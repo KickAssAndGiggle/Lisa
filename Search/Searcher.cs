@@ -1594,8 +1594,7 @@ namespace Lisa
 
             if (ttCut)
             {
-                _theBoard.UnmakeLastMove();
-                return alpha;
+                goto ReturnEarly;
             }
             else
             {
@@ -1609,15 +1608,13 @@ namespace Lisa
             bool futilityCut = TryFutilityCut(legalMove, depth, beta, isInCheck, staticEval, nodeType, ref alpha);
             if (futilityCut)
             {
-                _theBoard.UnmakeLastMove();
-                return alpha;
+                goto ReturnEarly;
             }
 
             bool nullCut = TryNullMove(legalMove, rootMoveKey, depth, beta, isInCheck, staticEval, nodeType, isPawnPush, ref localPV, ref alpha);
             if (nullCut)
             {
-                _theBoard.UnmakeLastMove();
-                return alpha;
+                goto ReturnEarly;
             }
 
             int played = 0;
@@ -1643,8 +1640,7 @@ namespace Lisa
                 Sorter.SetRefutationMove(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From]);
                 int MoveKey = ttMove.From * 100 + ttMove.To;
                 Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
-                _theBoard.UnmakeLastMove();
-                return alpha;
+                goto ReturnEarly;
             }
 
             bool refutationCut = TryRefutationMove(ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV,
@@ -1654,7 +1650,7 @@ namespace Lisa
             {
                 int MoveKey = Sorter.Refutations[_fullDepth - depth].From * 100 + Sorter.Refutations[_fullDepth - depth].To;
                 Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
-                goto StoreInTransTable;
+                goto ReturnEarly;
             }
 
             allOpCaps = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, true, false, (depth <= _fullDepth - 6 && nodeType != NodeTypes.PV));
@@ -1676,7 +1672,7 @@ namespace Lisa
 
                 if (killerOneCut)
                 {
-                    goto StoreInTransTable;
+                    goto ReturnEarly;
                 }
             }
 
@@ -1688,14 +1684,13 @@ namespace Lisa
 
                 if (killerTwoCut)
                 {
-                    goto StoreInTransTable;
+                    goto ReturnEarly;
                 }
             }
 
             bool probCutCut = TryProbCut(nodeType, depth, beta, isInCheck, rootMoveKey, ref alphaRaised, ref localPV, ref alpha);
             if (probCutCut)
             {
-                _theBoard.UnmakeLastMove();
                 goto ReturnEarly;
             }
 
@@ -1869,10 +1864,9 @@ namespace Lisa
 
             }
 
-            _theBoard.UnmakeLastMove();
-
         ReturnEarly:
 
+            _theBoard.UnmakeLastMove();
             return alpha;
 
         }
