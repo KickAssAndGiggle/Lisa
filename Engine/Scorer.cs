@@ -81,7 +81,6 @@ namespace Lisa
             RewardOpeningMobility(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
             RewardKnightOutpost(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
             PenaliseTrappedRook(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            //PenaliseObviousPins(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
 
             //Late Game          
             RewardRooksOnOpenFiles(ref TheBoard, TheBoard.WhiteFilePawns, TheBoard.BlackFilePawns, ref WhiteEndgameScore, ref BlackEndgameScore);
