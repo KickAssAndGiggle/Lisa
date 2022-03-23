@@ -1633,14 +1633,16 @@ namespace Lisa
             Move[] allOppMoves = null;
             Move[] allOpCaps = null;
 
-
-            bool pvCut = TryPrimaryVariation(hasTTMove, ttMove, depth, beta, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV, ref pv, ref alpha);
-            if (pvCut)
+            if (hasTTMove)
             {
-                Sorter.SetRefutationMove(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From]);
-                int MoveKey = ttMove.From * 100 + ttMove.To;
-                Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
-                goto ReturnEarly;
+                bool pvCut = TryPrimaryVariation(hasTTMove, ttMove, depth, beta, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV, ref pv, ref alpha);
+                if (pvCut)
+                {
+                    Sorter.SetRefutationMove(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From]);
+                    int MoveKey = ttMove.From * 100 + ttMove.To;
+                    Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                    goto ReturnEarly;
+                }
             }
 
             bool refutationCut = TryRefutationMove(ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV,
@@ -1653,7 +1655,28 @@ namespace Lisa
                 goto ReturnEarly;
             }
 
-            allOpCaps = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, true, false, (depth <= _fullDepth - 6 && nodeType != NodeTypes.PV));
+            if (!hasTTMove && nodeType != NodeTypes.All && depth >= 6)
+            {
+                int iidAlpha = -5000;
+                int iidBeta = 5000;
+                allOpCaps = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, true, false, true);
+                allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, true);
+                for (int nn = 0; nn < allOpCaps.Length; nn++)
+                {
+                    allOpCaps[nn].Score = -EvaluateMove(allOpCaps[nn], rootMoveKey, -iidBeta, -iidAlpha, (byte)(depth - 4), ref localPV);
+                }
+                for (int nn = 0; nn < allOppMoves.Length; nn++)
+                {
+                    allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, (byte)(depth - 4), ref localPV);
+                }
+                Array.Sort(allOpCaps);
+                Array.Sort(allOppMoves);
+            }
+
+            if (allOpCaps == null)
+            {
+                allOpCaps = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, true, false, (depth <= _fullDepth - 6 && nodeType != NodeTypes.PV));
+            }
 
             bool winningCapsCut = TryWinningCaptures(allOpCaps, ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV,
                 ref pv, ref betaCutoff, ref bestIndex, ref capsOnlyCut, ref capsOnlyAlphaRaised, ref alpha, refutationSeparated);
@@ -1702,7 +1725,18 @@ namespace Lisa
                 goto StoreInTransTable;
             }
 
-            allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true);
+            if (allOppMoves == null)
+            {
+                if (nodeType != NodeTypes.All)
+                {
+                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true);
+                }
+                else
+                {
+                    allOppMoves = _theBoard.GenerateNonCaptureMoves(_theBoard.OnMove);
+                }
+            }
+
             int quietPlayed = 0;
             for (int nn = 0; nn < allOppMoves.Length; nn++)
             {
