@@ -1655,19 +1655,29 @@ namespace Lisa
                 goto ReturnEarly;
             }
 
-            if (!hasTTMove && nodeType != NodeTypes.All && depth >= 6)
+            if (!hasTTMove && (nodeType != NodeTypes.All || depth >= _fullDepth - 1) && depth >= 6)
             {
-                int iidAlpha = -5000;
-                int iidBeta = 5000;
+                int iidAlpha = alpha;
+                int iidBeta = beta;
                 allOpCaps = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, true, false, true);
                 allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, true);
+
+                byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOpCaps.Length; nn++)
                 {
-                    allOpCaps[nn].Score = -EvaluateMove(allOpCaps[nn], rootMoveKey, -iidBeta, -iidAlpha, (byte)(depth - 4), ref localPV);
+                    allOpCaps[nn].Score = -EvaluateMove(allOpCaps[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
+                    if (allOpCaps[nn].Score > iidAlpha)
+                    {
+                        iidAlpha = allOpCaps[nn].Score;
+                    }
                 }
                 for (int nn = 0; nn < allOppMoves.Length; nn++)
                 {
-                    allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, (byte)(depth - 4), ref localPV);
+                    allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
+                    if (allOppMoves[nn].Score > iidAlpha)
+                    {
+                        iidAlpha = allOppMoves[nn].Score;
+                    }
                 }
                 Array.Sort(allOpCaps);
                 Array.Sort(allOppMoves);
