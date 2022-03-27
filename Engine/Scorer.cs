@@ -594,38 +594,38 @@ namespace Lisa
 
             if (TheBoard.WhitePressureMap[27] > TheBoard.BlackPressureMap[27])
             {
-                WhiteScore += 25;
+                WhiteScore += CENTRAL_PRESSURE_BONUS;
             }
             else if (TheBoard.BlackPressureMap[27] > TheBoard.WhitePressureMap[27])
             {
-                BlackScore += 25;
+                BlackScore += CENTRAL_PRESSURE_BONUS;
             }
 
             if (TheBoard.WhitePressureMap[28] > TheBoard.BlackPressureMap[28])
             {
-                WhiteScore += 25;
+                WhiteScore += CENTRAL_PRESSURE_BONUS;
             }
             else if (TheBoard.BlackPressureMap[28] > TheBoard.WhitePressureMap[28])
             {
-                BlackScore += 25;
+                BlackScore += CENTRAL_PRESSURE_BONUS;
             }
 
             if (TheBoard.WhitePressureMap[35] > TheBoard.BlackPressureMap[35])
             {
-                WhiteScore += 25;
+                WhiteScore += CENTRAL_PRESSURE_BONUS;
             }
             else if (TheBoard.BlackPressureMap[35] > TheBoard.WhitePressureMap[35])
             {
-                BlackScore += 25;
+                BlackScore += CENTRAL_PRESSURE_BONUS;
             }
 
             if (TheBoard.WhitePressureMap[36] > TheBoard.BlackPressureMap[36])
             {
-                WhiteScore += 25;
+                WhiteScore += CENTRAL_PRESSURE_BONUS;
             }
             else if (TheBoard.BlackPressureMap[36] > TheBoard.WhitePressureMap[36])
             {
-                BlackScore += 25;
+                BlackScore += CENTRAL_PRESSURE_BONUS;
             }
 
 

@@ -308,6 +308,8 @@ namespace Lisa
         public static int TEMPO_BONUS = 19;
         public static int CONNECTED_PASSED_PAWN_BONUS = 71;
 
+        public static int CENTRAL_PRESSURE_BONUS = 25;
+
         #endregion
 
         #region Search parameters
