@@ -993,7 +993,16 @@ namespace Lisa
                                 )
         {
 
-            if (!_endGame && !isPawnPush && staticEval > beta && beta != -5000 && depth < _fullDepth && depth > 2 && !isInCheck && nodeType == NodeTypes.Cut && legalMove.PromotionPiece == 0)
+            if (!_endGame && 
+                !isPawnPush && 
+                staticEval > beta && 
+                beta != -5000 && 
+                depth < _fullDepth && 
+                !isInCheck && 
+                depth > 2 &&
+                (nodeType == NodeTypes.Cut || depth <= 4) && 
+                legalMove.PromotionPiece == 0
+                )
             {
                 _infoNullMoveAttempts += 1;
                 _theBoard.MakeMove(_phantomMove, _theBoard.OnMove, true);
