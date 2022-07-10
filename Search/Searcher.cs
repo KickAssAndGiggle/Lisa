@@ -126,7 +126,7 @@ namespace Lisa
         private int _startingWhiteMaterial;
         private int _startingBlackMaterial;
 
-        private Move _phantomMove = new Move();
+        private Move _phantomMove = new();
 
         public Searcher()
         {
@@ -179,7 +179,7 @@ namespace Lisa
             _theBoard = gameBoard;
 
             //Create a time controller, which will calculate how long we can afford to use on this move
-            TimeManager timeController = new TimeManager(ourTimeMilliseconds, _theBoard);
+            TimeManager timeController = new (ourTimeMilliseconds, _theBoard);
 
             if (TryEndgameTableBase(ref timeController))
             {

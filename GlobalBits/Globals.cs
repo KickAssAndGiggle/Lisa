@@ -490,8 +490,8 @@ namespace Lisa
 
             LoadSettings();
 
-            Material = new int[0];
-            SeeMaterial = new int[0];
+            Material = Array.Empty<int>();
+            SeeMaterial = Array.Empty<int>();
 
             Book = new OpeningBook(_bookFile);
 

@@ -189,7 +189,7 @@ namespace Lisa
         }
 
 
-        private void ProcessOption(string optString, StreamWriter sw)
+        private static void ProcessOption(string optString, StreamWriter sw)
         {
 
             string[] splits = optString.Split(" ");
@@ -949,10 +949,7 @@ namespace Lisa
                 }
 
             }
-            catch (Exception Ex)
-            {
-                string Err = Ex.Message;
-            }
+            catch { }
 
         }
 
@@ -966,14 +963,11 @@ namespace Lisa
                     UCIMoveMade(_search.BestMove);
                 }
             }
-            catch (Exception Ex)
-            {
-                string Err = Ex.Message;
-            }
+            catch { }
         }
 
 
-        private void UCIReportID()
+        private static void UCIReportID()
         {
             UCISendToGUI("id name PawnStorm");
             UCISendToGUI("id author Russell Lambert");
@@ -982,7 +976,7 @@ namespace Lisa
         }
 
 
-        private void UCIMoveMade(Move made)
+        private static void UCIMoveMade(Move made)
         {
             string moveString = ConvertMoveToString(made);
             UCISendToGUI("bestmove " + moveString);
@@ -1132,7 +1126,7 @@ namespace Lisa
 
 
 
-        private void UCISendToGUI(string Value)
+        private static void UCISendToGUI(string Value)
         {
             Console.Out.Write(Value + Convert.ToChar(10));
         }

@@ -28,4 +28,12 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Lisa\Lisa\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Lisa\Lisa\.editorconfig" />
+  </ItemGroup>
+
 </Project>

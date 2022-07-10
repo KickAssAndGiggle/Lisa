@@ -26,7 +26,7 @@ namespace Lisa
             {
 
                 string Fen = "";
-                if (S.Contains(";"))
+                if (S.Contains(';'))
                 {
                     string[] Splits = S.Split(Convert.ToChar(";"));
                     Fen = Splits[0];

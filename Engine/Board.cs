@@ -983,27 +983,22 @@ namespace Lisa
             fenSplits[7] = fenSplits[7].Substring(0, fenSplits[7].IndexOf(" ")).Trim();
             string[] InfoSplits = Info.Split(Convert.ToChar(" "));
 
-            _whiteCanKSideCastle = (Info.Contains("K"));
-            _whiteCanQSideCastle = (Info.Contains("Q"));
-            _blackCanKSideCastle = (Info.Contains("k"));
-            _blackCanQSideCastle = (Info.Contains("q"));
+            _whiteCanKSideCastle = (Info.Contains('K'));
+            _whiteCanQSideCastle = (Info.Contains('Q'));
+            _blackCanKSideCastle = (Info.Contains('k'));
+            _blackCanQSideCastle = (Info.Contains('q'));
 
             try
             {
                 _halfMoveClock = Convert.ToInt32(InfoSplits[3]);
             }
-            catch (Exception Ex)
-            {
-                string NoHalfMoveErr = Ex.Message;
-            }
+            catch { }
+
             try
             {
                 _fullMoveClock = Convert.ToInt32(InfoSplits[4]);
             }
-            catch (Exception Ex)
-            {
-                string NoFullMoveErr = Ex.Message;
-            }
+            catch { }
 
             if (Info.StartsWith("w"))
             {
