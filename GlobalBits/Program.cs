@@ -21,9 +21,12 @@ namespace Lisa
             }
             else if (Mode == ProgramMode.MultiFen)
             {
-                ReconfigureAfterOptions();
-                FenTester fenner = new(FensToTest, OutputFile);
-                fenner.Test();
+                if (FensToTest != null)
+                {
+                    ReconfigureAfterOptions();
+                    FenTester fenner = new(FensToTest, OutputFile);
+                    fenner.Test();
+                }
             }
             else if (Mode == ProgramMode.FenToZobrist)
             {

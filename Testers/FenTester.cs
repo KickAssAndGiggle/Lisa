@@ -73,20 +73,24 @@ namespace Lisa
                 LinesForFile.Add("CutOffWithThirdSortedMove: " + Search.InfoNodesCutOffWithThirdSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
                 LinesForFile.Add("CutOffWithLaterSortedMove: " + Search.InfoNodesCutOffWithLaterSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
                 LinesForFile.Add(" ");
-                Move[] PV = Search.BestPV;
+
+                Move[]? PV = Search.BestPV;
                 string PVString = "";
-                for (int NN = PV.Length - 1; NN >= 0; NN--)
-                {
-                    if (!(PV[NN].From == 0 && PV[NN].To == 0))
+                if (PV != null)
+                {                    
+                    for (int NN = PV.Length - 1; NN >= 0; NN--)
                     {
-                        PVString += ConvertMoveToString(PV[NN]) + " ";
+                        if (!(PV[NN].From == 0 && PV[NN].To == 0))
+                        {
+                            PVString += ConvertMoveToString(PV[NN]) + " ";
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
-                    {
-                        break;
-                    }
+                    PVString = PVString.Trim();
                 }
-                PVString = PVString.Trim();
                 LinesForFile.Add("PV: " + PVString);
                 LinesForFile.Add(" ");
                 LinesForFile.Add(" ");

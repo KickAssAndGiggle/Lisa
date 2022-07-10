@@ -8,43 +8,48 @@ namespace Lisa
 
         public OpeningBook(string bookFile)
         {
-
-            string[] lines = File.ReadAllLines(BookFile);
+                        
             List<BookPosition> posList = new();
 
-            foreach (string line in lines)
+            try
             {
 
-                string trimmed = line.Trim();
-                if (trimmed != "" && !trimmed.StartsWith("#"))
+                string[] lines = File.ReadAllLines(bookFile);
+                foreach (string line in lines)
                 {
 
-                    string[] splits = trimmed.Split('=');
-                    BookPosition pos = new()
+                    string trimmed = line.Trim();
+                    if (trimmed != "" && !trimmed.StartsWith("#"))
                     {
-                        Zobrist = Convert.ToInt64(splits[0])
-                    };
 
-                    string[] moves = splits[1].Split('|');
-                    List<BookMove> PosMovesList = new();
-
-                    foreach (string move in moves)
-                    {
-                        string[] parts = move.Split(',');
-                        BookMove fromBook = new()
+                        string[] splits = trimmed.Split('=');
+                        BookPosition pos = new()
                         {
-                            From = Convert.ToByte(parts[0]),
-                            To = Convert.ToByte(parts[1])
+                            Zobrist = Convert.ToInt64(splits[0])
                         };
-                        PosMovesList.Add(fromBook);
+
+                        string[] moves = splits[1].Split('|');
+                        List<BookMove> PosMovesList = new();
+
+                        foreach (string move in moves)
+                        {
+                            string[] parts = move.Split(',');
+                            BookMove fromBook = new()
+                            {
+                                From = Convert.ToByte(parts[0]),
+                                To = Convert.ToByte(parts[1])
+                            };
+                            PosMovesList.Add(fromBook);
+                        }
+
+                        pos.Moves = PosMovesList.ToArray();
+                        posList.Add(pos);
+
                     }
 
-                    pos.Moves = PosMovesList.ToArray();
-                    posList.Add(pos);
-
                 }
-
             }
+            catch { }
 
             _bookPositions = posList.ToArray();
 

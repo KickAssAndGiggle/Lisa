@@ -475,7 +475,7 @@ namespace Lisa
         public static int PerftDepth = 0;
         public static byte MultiFenDepth = 0;
         public static string OutputFile = "";
-        public static string[] FensToTest;
+        public static string[]? FensToTest;
         public static string EPDInput = "";
         public static string EPDOutput = "";
 
@@ -483,11 +483,22 @@ namespace Lisa
         public static int PawnStructureHashSizeMB = 64;
         public static int PositionScoreHashSizeMB = 64;
 
-        public static string BookFile = "";
+        private static string _bookFile = "";
+
+        static Globals()
+        {
+
+            LoadSettings();
+
+            Material = new int[0];
+            SeeMaterial = new int[0];
+
+            Book = new OpeningBook(_bookFile);
+
+        }
 
         public static void Initialise()
-        {
-            LoadSettings();
+        {            
             Initialised = true;
         }
 
@@ -656,16 +667,11 @@ namespace Lisa
 
             if (File.Exists(AppFolder + "Book.ini"))
             {
-                BookFile = AppFolder + "Book.ini";
+                _bookFile = AppFolder + "Book.ini";
             }
             else if (File.Exists(AppFolder + "GlobalBits\\Book.ini"))
             {
-                BookFile = AppFolder + "GlobalBits\\Book.ini";
-            }
-
-            if (BookFile != "")
-            {
-                Book = new OpeningBook(BookFile);
+                _bookFile = AppFolder + "GlobalBits\\Book.ini";
             }
 
             List<string> MultiFenList = new();

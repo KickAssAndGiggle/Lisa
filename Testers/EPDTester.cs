@@ -159,20 +159,25 @@ namespace Lisa
                 OutputLines.Add("CutOffWithThirdSortedMove: " + Search.InfoNodesCutOffWithThirdSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
                 OutputLines.Add("CutOffWithLaterSortedMove: " + Search.InfoNodesCutOffWithLaterSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
                 OutputLines.Add(" ");
-                Move[] PV = Search.BestPV;
+
+                Move[]? PV = Search.BestPV;
                 string PVString = "";
-                for (int NN = PV.Length - 1; NN >= 0; NN--)
+
+                if (PV != null)
                 {
-                    if (!(PV[NN].From == 0 && PV[NN].To == 0))
+                    for (int NN = PV.Length - 1; NN >= 0; NN--)
                     {
-                        PVString += ConvertMoveToString(PV[NN]) + " ";
+                        if (!(PV[NN].From == 0 && PV[NN].To == 0))
+                        {
+                            PVString += ConvertMoveToString(PV[NN]) + " ";
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
-                    {
-                        break;
-                    }
+                    PVString = PVString.Trim();
                 }
-                PVString = PVString.Trim();
                 OutputLines.Add("PV: " + PVString);
 
                 OutputLines.Add(" ");

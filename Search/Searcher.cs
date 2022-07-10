@@ -7,13 +7,13 @@ namespace Lisa
         #region Events and delegates
 
         public delegate void BestMoveSelectedEventHandler();
-        public event BestMoveSelectedEventHandler BestMoveSelected;
+        public event BestMoveSelectedEventHandler? BestMoveSelected;
 
         public delegate void InfoUpdatedEventHandler();
-        public event InfoUpdatedEventHandler InfoUpdated;
+        public event InfoUpdatedEventHandler? InfoUpdated;
 
         public delegate void TablebaseHitEventHandler();
-        public event TablebaseHitEventHandler TablebaseHit;
+        public event TablebaseHitEventHandler? TablebaseHit;
 
         #endregion
 
@@ -21,7 +21,6 @@ namespace Lisa
 
         private Board _theBoard;
         private TranspositionTable _transTable;
-        private TimeManager _timeController;
 
         private byte _fullDepth;
 
@@ -104,19 +103,19 @@ namespace Lisa
 
         private Move _bestMove;
         private int _bestScore;
-        private Move[] _bestPV;
+        private Move[]? _bestPV;
 
         private bool _cancel = false;
         private bool _hasCancelled = false;
         private bool _isSearching = false;
 
-        public string _uciTablebaseHit;
+        public string _uciTablebaseHit = "";
 
         public bool HasCancelled => _hasCancelled;
         public bool IsSearching => _isSearching;
         public Move BestMove => _bestMove;
         public int BestScore => _bestScore;
-        public Move[] BestPV => _bestPV;
+        public Move[]? BestPV => _bestPV;
         public string UCITablebaseHit => _uciTablebaseHit;
 
         #endregion
@@ -132,6 +131,9 @@ namespace Lisa
         public Searcher()
         {
             _transTable = new TranspositionTable();
+            _theBoard = new Board();
+            _secondTimer = new System.Timers.Timer();
+            _secondTimer.Elapsed += SecondTimer_Elapsed;
         }
 
 
@@ -165,7 +167,7 @@ namespace Lisa
                            byte maxDepth = 8,
                            int ourTimeMilliseconds = 20000000,
                            int oppTimeMillisconds = 20000000,
-                           List<long> prevZobrists = null
+                           List<long>? prevZobrists = null
                           )
         {
 
@@ -177,13 +179,13 @@ namespace Lisa
             _theBoard = gameBoard;
 
             //Create a time controller, which will calculate how long we can afford to use on this move
-            _timeController = new TimeManager(ourTimeMilliseconds, _theBoard);
+            TimeManager timeController = new TimeManager(ourTimeMilliseconds, _theBoard);
 
-            if (TryEndgameTableBase())
+            if (TryEndgameTableBase(ref timeController))
             {
                 _isSearching = false;
                 _secondTimer.Stop();
-                TablebaseHit.Invoke();
+                TablebaseHit?.Invoke();
                 return;
             }
 
@@ -263,7 +265,7 @@ namespace Lisa
             //Create an array to store the best ordered moves from the previous depth of
             //iterative deepening. If we run out of time, we will fall-back to the last
             //fully completed depth's results
-            Move[] prevIterationBest = null;
+            Move[]? prevIterationBest = null;
             int totalUsedTickCount = 0;
             bool quittingEarly = false;
             _infoMaxSearchDepth = maxDepth;
@@ -275,6 +277,7 @@ namespace Lisa
             int prevIterationAlpha = -5000;
             int bestScoreAtDepth = 0;
             int windowSize = 0;
+            bool nullWindowSearch;
 
             for (byte depth = 1; depth <= maxDepth; depth++)
             {
@@ -308,9 +311,6 @@ namespace Lisa
 
                             bool alphaWidened = false;
                             bool betaWidened = false;
-
-                            int posScore = 0;
-                            bool nullWindowSearch = false;
                             bool nullWindowFailure = false;
 
                         ReSearchAfterFallingOutsideWindow:
@@ -380,12 +380,15 @@ namespace Lisa
                     totalUsedTickCount += (moveEndTickCount - moveStartTickCount);
                     _infoCurrentSearchDepth = depth;
 
-                    if ((totalUsedTickCount > _timeController.MaxTimeToUse && nn < legal.Length / 3 && depth >= 7) || (_cancel && depth > 1))
+                    if ((totalUsedTickCount > timeController.MaxTimeToUse && nn < legal.Length / 3 && depth >= 7) || (_cancel && depth > 1))
                     {
-                        //We've gone over, and we are not almost done
-                        quittingEarly = true;
-                        legal = prevIterationBest;
-                        break;
+                        if (prevIterationBest != null)
+                        {
+                            //We've gone over, and we are not almost done
+                            quittingEarly = true;
+                            legal = prevIterationBest;
+                            break;
+                        }
 
                     }
                     else
@@ -415,12 +418,12 @@ namespace Lisa
 
                     if (depth >= 4)
                     {
-                        if (totalUsedTickCount > _timeController.MaxTimeToUse)
+                        if (totalUsedTickCount > timeController.MaxTimeToUse)
                         {
                             //We must exit here, we have used too much time
                             break;
                         }
-                        else if (totalUsedTickCount > Convert.ToInt32(_timeController.MaxTimeToUse * 0.5))
+                        else if (totalUsedTickCount > Convert.ToInt32(timeController.MaxTimeToUse * 0.5))
                         {
                             //We've used 50% of our max time...odds of completing another ply is minimal
                             break;
@@ -676,7 +679,7 @@ namespace Lisa
         }
 
 
-        private bool TryEndgameTableBase()
+        private bool TryEndgameTableBase(ref TimeManager timeController)
         {
 
             int pieceCount = 0;
@@ -691,7 +694,7 @@ namespace Lisa
             _endGame = (pieceCount <= 18);
             _opening = (pieceCount > 28);
 
-            if (Mode == ProgramMode.UCI && UseTablebase && ((pieceCount <= 7 && _timeController.MaxTimeToUse >= 15000) || pieceCount <= 6))
+            if (Mode == ProgramMode.UCI && UseTablebase && ((pieceCount <= 7 && timeController.MaxTimeToUse >= 15000) || pieceCount <= 6))
             {
                 EndgameTablebase EGT = new();
                 string UCIMove = EGT.FindBestMoveFrom7ManTablebase(_theBoard.GenerateFen());
@@ -1637,8 +1640,8 @@ namespace Lisa
             int bestIndex = -1;
             bool capsOnlyCut = false;
             bool capsOnlyAlphaRaised = false;
-            Move[] allOppMoves = null;
-            Move[] allOpCaps = null;
+            Move[]? allOppMoves = null;
+            Move[]? allOpCaps = null;
 
             if (hasTTMove)
             {
@@ -1841,6 +1844,23 @@ namespace Lisa
                         betaCutoff = true;
                         bestIndex = nn;
                         Sorter.SetRefutationMove(_fullDepth, depth, allOppMoves[nn], _theBoard.Piece[allOppMoves[nn].From]);
+
+                        if (nn == 0)
+                        {
+                            _infoNodesCutOffWithFirstSortedMove += 1;
+                        }
+                        else if (nn == 1)
+                        {
+                            _infoNodesCutoffWithSecondSortedMove += 1;
+                        }
+                        else if (nn == 2)
+                        {
+                            _infoNodesCutOffWithThirdSortedMove += 1;
+                        }
+                        else
+                        {
+                            _infoNodesCutOffWithLaterSortedMove += 1;
+                        }
                         break;
                     }
                     if (score > alpha)
@@ -1865,7 +1885,7 @@ namespace Lisa
 
             if (betaCutoff)
             {
-                if (!capsOnlyCut)
+                if (!capsOnlyCut && allOppMoves != null)
                 {
                     _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TransTablePosTypeBetaCutoff);
                     int MoveKey = allOppMoves[bestIndex].From * 100 + allOppMoves[bestIndex].To;
@@ -1878,7 +1898,7 @@ namespace Lisa
             }
             else if (alphaRaised)
             {
-                if (!capsOnlyAlphaRaised && !alphaRaisedByNonGeneratedMove)
+                if (!capsOnlyAlphaRaised && !alphaRaisedByNonGeneratedMove && allOppMoves != null)
                 {
                     _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TransTablePosTypeExact);
                     int MoveKey = allOppMoves[bestIndex].From * 100 + allOppMoves[bestIndex].To;
@@ -2143,7 +2163,7 @@ namespace Lisa
         #region Minor private helper functions
 
 
-        private void SecondTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void SecondTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
             if (!_cancel && _isSearching)
             {
@@ -2167,9 +2187,7 @@ namespace Lisa
             _infoNodesLookedAt = 0;
             _infoCurrentSearchDepth = 0;
 
-            //Create a timer for one second so we can periodically update whichever UCI GUI/Command line is controlling us
-            _secondTimer = new System.Timers.Timer();
-            _secondTimer.Elapsed += SecondTimer_Elapsed;
+            //Create a timer for one second so we can periodically update whichever UCI GUI/Command line is controlling us            
             _secondTimer.Interval = 1000;
             _secondTimer.Start();
 

@@ -11,12 +11,17 @@ namespace Lisa
         private int _oppTimeInMils = 0;
         private List<long> _seenZobrist = new();
 
+        public UCIInterface()
+        {
+            _search = new Searcher();
+            _gameBoard = new Board();
+        }
+
         public void InitiateUCI()
         {
 
             bool exit = false;
-
-            _search = new Searcher();
+                        
             _search.BestMoveSelected += Search_BestMoveSelected;
             _search.InfoUpdated += Search_InfoUpdated;
             _search.TablebaseHit += Search_TablebaseHit;
@@ -134,11 +139,10 @@ namespace Lisa
                 else if (command.StartsWith("go"))
                 {
 
-                    if (optWriter != null)
+                    if (optWriter.BaseStream.CanWrite)
                     {
                         optWriter.WriteLine("=== DONE ===");
                         optWriter.Close();
-                        optWriter = null;
                     }
 
                     string[] splits = command.Split(Convert.ToChar(" "));
@@ -916,28 +920,33 @@ namespace Lisa
             try
             {
 
-                string infoString = "info seldepth " + _search.InfoCurrentSearchDepth.ToString() + " depth " + _search.InfoCurrentSearchDepth.ToString() + 
-                    " time " + (_search.InfoSecondsUsed * 1000).ToString();
-                infoString += " nodes " + _search.InfoNodesLookedAt.ToString() + " nps " + _search.InfoNodesPerSecond.ToString();
+                Move[]? pv = _search.BestPV;
 
-                Move[] pv = _search.BestPV;
-                string pvString = "";
-                
-                for (int nn = pv.Length - 1; nn >= 0; nn--)
+                if (pv != null)
                 {
-                    if (!(pv[nn].From == 0 && pv[nn].To == 0))
-                    {
-                        pvString += ConvertMoveToString(pv[nn]) + " ";
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
 
-                pvString = pvString.Trim();
-                infoString += " score cp " + _search.BestScore.ToString() + " pv " + pvString;
-                UCISendToGUI(infoString);
+                    string infoString = "info seldepth " + _search.InfoCurrentSearchDepth.ToString() + " depth " + _search.InfoCurrentSearchDepth.ToString() + 
+                        " time " + (_search.InfoSecondsUsed * 1000).ToString();
+                    infoString += " nodes " + _search.InfoNodesLookedAt.ToString() + " nps " + _search.InfoNodesPerSecond.ToString();
+
+                    string pvString = "";
+                    for (int nn = pv.Length - 1; nn >= 0; nn--)
+                    {
+                        if (!(pv[nn].From == 0 && pv[nn].To == 0))
+                        {
+                            pvString += ConvertMoveToString(pv[nn]) + " ";
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    pvString = pvString.Trim();
+                    infoString += " score cp " + _search.BestScore.ToString() + " pv " + pvString;
+                    UCISendToGUI(infoString);
+
+                }
 
             }
             catch (Exception Ex)
@@ -986,7 +995,7 @@ namespace Lisa
         }
 
 
-        private void SetupGame(string startPos, string[] guiMoves = null)
+        private void SetupGame(string startPos, string[]? guiMoves = null)
         {
 
             _gameBoard = new Board();
