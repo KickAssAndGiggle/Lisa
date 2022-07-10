@@ -12,9 +12,9 @@ namespace Lisa
         public void ConvertFenToZobrist(string Fen, string OutputFile)
         {
 
-            Board TheBoard = new();
-            TheBoard.InitialiseFromFEN(Fen);
-            string ZobString = TheBoard.CurrentZobrist.ToString();
+            Board theBoard = new();
+            theBoard.InitialiseFromFEN(Fen);
+            string ZobString = theBoard.CurrentZobrist.ToString();
 
             StreamWriter SW = File.CreateText(OutputFile);
             SW.WriteLine("Fen: " + Fen);

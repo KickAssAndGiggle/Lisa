@@ -35,7 +35,7 @@ namespace Lisa
 
         }
 
-        public static Move[] GetSortedMoves(ref Board TheBoard, int RootMoveKey, bool CapturesOnly, bool NonCapturesOnly, bool LowDepth = false)
+        public static Move[] GetSortedMoves(ref Board theBoard, int RootMoveKey, bool CapturesOnly, bool NonCapturesOnly, bool LowDepth = false)
         {
 
             Move[] List;
@@ -43,51 +43,51 @@ namespace Lisa
             {
                 if (LowDepth)
                 {
-                    List = TheBoard.GenerateCaptureMovesWithScore(TheBoard.OnMove);
+                    List = theBoard.GenerateCaptureMovesWithScore(theBoard.OnMove);
                     return List;
                 }
                 else
                 {
-                    List = TheBoard.GenerateCaptureMoves(TheBoard.OnMove);
+                    List = theBoard.GenerateCaptureMoves(theBoard.OnMove);
                 }
             }
             else if (NonCapturesOnly)
             {
-                List = TheBoard.GenerateNonCaptureMoves(TheBoard.OnMove);
+                List = theBoard.GenerateNonCaptureMoves(theBoard.OnMove);
             }
             else
             {
-                List = TheBoard.GenerateAllMoves(TheBoard.OnMove);
+                List = theBoard.GenerateAllMoves(theBoard.OnMove);
             }
 
-            int TotalMaterial = (TheBoard.WhiteMaterial + TheBoard.BlackMaterial);
+            int TotalMaterial = (theBoard.WhiteMaterial + theBoard.BlackMaterial);
             float EarlyRatio = (float)TotalMaterial / (float)MaxMaterial; float LateRatio = 1 - EarlyRatio;
 
             for (int NN = 0; NN < List.Length; NN++)
             {
                 if (!LowDepth)
                 {
-                    TheBoard.MakeMove(List[NN], TheBoard.OnMove, false);
-                    if (TheBoard.IsInCheck(TheBoard.OnMove))
+                    theBoard.MakeMove(List[NN], theBoard.OnMove, false);
+                    if (theBoard.IsInCheck(theBoard.OnMove))
                     {
                         List[NN].Score = 4950;
-                        TheBoard.UnmakeLastMove();
+                        theBoard.UnmakeLastMove();
                         continue;
                     }
                     else
                     {
-                        TheBoard.UnmakeLastMove();
+                        theBoard.UnmakeLastMove();
                     }
                 }
                 if (List[NN].IsCapture)
                 {
-                    if (TheBoard.Piece[List[NN].To] != -1)
+                    if (theBoard.Piece[List[NN].To] != -1)
                     {
                         //No en-pasant
-                        List[NN].Score = 4000 + TheBoard.See(List[NN].To);
+                        List[NN].Score = 4000 + theBoard.See(List[NN].To);
                         if (List[NN].Score == 4000)
                         {
-                            List[NN].Score += TheBoard.Piece[List[NN].To];
+                            List[NN].Score += theBoard.Piece[List[NN].To];
                         }
                     }
                     else
@@ -102,18 +102,18 @@ namespace Lisa
                     int MoveKey = List[NN].From * 100 + List[NN].To;
                     List[NN].Score = History[MoveKey];
                     List[NN].Score += (SingleMoveHistory[RootMoveKey, MoveKey]);
-                    int piecePressure = Material[TheBoard.Piece[List[NN].From]];
+                    int piecePressure = Material[theBoard.Piece[List[NN].From]];
                     if (piecePressure == 0)
                     {
                         piecePressure = 75;
                     }
-                    if (TheBoard.OnMove == WHITE)
+                    if (theBoard.OnMove == WHITE)
                     {
-                        List[NN].Score += (((TheBoard.WhitePressureMap[List[NN].To] - piecePressure) - TheBoard.WhitePressureMap[List[NN].From]) / 2);
+                        List[NN].Score += (((theBoard.WhitePressureMap[List[NN].To] - piecePressure) - theBoard.WhitePressureMap[List[NN].From]) / 2);
                     }
                     else
                     {
-                        List[NN].Score += (((TheBoard.BlackPressureMap[List[NN].To] - piecePressure) - TheBoard.BlackPressureMap[List[NN].From]) / 2);
+                        List[NN].Score += (((theBoard.BlackPressureMap[List[NN].To] - piecePressure) - theBoard.BlackPressureMap[List[NN].From]) / 2);
                     }
 
                 }

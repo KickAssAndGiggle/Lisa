@@ -4,48 +4,48 @@ namespace Lisa
     public static class Scorer
     {
 
-        public static int ScorePosition(ref Board TheBoard, ref TranspositionTable TT, int Alpha, int Beta, bool allowLazyEval, int lastMoveCapMaterial)
+        public static int ScorePosition(ref Board theBoard, ref TranspositionTable tt, int alpha, int beta, bool allowLazyEval, int lastMoveCapMaterial)
         {
 
-            bool InTT = TT.LookupScore(TheBoard.CurrentZobrist, out TTScore Lookup);
+            bool InTT = tt.LookupScore(theBoard.CurrentZobrist, out TTScore lookup);
             if (InTT)
             {
-                if (TheBoard.OnMove == BLACK)
+                if (theBoard.OnMove == BLACK)
                 {
-                    return (Lookup.WhiteScore - Lookup.BlackScore);
+                    return (lookup.WhiteScore - lookup.BlackScore);
                 }
                 else
                 {
-                    return (Lookup.BlackScore - Lookup.WhiteScore);
+                    return (lookup.BlackScore - lookup.WhiteScore);
                 }
             }
 
-            int Phase = (TheBoard.GamePhase * 256 + 12) / 24;
+            int phase = (theBoard.GamePhase * 256 + 12) / 24;
 
-            int WhiteOpeningScore = TheBoard.WhiteEarlyPSTScore + TheBoard.WhiteMaterial;
-            int WhiteEndgameScore = TheBoard.WhiteLatePSTScore + TheBoard.WhiteMaterial;
-            int BlackOpeningScore = TheBoard.BlackEarlyPSTScore + TheBoard.BlackMaterial;
-            int BlackEndgameScore = TheBoard.BlackLatePSTScore + TheBoard.BlackMaterial;
+            int whiteOpeningScore = theBoard.WhiteEarlyPSTScore + theBoard.WhiteMaterial;
+            int whiteEndgameScore = theBoard.WhiteLatePSTScore + theBoard.WhiteMaterial;
+            int blackOpeningScore = theBoard.BlackEarlyPSTScore + theBoard.BlackMaterial;
+            int blackEndgameScore = theBoard.BlackLatePSTScore + theBoard.BlackMaterial;
 
             if (allowLazyEval)
             {
 
-                int WhiteLazyScore = ((WhiteOpeningScore * (256 - Phase)) + (WhiteEndgameScore * Phase)) / 256;
-                int BlackLazyScore = ((BlackOpeningScore * (256 - Phase)) + (BlackEndgameScore * Phase)) / 256;
-                int lazy = TheBoard.OnMove == BLACK ? WhiteLazyScore - BlackLazyScore : BlackLazyScore - WhiteLazyScore;
+                int whiteLazyScore = ((whiteOpeningScore * (256 - phase)) + (whiteEndgameScore * phase)) / 256;
+                int blackLazyScore = ((blackOpeningScore * (256 - phase)) + (blackEndgameScore * phase)) / 256;
+                int lazy = theBoard.OnMove == BLACK ? whiteLazyScore - blackLazyScore : blackLazyScore - whiteLazyScore;
 
-                if (TheBoard.WhiteQueenSquare == 255 && TheBoard.BlackQueenSquare == 255)
+                if (theBoard.WhiteQueenSquare == 255 && theBoard.BlackQueenSquare == 255)
                 {
                     if (lastMoveCapMaterial == 0)
                     {
-                        if (lazy + LAZY_EVAL_QUEENS_OFF_MARGIN < Alpha || lazy - LAZY_EVAL_QUEENS_OFF_MARGIN > Beta)
+                        if (lazy + LAZY_EVAL_QUEENS_OFF_MARGIN < alpha || lazy - LAZY_EVAL_QUEENS_OFF_MARGIN > beta)
                         {
                             return lazy;
                         }
                     }
                     else
                     {
-                        if (lazy + (LAZY_EVAL_QUEENS_OFF_MARGIN + lastMoveCapMaterial) < Alpha || lazy - (LAZY_EVAL_QUEENS_OFF_MARGIN + lastMoveCapMaterial) > Beta)
+                        if (lazy + (LAZY_EVAL_QUEENS_OFF_MARGIN + lastMoveCapMaterial) < alpha || lazy - (LAZY_EVAL_QUEENS_OFF_MARGIN + lastMoveCapMaterial) > beta)
                         {
                             return lazy;
                         }
@@ -55,14 +55,14 @@ namespace Lisa
                 {
                     if (lastMoveCapMaterial == 0)
                     {
-                        if (lazy + LAZY_EVAL_QUEENS_ON_MARGIN < Alpha || lazy - LAZY_EVAL_QUEENS_ON_MARGIN > Beta)
+                        if (lazy + LAZY_EVAL_QUEENS_ON_MARGIN < alpha || lazy - LAZY_EVAL_QUEENS_ON_MARGIN > beta)
                         {
                             return lazy;
                         }
                     }
                     else
                     {
-                        if (lazy + (LAZY_EVAL_QUEENS_ON_MARGIN + lastMoveCapMaterial) < Alpha || lazy - (LAZY_EVAL_QUEENS_ON_MARGIN + lastMoveCapMaterial) > Beta)
+                        if (lazy + (LAZY_EVAL_QUEENS_ON_MARGIN + lastMoveCapMaterial) < alpha || lazy - (LAZY_EVAL_QUEENS_ON_MARGIN + lastMoveCapMaterial) > beta)
                         {
                             return lazy;
                         }
@@ -72,207 +72,208 @@ namespace Lisa
             }
 
             //Early Game
-            RewardBeingCastled(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            RewardKingSafety(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            PenaliseBishopPawnWeaknesses(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            RewardActiveBishop(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            EncouragePawnsOnOppositeSideToKingToAdvance(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            RewardPawnBishopSynergy(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            RewardOpeningMobility(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            RewardKnightOutpost(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
-            PenaliseTrappedRook(ref TheBoard, ref WhiteOpeningScore, ref BlackOpeningScore);
+            RewardBeingCastled(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            RewardKingSafety(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            PenaliseBishopPawnWeaknesses(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            RewardActiveBishop(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            EncouragePawnsOnOppositeSideToKingToAdvance(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            RewardPawnBishopSynergy(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            RewardOpeningMobility(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            RewardKnightOutpost(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            PenaliseTrappedRook(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
 
             //Late Game          
-            RewardRooksOnOpenFiles(ref TheBoard, TheBoard.WhiteFilePawns, TheBoard.BlackFilePawns, ref WhiteEndgameScore, ref BlackEndgameScore);
-            PenaliseTrappedBishop(ref TheBoard, ref WhiteEndgameScore, ref BlackEndgameScore);
-            RewardRooksOnTheSeventh(ref TheBoard, ref WhiteEndgameScore, ref BlackEndgameScore);
-            RewardBlockadingDangerousPawns(ref TheBoard, ref WhiteEndgameScore, ref BlackEndgameScore);
+            RewardRooksOnOpenFiles(ref theBoard, ref whiteEndgameScore, ref blackEndgameScore);
+            PenaliseTrappedBishop(ref theBoard, ref whiteEndgameScore, ref blackEndgameScore);
+            RewardRooksOnTheSeventh(ref theBoard, ref whiteEndgameScore, ref blackEndgameScore);
+            RewardBlockadingDangerousPawns(ref theBoard, ref whiteEndgameScore, ref blackEndgameScore);
 
-            bool PawnsInTT = TT.LookupPPScore(TheBoard.PawnOnlyZobrist, out TTPawnAnalysis PawnLookup);
-            if (PawnsInTT)
+            bool pawnsInTT = tt.LookupPPScore(theBoard.PawnOnlyZobrist, out TTPawnAnalysis pawnLookup);
+            if (pawnsInTT)
             {
 
-                WhiteOpeningScore += PawnLookup.WhiteBackwardsPawnScore;
-                BlackOpeningScore += PawnLookup.BlackBackwardPawnScore;
-                WhiteOpeningScore += PawnLookup.WhitePawnChainScore;
-                BlackOpeningScore += PawnLookup.BlackPawnChainScore;
+                whiteOpeningScore += pawnLookup.WhiteBackwardsPawnScore;
+                blackOpeningScore += pawnLookup.BlackBackwardPawnScore;
+                whiteOpeningScore += pawnLookup.WhitePawnChainScore;
+                blackOpeningScore += pawnLookup.BlackPawnChainScore;
 
-                WhiteEndgameScore += PawnLookup.WhitePassedPawnScore;
-                BlackEndgameScore += PawnLookup.BlackPassedPawnScore;
-                WhiteEndgameScore += PawnLookup.WhiteDoubledPawnScore;
-                BlackEndgameScore += PawnLookup.BlackDoubledPawnScore;
-                WhiteEndgameScore += PawnLookup.WhiteIsolatedPawnScore;
-                BlackEndgameScore += PawnLookup.BlackIsolatedPawnScore;
+                whiteEndgameScore += pawnLookup.WhitePassedPawnScore;
+                blackEndgameScore += pawnLookup.BlackPassedPawnScore;
+                whiteEndgameScore += pawnLookup.WhiteDoubledPawnScore;
+                blackEndgameScore += pawnLookup.BlackDoubledPawnScore;
+                whiteEndgameScore += pawnLookup.WhiteIsolatedPawnScore;
+                blackEndgameScore += pawnLookup.BlackIsolatedPawnScore;
 
             }
             else
             {
 
-                PenaliseBackwardsPawns(ref TheBoard, out int WhiteBWPScore, out int BlackBWPScore);
-                RewardPawnChains(ref TheBoard, out int WhiteChainScore, out int BlackChainScore);
+                PenaliseBackwardsPawns(ref theBoard, out int whiteBWPScore, out int blackBWPScore);
+                RewardPawnChains(ref theBoard, out int whiteChainScore, out int blackChainScore);
 
-                RewardPassedPawns(ref TheBoard, out int WhitePPScore, out int BlackPPScore);
-                PenaliseDoubledAndTripledPawns(ref TheBoard, out int WhiteDblPawnScore, out int BlackDblPawnScore);
-                PenaliseIsolatedPawns(ref TheBoard, out int WhiteIsoPawnScore, out int BlackIsoPawnScore);
+                RewardPassedPawns(ref theBoard, out int whitePPScore, out int blackPPScore);
+                PenaliseDoubledAndTripledPawns(ref theBoard, out int whiteDblPawnScore, out int blackDblPawnScore);
+                PenaliseIsolatedPawns(ref theBoard, out int whiteIsoPawnScore, out int blackIsoPawnScore);
 
-                TT.AddPawnStructureToTransTable(TheBoard.PawnOnlyZobrist, WhitePPScore, BlackPPScore, WhiteBWPScore,
-                    BlackBWPScore, WhiteChainScore, BlackChainScore, WhiteDblPawnScore, BlackDblPawnScore, WhiteIsoPawnScore, BlackIsoPawnScore);
+                tt.AddPawnStructureToTransTable(theBoard.PawnOnlyZobrist, whitePPScore, blackPPScore, whiteBWPScore,
+                    blackBWPScore, whiteChainScore, blackChainScore, whiteDblPawnScore, blackDblPawnScore, 
+                    whiteIsoPawnScore, blackIsoPawnScore);
 
-                WhiteOpeningScore += WhiteBWPScore;
-                WhiteOpeningScore += WhiteChainScore;
-                WhiteEndgameScore += WhitePPScore;
-                WhiteEndgameScore += WhiteDblPawnScore;
-                WhiteEndgameScore += WhiteIsoPawnScore;
+                whiteOpeningScore += whiteBWPScore;
+                whiteOpeningScore += whiteChainScore;
+                whiteEndgameScore += whitePPScore;
+                whiteEndgameScore += whiteDblPawnScore;
+                whiteEndgameScore += whiteIsoPawnScore;
 
-                BlackOpeningScore += BlackBWPScore;
-                BlackOpeningScore += BlackChainScore;
-                BlackEndgameScore += BlackPPScore;
-                BlackEndgameScore += BlackDblPawnScore;
-                BlackEndgameScore += BlackIsoPawnScore;
+                blackOpeningScore += blackBWPScore;
+                blackOpeningScore += blackChainScore;
+                blackEndgameScore += blackPPScore;
+                blackEndgameScore += blackDblPawnScore;
+                blackEndgameScore += blackIsoPawnScore;
 
             }
 
-            int WhiteScore = ((WhiteOpeningScore * (256 - Phase)) + (WhiteEndgameScore * Phase)) / 256;
-            int BlackScore = ((BlackOpeningScore * (256 - Phase)) + (BlackEndgameScore * Phase)) / 256;
+            int whiteScore = ((whiteOpeningScore * (256 - phase)) + (whiteEndgameScore * phase)) / 256;
+            int blackScore = ((blackOpeningScore * (256 - phase)) + (blackEndgameScore * phase)) / 256;
 
-            if (TheBoard.WhiteHasDarkSquaredBishop && TheBoard.WhiteHasLightSquaredBishop)
+            if (theBoard.WhiteHasDarkSquaredBishop && theBoard.WhiteHasLightSquaredBishop)
             {
-                WhiteScore += BISHOP_PAIR_BONUS_VALUE;
+                whiteScore += BISHOP_PAIR_BONUS_VALUE;
             }
-            if (TheBoard.BlackHasDarkSquaredBishop && TheBoard.BlackHasLightSquaredBishop)
+            if (theBoard.BlackHasDarkSquaredBishop && theBoard.BlackHasLightSquaredBishop)
             {
-                BlackScore += BISHOP_PAIR_BONUS_VALUE;
+                blackScore += BISHOP_PAIR_BONUS_VALUE;
             }
 
-            if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.WhiteRookTwoSquare != 255)
+            if (theBoard.WhiteRookOneSquare != 255 && theBoard.WhiteRookTwoSquare != 255)
             {
-                WhiteScore -= ROOK_REDUNDANCY_PENALTY;
+                whiteScore -= ROOK_REDUNDANCY_PENALTY;
             }
-            if (TheBoard.BlackRookOneSquare != 255 && TheBoard.BlackRookTwoSquare != 255)
+            if (theBoard.BlackRookOneSquare != 255 && theBoard.BlackRookTwoSquare != 255)
             {
-                BlackScore -= ROOK_REDUNDANCY_PENALTY;
-            }
-
-            if (TheBoard.WhiteKnightOneSquare != 255 && TheBoard.WhiteKnightTwoSquare != 255)
-            {
-                WhiteScore -= KNIGHT_REDUNDANCY_PENALTY;
-            }
-            if (TheBoard.BlackKnightOneSquare != 255 && TheBoard.BlackKnightTwoSquare != 255)
-            {
-                BlackScore -= KNIGHT_REDUNDANCY_PENALTY;
+                blackScore -= ROOK_REDUNDANCY_PENALTY;
             }
 
-            if (TheBoard.WhiteRookOneSquare != 255 || TheBoard.WhiteRookTwoSquare != 255)
+            if (theBoard.WhiteKnightOneSquare != 255 && theBoard.WhiteKnightTwoSquare != 255)
+            {
+                whiteScore -= KNIGHT_REDUNDANCY_PENALTY;
+            }
+            if (theBoard.BlackKnightOneSquare != 255 && theBoard.BlackKnightTwoSquare != 255)
+            {
+                blackScore -= KNIGHT_REDUNDANCY_PENALTY;
+            }
+
+            if (theBoard.WhiteRookOneSquare != 255 || theBoard.WhiteRookTwoSquare != 255)
             {
                 for (int NN = 0; NN <= 7; NN++)
                 {
-                    if (TheBoard.WhiteFilePawns[NN] == 0)
+                    if (theBoard.WhiteFilePawns[NN] == 0)
                     {
-                        if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.WhiteRookTwoSquare != 255)
+                        if (theBoard.WhiteRookOneSquare != 255 && theBoard.WhiteRookTwoSquare != 255)
                         {
-                            WhiteScore += SEMI_OPEN_FILE_TWO_ROOKS_BONUS;
+                            whiteScore += SEMI_OPEN_FILE_TWO_ROOKS_BONUS;
                         }
                         else
                         {
-                            WhiteScore += SEMI_OPEN_FILE_ONE_ROOK_BONUS;
+                            whiteScore += SEMI_OPEN_FILE_ONE_ROOK_BONUS;
                         }
                     }
                 }
             }
 
-            if (TheBoard.BlackRookOneSquare != 255 || TheBoard.BlackRookTwoSquare != 255)
+            if (theBoard.BlackRookOneSquare != 255 || theBoard.BlackRookTwoSquare != 255)
             {
                 for (int NN = 0; NN <= 7; NN++)
                 {
-                    if (TheBoard.BlackFilePawns[NN] == 0)
+                    if (theBoard.BlackFilePawns[NN] == 0)
                     {
-                        if (TheBoard.BlackRookOneSquare != 255 && TheBoard.BlackRookTwoSquare != 255)
+                        if (theBoard.BlackRookOneSquare != 255 && theBoard.BlackRookTwoSquare != 255)
                         {
-                            BlackScore += SEMI_OPEN_FILE_TWO_ROOKS_BONUS;
+                            blackScore += SEMI_OPEN_FILE_TWO_ROOKS_BONUS;
                         }
                         else
                         {
-                            BlackScore += SEMI_OPEN_FILE_ONE_ROOK_BONUS;
+                            blackScore += SEMI_OPEN_FILE_ONE_ROOK_BONUS;
                         }
                     }
                 }
             }
 
-            TT.AddScoreToTransTable(TheBoard.CurrentZobrist, WhiteScore, BlackScore);
+            tt.AddScoreToTransTable(theBoard.CurrentZobrist, whiteScore, blackScore);
 
-            if (TheBoard.OnMove == BLACK)
+            if (theBoard.OnMove == BLACK)
             {
-                BlackScore += TEMPO_BONUS;
-                return (WhiteScore - BlackScore);
+                blackScore += TEMPO_BONUS;
+                return (whiteScore - blackScore);
             }
             else
             {
-                WhiteScore += TEMPO_BONUS;
-                return (BlackScore - WhiteScore);
+                whiteScore += TEMPO_BONUS;
+                return (blackScore - whiteScore);
             }
 
         }
 
 
-        public static void PenaliseTrappedRook(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        public static void PenaliseTrappedRook(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.BlackKingSquare <= 3)
+            if (theBoard.BlackKingSquare <= 3)
             {
-                if (TheBoard.Piece[0] == ROOK && TheBoard.Color[0] == BLACK)
+                if (theBoard.Piece[0] == ROOK && theBoard.Color[0] == BLACK)
                 {
-                    if ((TheBoard.Piece[8] == PAWN && TheBoard.Color[8] == BLACK) || (TheBoard.Piece[16] == PAWN && TheBoard.Color[16] == BLACK))
+                    if ((theBoard.Piece[8] == PAWN && theBoard.Color[8] == BLACK) || (theBoard.Piece[16] == PAWN && theBoard.Color[16] == BLACK))
                     {
-                        BlackScore -= TRAPPED_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[1] == 0)
+                        blackScore -= TRAPPED_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[1] == 0)
                         {
-                            BlackScore += TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION;
+                            blackScore += TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION;
                         }
-                        if (TheBoard.BlackFilePawns[2] == 0)
+                        if (theBoard.BlackFilePawns[2] == 0)
                         {
-                            BlackScore += TRAPPED_ROOK_PENALTY_C_PAWN_MITIGATION;
-                        }
-                    }
-                }
-            }
-
-            if (TheBoard.BlackKingSquare == 5 || TheBoard.BlackKingSquare == 6)
-            {
-                if (TheBoard.Piece[7] == ROOK && TheBoard.Color[7] == BLACK)
-                {
-                    if ((TheBoard.Piece[15] == PAWN && TheBoard.Color[15] == BLACK) || (TheBoard.Piece[23] == PAWN && TheBoard.Color[23] == BLACK))
-                    {
-                        BlackScore -= TRAPPED_ROOK_PENALTY;
-                    }
-                }
-            }
-
-            if (TheBoard.WhiteKingSquare >= 57 && TheBoard.WhiteKingSquare <= 59)
-            {
-                if (TheBoard.Piece[56] == ROOK && TheBoard.Color[56] == WHITE)
-                {
-                    if ((TheBoard.Piece[48] == PAWN && TheBoard.Color[48] == WHITE) || (TheBoard.Piece[40] == PAWN && TheBoard.Color[40] == WHITE))
-                    {
-                        WhiteScore -= TRAPPED_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[1] == 0)
-                        {
-                            WhiteScore += TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION;
-                        }
-                        if (TheBoard.WhiteFilePawns[2] == 0)
-                        {
-                            WhiteScore += TRAPPED_ROOK_PENALTY_C_PAWN_MITIGATION;
+                            blackScore += TRAPPED_ROOK_PENALTY_C_PAWN_MITIGATION;
                         }
                     }
                 }
             }
 
-            if (TheBoard.WhiteKingSquare == 61 || TheBoard.WhiteKingSquare == 62)
+            if (theBoard.BlackKingSquare == 5 || theBoard.BlackKingSquare == 6)
             {
-                if (TheBoard.Piece[63] == ROOK && TheBoard.Color[63] == WHITE)
+                if (theBoard.Piece[7] == ROOK && theBoard.Color[7] == BLACK)
                 {
-                    if ((TheBoard.Piece[55] == PAWN && TheBoard.Color[55] == WHITE) || (TheBoard.Piece[47] == PAWN && TheBoard.Color[47] == WHITE))
+                    if ((theBoard.Piece[15] == PAWN && theBoard.Color[15] == BLACK) || (theBoard.Piece[23] == PAWN && theBoard.Color[23] == BLACK))
                     {
-                        WhiteScore -= TRAPPED_ROOK_PENALTY;
+                        blackScore -= TRAPPED_ROOK_PENALTY;
+                    }
+                }
+            }
+
+            if (theBoard.WhiteKingSquare >= 57 && theBoard.WhiteKingSquare <= 59)
+            {
+                if (theBoard.Piece[56] == ROOK && theBoard.Color[56] == WHITE)
+                {
+                    if ((theBoard.Piece[48] == PAWN && theBoard.Color[48] == WHITE) || (theBoard.Piece[40] == PAWN && theBoard.Color[40] == WHITE))
+                    {
+                        whiteScore -= TRAPPED_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[1] == 0)
+                        {
+                            whiteScore += TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION;
+                        }
+                        if (theBoard.WhiteFilePawns[2] == 0)
+                        {
+                            whiteScore += TRAPPED_ROOK_PENALTY_C_PAWN_MITIGATION;
+                        }
+                    }
+                }
+            }
+
+            if (theBoard.WhiteKingSquare == 61 || theBoard.WhiteKingSquare == 62)
+            {
+                if (theBoard.Piece[63] == ROOK && theBoard.Color[63] == WHITE)
+                {
+                    if ((theBoard.Piece[55] == PAWN && theBoard.Color[55] == WHITE) || (theBoard.Piece[47] == PAWN && theBoard.Color[47] == WHITE))
+                    {
+                        whiteScore -= TRAPPED_ROOK_PENALTY;
                     }
                 }
             }
@@ -280,27 +281,27 @@ namespace Lisa
         }
 
 
-        public static void RewardBlockadingDangerousPawns(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        public static void RewardBlockadingDangerousPawns(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
             for (int NN = 32; NN <= 39; NN++)
             {
-                if (TheBoard.Piece[NN] == PAWN && TheBoard.Color[NN] == BLACK)
+                if (theBoard.Piece[NN] == PAWN && theBoard.Color[NN] == BLACK)
                 {
-                    if ((TheBoard.Piece[NN + 8] == BISHOP || TheBoard.Piece[NN + 8] == KNIGHT) && TheBoard.Color[NN + 8] == WHITE)
+                    if ((theBoard.Piece[NN + 8] == BISHOP || theBoard.Piece[NN + 8] == KNIGHT) && theBoard.Color[NN + 8] == WHITE)
                     {
-                        WhiteScore += BLOCKADING_PASSED_PAWN_BONUS;
+                        whiteScore += BLOCKADING_PASSED_PAWN_BONUS;
                     }
                 }
             }
 
             for (int NN = 24; NN <= 31; NN++)
             {
-                if (TheBoard.Piece[NN] == PAWN && TheBoard.Color[NN] == WHITE)
+                if (theBoard.Piece[NN] == PAWN && theBoard.Color[NN] == WHITE)
                 {
-                    if ((TheBoard.Piece[NN - 8] == BISHOP || TheBoard.Piece[NN - 8] == KNIGHT) && TheBoard.Color[NN - 8] == BLACK)
+                    if ((theBoard.Piece[NN - 8] == BISHOP || theBoard.Piece[NN - 8] == KNIGHT) && theBoard.Color[NN - 8] == BLACK)
                     {
-                        BlackScore += BLOCKADING_PASSED_PAWN_BONUS;
+                        blackScore += BLOCKADING_PASSED_PAWN_BONUS;
                     }
                 }
             }
@@ -308,102 +309,102 @@ namespace Lisa
         }
 
 
-        public static void RewardKnightOutpost(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        public static void RewardKnightOutpost(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.Piece[26] == KNIGHT && TheBoard.Color[26] == WHITE)
+            if (theBoard.Piece[26] == KNIGHT && theBoard.Color[26] == WHITE)
             {
-                if (TheBoard.Piece[33] == PAWN && TheBoard.Color[33] == WHITE)
+                if (theBoard.Piece[33] == PAWN && theBoard.Color[33] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
-                if (TheBoard.Piece[35] == PAWN && TheBoard.Color[35] == WHITE)
+                if (theBoard.Piece[35] == PAWN && theBoard.Color[35] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
             }
 
-            if (TheBoard.Piece[27] == KNIGHT && TheBoard.Color[27] == WHITE)
+            if (theBoard.Piece[27] == KNIGHT && theBoard.Color[27] == WHITE)
             {
-                if (TheBoard.Piece[34] == PAWN && TheBoard.Color[34] == WHITE)
+                if (theBoard.Piece[34] == PAWN && theBoard.Color[34] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
-                if (TheBoard.Piece[36] == PAWN && TheBoard.Color[36] == WHITE)
+                if (theBoard.Piece[36] == PAWN && theBoard.Color[36] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
             }
 
-            if (TheBoard.Piece[28] == KNIGHT && TheBoard.Color[28] == WHITE)
+            if (theBoard.Piece[28] == KNIGHT && theBoard.Color[28] == WHITE)
             {
-                if (TheBoard.Piece[35] == PAWN && TheBoard.Color[35] == WHITE)
+                if (theBoard.Piece[35] == PAWN && theBoard.Color[35] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
-                if (TheBoard.Piece[37] == PAWN && TheBoard.Color[37] == WHITE)
+                if (theBoard.Piece[37] == PAWN && theBoard.Color[37] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
             }
 
-            if (TheBoard.Piece[29] == KNIGHT && TheBoard.Color[29] == WHITE)
+            if (theBoard.Piece[29] == KNIGHT && theBoard.Color[29] == WHITE)
             {
-                if (TheBoard.Piece[36] == PAWN && TheBoard.Color[36] == WHITE)
+                if (theBoard.Piece[36] == PAWN && theBoard.Color[36] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
-                if (TheBoard.Piece[38] == PAWN && TheBoard.Color[38] == WHITE)
+                if (theBoard.Piece[38] == PAWN && theBoard.Color[38] == WHITE)
                 {
-                    WhiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    whiteScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
             }
 
-            if (TheBoard.Piece[34] == KNIGHT && TheBoard.Color[34] == BLACK)
+            if (theBoard.Piece[34] == KNIGHT && theBoard.Color[34] == BLACK)
             {
-                if (TheBoard.Piece[27] == PAWN && TheBoard.Color[27] == BLACK)
+                if (theBoard.Piece[27] == PAWN && theBoard.Color[27] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
-                if (TheBoard.Piece[25] == PAWN && TheBoard.Color[25] == BLACK)
+                if (theBoard.Piece[25] == PAWN && theBoard.Color[25] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
             }
 
-            if (TheBoard.Piece[35] == KNIGHT && TheBoard.Color[35] == BLACK)
+            if (theBoard.Piece[35] == KNIGHT && theBoard.Color[35] == BLACK)
             {
-                if (TheBoard.Piece[28] == PAWN && TheBoard.Color[28] == BLACK)
+                if (theBoard.Piece[28] == PAWN && theBoard.Color[28] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
-                if (TheBoard.Piece[26] == PAWN && TheBoard.Color[26] == BLACK)
+                if (theBoard.Piece[26] == PAWN && theBoard.Color[26] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
             }
 
-            if (TheBoard.Piece[36] == KNIGHT && TheBoard.Color[36] == BLACK)
+            if (theBoard.Piece[36] == KNIGHT && theBoard.Color[36] == BLACK)
             {
-                if (TheBoard.Piece[29] == PAWN && TheBoard.Color[29] == BLACK)
+                if (theBoard.Piece[29] == PAWN && theBoard.Color[29] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
-                if (TheBoard.Piece[27] == PAWN && TheBoard.Color[27] == BLACK)
+                if (theBoard.Piece[27] == PAWN && theBoard.Color[27] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MAJOR_BONUS;
                 }
             }
 
-            if (TheBoard.Piece[37] == KNIGHT && TheBoard.Color[37] == BLACK)
+            if (theBoard.Piece[37] == KNIGHT && theBoard.Color[37] == BLACK)
             {
-                if (TheBoard.Piece[30] == PAWN && TheBoard.Color[30] == BLACK)
+                if (theBoard.Piece[30] == PAWN && theBoard.Color[30] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
-                if (TheBoard.Piece[28] == PAWN && TheBoard.Color[28] == BLACK)
+                if (theBoard.Piece[28] == PAWN && theBoard.Color[28] == BLACK)
                 {
-                    BlackScore += KNIGHT_OUTPOST_MINOR_BONUS;
+                    blackScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
             }
 
@@ -411,46 +412,46 @@ namespace Lisa
         }
 
 
-        public static void RewardPawnChains(ref Board TheBoard, out int WhiteChainScore, out int BlackChainScore)
+        public static void RewardPawnChains(ref Board theBoard, out int WhiteChainScore, out int BlackChainScore)
         {
 
             WhiteChainScore = 0; BlackChainScore = 0;
             for (int PP = 0; PP <= 7; PP++)
             {
-                if (TheBoard.WhitePawnSquares[PP] != -1)
+                if (theBoard.WhitePawnSquares[PP] != -1)
                 {
-                    if (TheBoard.WhitePawnSquares[PP] < 48)
+                    if (theBoard.WhitePawnSquares[PP] < 48)
                     {
-                        if (TheBoard.WhitePawnSquares[PP] % 8 != 0)
+                        if (theBoard.WhitePawnSquares[PP] % 8 != 0)
                         {
-                            if (TheBoard.Color[TheBoard.WhitePawnSquares[PP] + 7] == WHITE && TheBoard.Piece[TheBoard.WhitePawnSquares[PP] + 7] == PAWN)
+                            if (theBoard.Color[theBoard.WhitePawnSquares[PP] + 7] == WHITE && theBoard.Piece[theBoard.WhitePawnSquares[PP] + 7] == PAWN)
                             {
                                 WhiteChainScore += PAWN_CHAIN_BONUS;
                             }
                         }
-                        if (TheBoard.WhitePawnSquares[PP] % 8 != 7)
+                        if (theBoard.WhitePawnSquares[PP] % 8 != 7)
                         {
-                            if (TheBoard.Color[TheBoard.WhitePawnSquares[PP] + 9] == WHITE && TheBoard.Piece[TheBoard.WhitePawnSquares[PP] + 9] == PAWN)
+                            if (theBoard.Color[theBoard.WhitePawnSquares[PP] + 9] == WHITE && theBoard.Piece[theBoard.WhitePawnSquares[PP] + 9] == PAWN)
                             {
                                 WhiteChainScore += PAWN_CHAIN_BONUS;
                             }
                         }
                     }
                 }
-                if (TheBoard.BlackPawnSquares[PP] != -1)
+                if (theBoard.BlackPawnSquares[PP] != -1)
                 {
-                    if (TheBoard.BlackPawnSquares[PP] > 15)
+                    if (theBoard.BlackPawnSquares[PP] > 15)
                     {
-                        if (TheBoard.BlackPawnSquares[PP] % 8 != 0)
+                        if (theBoard.BlackPawnSquares[PP] % 8 != 0)
                         {
-                            if (TheBoard.Color[TheBoard.BlackPawnSquares[PP] - 9] == BLACK && TheBoard.Piece[TheBoard.BlackPawnSquares[PP] - 9] == PAWN)
+                            if (theBoard.Color[theBoard.BlackPawnSquares[PP] - 9] == BLACK && theBoard.Piece[theBoard.BlackPawnSquares[PP] - 9] == PAWN)
                             {
                                 BlackChainScore += PAWN_CHAIN_BONUS;
                             }
                         }
-                        if (TheBoard.BlackPawnSquares[PP] % 8 != 7)
+                        if (theBoard.BlackPawnSquares[PP] % 8 != 7)
                         {
-                            if (TheBoard.Color[TheBoard.BlackPawnSquares[PP] - 7] == BLACK && TheBoard.Piece[TheBoard.BlackPawnSquares[PP] - 7] == PAWN)
+                            if (theBoard.Color[theBoard.BlackPawnSquares[PP] - 7] == BLACK && theBoard.Piece[theBoard.BlackPawnSquares[PP] - 7] == PAWN)
                             {
                                 BlackChainScore += PAWN_CHAIN_BONUS;
                             }
@@ -462,458 +463,458 @@ namespace Lisa
         }
 
 
-        public static void RewardOpeningMobility(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        public static void RewardOpeningMobility(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            Move[] WhiteMoves = TheBoard.GeneratePieceMovesWithoutKing(WHITE);
-            Move[] BlackMoves = TheBoard.GeneratePieceMovesWithoutKing(BLACK);
+            Move[] WhiteMoves = theBoard.GeneratePieceMovesWithoutKing(WHITE);
+            Move[] BlackMoves = theBoard.GeneratePieceMovesWithoutKing(BLACK);
 
-            WhiteScore += (WhiteMoves.Length * OPENING_MOBILITY_PER_MOVE_BONUS);
-            BlackScore += (BlackMoves.Length * OPENING_MOBILITY_PER_MOVE_BONUS);
+            whiteScore += (WhiteMoves.Length * OPENING_MOBILITY_PER_MOVE_BONUS);
+            blackScore += (BlackMoves.Length * OPENING_MOBILITY_PER_MOVE_BONUS);
 
-            if (TheBoard.WhiteKnightOneSquare != 255)
+            if (theBoard.WhiteKnightOneSquare != 255)
             {
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][35])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][35])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][36])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][36])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][27])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][27])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][28])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][28])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
 
-                if (TheBoard.WhiteKnightOneSquare % 8 == 0)
+                if (theBoard.WhiteKnightOneSquare % 8 == 0)
                 {
-                    WhiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
-                if (TheBoard.WhiteKnightOneSquare % 8 == 7)
+                if (theBoard.WhiteKnightOneSquare % 8 == 7)
                 {
-                    WhiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
 
 
             }
 
-            if (TheBoard.WhiteKnightTwoSquare != 255)
+            if (theBoard.WhiteKnightTwoSquare != 255)
             {
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][35])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][35])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][36])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][36])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][27])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][27])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][28])
+                if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][28])
                 {
-                    WhiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
 
-                if (TheBoard.WhiteKnightTwoSquare % 8 == 0)
+                if (theBoard.WhiteKnightTwoSquare % 8 == 0)
                 {
-                    WhiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
-                if (TheBoard.WhiteKnightTwoSquare % 8 == 7)
+                if (theBoard.WhiteKnightTwoSquare % 8 == 7)
                 {
-                    WhiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
 
             }
 
-            if (TheBoard.BlackKnightOneSquare != 255)
+            if (theBoard.BlackKnightOneSquare != 255)
             {
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][35])
+                if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][35])
                 {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][36])
+                if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][36])
                 {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][27])
+                if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][27])
                 {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][28])
+                if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][28])
                 {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
-                }
-
-                if (TheBoard.BlackKnightOneSquare % 8 == 0)
-                {
-                    BlackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
-                }
-                if (TheBoard.BlackKnightOneSquare % 8 == 7)
-                {
-                    BlackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
 
-            }
-
-            if (TheBoard.BlackKnightTwoSquare != 255)
-            {
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][35])
+                if (theBoard.BlackKnightOneSquare % 8 == 0)
                 {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][36])
+                if (theBoard.BlackKnightOneSquare % 8 == 7)
                 {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
-                }
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][27])
-                {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
-                }
-                if (TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][28])
-                {
-                    BlackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
-                }
-
-                if (TheBoard.BlackKnightTwoSquare % 8 == 0)
-                {
-                    BlackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
-                }
-                if (TheBoard.BlackKnightTwoSquare % 8 == 7)
-                {
-                    BlackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
 
             }
 
-            if (TheBoard.WhitePressureMap[27] > TheBoard.BlackPressureMap[27])
+            if (theBoard.BlackKnightTwoSquare != 255)
             {
-                WhiteScore += CENTRAL_PRESSURE_BONUS;
-            }
-            else if (TheBoard.BlackPressureMap[27] > TheBoard.WhitePressureMap[27])
-            {
-                BlackScore += CENTRAL_PRESSURE_BONUS;
+                if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][35])
+                {
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                }
+                if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][36])
+                {
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                }
+                if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][27])
+                {
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                }
+                if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][28])
+                {
+                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                }
+
+                if (theBoard.BlackKnightTwoSquare % 8 == 0)
+                {
+                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                }
+                if (theBoard.BlackKnightTwoSquare % 8 == 7)
+                {
+                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                }
+
             }
 
-            if (TheBoard.WhitePressureMap[28] > TheBoard.BlackPressureMap[28])
+            if (theBoard.WhitePressureMap[27] > theBoard.BlackPressureMap[27])
             {
-                WhiteScore += CENTRAL_PRESSURE_BONUS;
+                whiteScore += CENTRAL_PRESSURE_BONUS;
             }
-            else if (TheBoard.BlackPressureMap[28] > TheBoard.WhitePressureMap[28])
+            else if (theBoard.BlackPressureMap[27] > theBoard.WhitePressureMap[27])
             {
-                BlackScore += CENTRAL_PRESSURE_BONUS;
-            }
-
-            if (TheBoard.WhitePressureMap[35] > TheBoard.BlackPressureMap[35])
-            {
-                WhiteScore += CENTRAL_PRESSURE_BONUS;
-            }
-            else if (TheBoard.BlackPressureMap[35] > TheBoard.WhitePressureMap[35])
-            {
-                BlackScore += CENTRAL_PRESSURE_BONUS;
+                blackScore += CENTRAL_PRESSURE_BONUS;
             }
 
-            if (TheBoard.WhitePressureMap[36] > TheBoard.BlackPressureMap[36])
+            if (theBoard.WhitePressureMap[28] > theBoard.BlackPressureMap[28])
             {
-                WhiteScore += CENTRAL_PRESSURE_BONUS;
+                whiteScore += CENTRAL_PRESSURE_BONUS;
             }
-            else if (TheBoard.BlackPressureMap[36] > TheBoard.WhitePressureMap[36])
+            else if (theBoard.BlackPressureMap[28] > theBoard.WhitePressureMap[28])
             {
-                BlackScore += CENTRAL_PRESSURE_BONUS;
+                blackScore += CENTRAL_PRESSURE_BONUS;
+            }
+
+            if (theBoard.WhitePressureMap[35] > theBoard.BlackPressureMap[35])
+            {
+                whiteScore += CENTRAL_PRESSURE_BONUS;
+            }
+            else if (theBoard.BlackPressureMap[35] > theBoard.WhitePressureMap[35])
+            {
+                blackScore += CENTRAL_PRESSURE_BONUS;
+            }
+
+            if (theBoard.WhitePressureMap[36] > theBoard.BlackPressureMap[36])
+            {
+                whiteScore += CENTRAL_PRESSURE_BONUS;
+            }
+            else if (theBoard.BlackPressureMap[36] > theBoard.WhitePressureMap[36])
+            {
+                blackScore += CENTRAL_PRESSURE_BONUS;
             }
 
 
         }
 
 
-        public static void PenaliseBackwardsPawns(ref Board TheBoard, out int WhiteBWPScore, out int BlackBWPScore)
+        public static void PenaliseBackwardsPawns(ref Board theBoard, out int whiteBWPScore, out int blackBWPScore)
         {
 
-            WhiteBWPScore = 0; BlackBWPScore = 0;
+            whiteBWPScore = 0; blackBWPScore = 0;
 
             //white
-            if (TheBoard.Color[48] == WHITE && TheBoard.Piece[48] == PAWN)
+            if (theBoard.Color[48] == WHITE && theBoard.Piece[48] == PAWN)
             {
                 //a pawn in place
-                if (TheBoard.Color[49] == EMPTY || TheBoard.Piece[49] != PAWN)
+                if (theBoard.Color[49] == EMPTY || theBoard.Piece[49] != PAWN)
                 {
-                    if (TheBoard.Color[41] == EMPTY || TheBoard.Piece[41] != PAWN)
+                    if (theBoard.Color[41] == EMPTY || theBoard.Piece[41] != PAWN)
                     {
                         //white a pawn backward
-                        WhiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
+                        whiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                     }
                 }
             }
 
-            if (TheBoard.Color[49] == WHITE && TheBoard.Piece[49] == PAWN)
+            if (theBoard.Color[49] == WHITE && theBoard.Piece[49] == PAWN)
             {
                 //b pawn in place
-                if (TheBoard.Color[50] == EMPTY || TheBoard.Piece[50] != PAWN)
+                if (theBoard.Color[50] == EMPTY || theBoard.Piece[50] != PAWN)
                 {
-                    if (TheBoard.Color[42] == EMPTY || TheBoard.Piece[42] != PAWN)
+                    if (theBoard.Color[42] == EMPTY || theBoard.Piece[42] != PAWN)
                     {
-                        if (TheBoard.Color[48] == EMPTY || TheBoard.Piece[48] != PAWN)
+                        if (theBoard.Color[48] == EMPTY || theBoard.Piece[48] != PAWN)
                         {
-                            if (TheBoard.Color[40] == EMPTY || TheBoard.Piece[40] != PAWN)
+                            if (theBoard.Color[40] == EMPTY || theBoard.Piece[40] != PAWN)
                             {
                                 //white b pawn backward
-                                WhiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
+                                whiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[50] == WHITE && TheBoard.Piece[50] == PAWN)
+            if (theBoard.Color[50] == WHITE && theBoard.Piece[50] == PAWN)
             {
                 //c pawn in place
-                if (TheBoard.Color[51] == EMPTY || TheBoard.Piece[51] != PAWN)
+                if (theBoard.Color[51] == EMPTY || theBoard.Piece[51] != PAWN)
                 {
-                    if (TheBoard.Color[43] == EMPTY || TheBoard.Piece[43] != PAWN)
+                    if (theBoard.Color[43] == EMPTY || theBoard.Piece[43] != PAWN)
                     {
-                        if (TheBoard.Color[49] == EMPTY || TheBoard.Piece[49] != PAWN)
+                        if (theBoard.Color[49] == EMPTY || theBoard.Piece[49] != PAWN)
                         {
-                            if (TheBoard.Color[41] == EMPTY || TheBoard.Piece[41] != PAWN)
+                            if (theBoard.Color[41] == EMPTY || theBoard.Piece[41] != PAWN)
                             {
                                 //white c pawn backward
-                                WhiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                whiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[51] == WHITE && TheBoard.Piece[51] == PAWN)
+            if (theBoard.Color[51] == WHITE && theBoard.Piece[51] == PAWN)
             {
                 //d pawn in place
-                if (TheBoard.Color[52] == EMPTY || TheBoard.Piece[52] != PAWN)
+                if (theBoard.Color[52] == EMPTY || theBoard.Piece[52] != PAWN)
                 {
-                    if (TheBoard.Color[44] == EMPTY || TheBoard.Piece[44] != PAWN)
+                    if (theBoard.Color[44] == EMPTY || theBoard.Piece[44] != PAWN)
                     {
-                        if (TheBoard.Color[50] == EMPTY || TheBoard.Piece[50] != PAWN)
+                        if (theBoard.Color[50] == EMPTY || theBoard.Piece[50] != PAWN)
                         {
-                            if (TheBoard.Color[42] == EMPTY || TheBoard.Piece[42] != PAWN)
+                            if (theBoard.Color[42] == EMPTY || theBoard.Piece[42] != PAWN)
                             {
                                 //white d pawn backward
-                                WhiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                whiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[52] == WHITE && TheBoard.Piece[52] == PAWN)
+            if (theBoard.Color[52] == WHITE && theBoard.Piece[52] == PAWN)
             {
                 //e pawn in place
-                if (TheBoard.Color[53] == EMPTY || TheBoard.Piece[53] != PAWN)
+                if (theBoard.Color[53] == EMPTY || theBoard.Piece[53] != PAWN)
                 {
-                    if (TheBoard.Color[45] == EMPTY || TheBoard.Piece[45] != PAWN)
+                    if (theBoard.Color[45] == EMPTY || theBoard.Piece[45] != PAWN)
                     {
-                        if (TheBoard.Color[51] == EMPTY || TheBoard.Piece[51] != PAWN)
+                        if (theBoard.Color[51] == EMPTY || theBoard.Piece[51] != PAWN)
                         {
-                            if (TheBoard.Color[43] == EMPTY || TheBoard.Piece[43] != PAWN)
+                            if (theBoard.Color[43] == EMPTY || theBoard.Piece[43] != PAWN)
                             {
                                 //white e pawn backward
-                                WhiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                whiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[53] == WHITE && TheBoard.Piece[53] == PAWN)
+            if (theBoard.Color[53] == WHITE && theBoard.Piece[53] == PAWN)
             {
                 //f pawn in place
-                if (TheBoard.Color[54] == EMPTY || TheBoard.Piece[54] != PAWN)
+                if (theBoard.Color[54] == EMPTY || theBoard.Piece[54] != PAWN)
                 {
-                    if (TheBoard.Color[46] == EMPTY || TheBoard.Piece[46] != PAWN)
+                    if (theBoard.Color[46] == EMPTY || theBoard.Piece[46] != PAWN)
                     {
-                        if (TheBoard.Color[52] == EMPTY || TheBoard.Piece[52] != PAWN)
+                        if (theBoard.Color[52] == EMPTY || theBoard.Piece[52] != PAWN)
                         {
-                            if (TheBoard.Color[44] == EMPTY || TheBoard.Piece[44] != PAWN)
+                            if (theBoard.Color[44] == EMPTY || theBoard.Piece[44] != PAWN)
                             {
                                 //white f pawn backward
-                                WhiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                whiteBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[54] == WHITE && TheBoard.Piece[54] == PAWN)
+            if (theBoard.Color[54] == WHITE && theBoard.Piece[54] == PAWN)
             {
                 //g pawn in place
-                if (TheBoard.Color[55] == EMPTY || TheBoard.Piece[55] != PAWN)
+                if (theBoard.Color[55] == EMPTY || theBoard.Piece[55] != PAWN)
                 {
-                    if (TheBoard.Color[47] == EMPTY || TheBoard.Piece[47] != PAWN)
+                    if (theBoard.Color[47] == EMPTY || theBoard.Piece[47] != PAWN)
                     {
-                        if (TheBoard.Color[53] == EMPTY || TheBoard.Piece[53] != PAWN)
+                        if (theBoard.Color[53] == EMPTY || theBoard.Piece[53] != PAWN)
                         {
-                            if (TheBoard.Color[45] == EMPTY || TheBoard.Piece[45] != PAWN)
+                            if (theBoard.Color[45] == EMPTY || theBoard.Piece[45] != PAWN)
                             {
                                 //white g pawn backward
-                                WhiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
+                                whiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[55] == WHITE && TheBoard.Piece[55] == PAWN)
+            if (theBoard.Color[55] == WHITE && theBoard.Piece[55] == PAWN)
             {
                 //h pawn in place
-                if (TheBoard.Color[54] == EMPTY || TheBoard.Piece[54] != PAWN)
+                if (theBoard.Color[54] == EMPTY || theBoard.Piece[54] != PAWN)
                 {
-                    if (TheBoard.Color[46] == EMPTY || TheBoard.Piece[46] != PAWN)
+                    if (theBoard.Color[46] == EMPTY || theBoard.Piece[46] != PAWN)
                     {
                         //white h pawn backward
-                        WhiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
+                        whiteBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                     }
                 }
             }
 
             //black
-            if (TheBoard.Color[8] == BLACK && TheBoard.Piece[8] == PAWN)
+            if (theBoard.Color[8] == BLACK && theBoard.Piece[8] == PAWN)
             {
-                if (TheBoard.Color[9] == EMPTY || TheBoard.Piece[9] != PAWN)
+                if (theBoard.Color[9] == EMPTY || theBoard.Piece[9] != PAWN)
                 {
-                    if (TheBoard.Color[17] == EMPTY || TheBoard.Piece[17] != PAWN)
+                    if (theBoard.Color[17] == EMPTY || theBoard.Piece[17] != PAWN)
                     {
                         //black a pawn backward
-                        BlackBWPScore += FLANK_BACKWARD_PAWN_PENALTY;
+                        blackBWPScore += FLANK_BACKWARD_PAWN_PENALTY;
                     }
                 }
             }
 
-            if (TheBoard.Color[9] == BLACK && TheBoard.Piece[9] == PAWN)
+            if (theBoard.Color[9] == BLACK && theBoard.Piece[9] == PAWN)
             {
                 //b pawn in place
-                if (TheBoard.Color[10] == EMPTY || TheBoard.Piece[10] != PAWN)
+                if (theBoard.Color[10] == EMPTY || theBoard.Piece[10] != PAWN)
                 {
-                    if (TheBoard.Color[18] == EMPTY || TheBoard.Piece[18] != PAWN)
+                    if (theBoard.Color[18] == EMPTY || theBoard.Piece[18] != PAWN)
                     {
-                        if (TheBoard.Color[8] == EMPTY || TheBoard.Piece[8] != PAWN)
+                        if (theBoard.Color[8] == EMPTY || theBoard.Piece[8] != PAWN)
                         {
-                            if (TheBoard.Color[16] == EMPTY || TheBoard.Piece[16] != PAWN)
+                            if (theBoard.Color[16] == EMPTY || theBoard.Piece[16] != PAWN)
                             {
                                 //black b pawn backward
-                                BlackBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
+                                blackBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[10] == BLACK && TheBoard.Piece[10] == PAWN)
+            if (theBoard.Color[10] == BLACK && theBoard.Piece[10] == PAWN)
             {
                 //c pawn in place
-                if (TheBoard.Color[11] == EMPTY || TheBoard.Piece[11] != PAWN)
+                if (theBoard.Color[11] == EMPTY || theBoard.Piece[11] != PAWN)
                 {
-                    if (TheBoard.Color[19] == EMPTY || TheBoard.Piece[19] != PAWN)
+                    if (theBoard.Color[19] == EMPTY || theBoard.Piece[19] != PAWN)
                     {
-                        if (TheBoard.Color[9] == EMPTY || TheBoard.Piece[9] != PAWN)
+                        if (theBoard.Color[9] == EMPTY || theBoard.Piece[9] != PAWN)
                         {
-                            if (TheBoard.Color[17] == EMPTY || TheBoard.Piece[17] != PAWN)
+                            if (theBoard.Color[17] == EMPTY || theBoard.Piece[17] != PAWN)
                             {
                                 //black c pawn backward
-                                BlackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                blackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[11] == BLACK && TheBoard.Piece[11] == PAWN)
+            if (theBoard.Color[11] == BLACK && theBoard.Piece[11] == PAWN)
             {
                 //d pawn in place
-                if (TheBoard.Color[12] == EMPTY || TheBoard.Piece[12] != PAWN)
+                if (theBoard.Color[12] == EMPTY || theBoard.Piece[12] != PAWN)
                 {
-                    if (TheBoard.Color[20] == EMPTY || TheBoard.Piece[20] != PAWN)
+                    if (theBoard.Color[20] == EMPTY || theBoard.Piece[20] != PAWN)
                     {
-                        if (TheBoard.Color[10] == EMPTY || TheBoard.Piece[10] != PAWN)
+                        if (theBoard.Color[10] == EMPTY || theBoard.Piece[10] != PAWN)
                         {
-                            if (TheBoard.Color[18] == EMPTY || TheBoard.Piece[18] != PAWN)
+                            if (theBoard.Color[18] == EMPTY || theBoard.Piece[18] != PAWN)
                             {
                                 //black d pawn backward
-                                BlackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                blackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[12] == BLACK && TheBoard.Piece[12] == PAWN)
+            if (theBoard.Color[12] == BLACK && theBoard.Piece[12] == PAWN)
             {
                 //e pawn in place
-                if (TheBoard.Color[13] == EMPTY || TheBoard.Piece[13] != PAWN)
+                if (theBoard.Color[13] == EMPTY || theBoard.Piece[13] != PAWN)
                 {
-                    if (TheBoard.Color[21] == EMPTY || TheBoard.Piece[21] != PAWN)
+                    if (theBoard.Color[21] == EMPTY || theBoard.Piece[21] != PAWN)
                     {
-                        if (TheBoard.Color[11] == EMPTY || TheBoard.Piece[11] != PAWN)
+                        if (theBoard.Color[11] == EMPTY || theBoard.Piece[11] != PAWN)
                         {
-                            if (TheBoard.Color[19] == EMPTY || TheBoard.Piece[19] != PAWN)
+                            if (theBoard.Color[19] == EMPTY || theBoard.Piece[19] != PAWN)
                             {
                                 //black e pawn backward
-                                BlackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                blackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[13] == BLACK && TheBoard.Piece[13] == PAWN)
+            if (theBoard.Color[13] == BLACK && theBoard.Piece[13] == PAWN)
             {
                 //f pawn in place
-                if (TheBoard.Color[14] == EMPTY || TheBoard.Piece[14] != PAWN)
+                if (theBoard.Color[14] == EMPTY || theBoard.Piece[14] != PAWN)
                 {
-                    if (TheBoard.Color[22] == EMPTY || TheBoard.Piece[22] != PAWN)
+                    if (theBoard.Color[22] == EMPTY || theBoard.Piece[22] != PAWN)
                     {
-                        if (TheBoard.Color[12] == EMPTY || TheBoard.Piece[12] != PAWN)
+                        if (theBoard.Color[12] == EMPTY || theBoard.Piece[12] != PAWN)
                         {
-                            if (TheBoard.Color[20] == EMPTY || TheBoard.Piece[20] != PAWN)
+                            if (theBoard.Color[20] == EMPTY || theBoard.Piece[20] != PAWN)
                             {
                                 //black f pawn backward
-                                BlackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
+                                blackBWPScore -= CENTER_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[14] == BLACK && TheBoard.Piece[14] == PAWN)
+            if (theBoard.Color[14] == BLACK && theBoard.Piece[14] == PAWN)
             {
                 //g pawn in place
-                if (TheBoard.Color[15] == EMPTY || TheBoard.Piece[15] != PAWN)
+                if (theBoard.Color[15] == EMPTY || theBoard.Piece[15] != PAWN)
                 {
-                    if (TheBoard.Color[23] == EMPTY || TheBoard.Piece[23] != PAWN)
+                    if (theBoard.Color[23] == EMPTY || theBoard.Piece[23] != PAWN)
                     {
-                        if (TheBoard.Color[13] == EMPTY || TheBoard.Piece[13] != PAWN)
+                        if (theBoard.Color[13] == EMPTY || theBoard.Piece[13] != PAWN)
                         {
-                            if (TheBoard.Color[21] == EMPTY || TheBoard.Piece[21] != PAWN)
+                            if (theBoard.Color[21] == EMPTY || theBoard.Piece[21] != PAWN)
                             {
                                 //black g pawn backward
-                                BlackBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
+                                blackBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                             }
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[15] == BLACK && TheBoard.Piece[15] == PAWN)
+            if (theBoard.Color[15] == BLACK && theBoard.Piece[15] == PAWN)
             {
                 //h pawn in place
-                if (TheBoard.Color[14] == EMPTY || TheBoard.Piece[14] != PAWN)
+                if (theBoard.Color[14] == EMPTY || theBoard.Piece[14] != PAWN)
                 {
-                    if (TheBoard.Color[22] == EMPTY || TheBoard.Piece[22] != PAWN)
+                    if (theBoard.Color[22] == EMPTY || theBoard.Piece[22] != PAWN)
                     {
                         //black h pawn backward
-                        BlackBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
+                        blackBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                     }
                 }
             }
@@ -921,298 +922,298 @@ namespace Lisa
 
         }
 
-        public static void RewardRooksOnTheSeventh(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        public static void RewardRooksOnTheSeventh(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.WhiteRookOneSquare >= 8 && TheBoard.WhiteRookOneSquare <= 15)
+            if (theBoard.WhiteRookOneSquare >= 8 && theBoard.WhiteRookOneSquare <= 15)
             {
-                WhiteScore += ROOK_ON_SEVENTH_BONUS;
+                whiteScore += ROOK_ON_SEVENTH_BONUS;
             }
 
-            if (TheBoard.WhiteRookTwoSquare >= 8 && TheBoard.WhiteRookTwoSquare <= 15)
+            if (theBoard.WhiteRookTwoSquare >= 8 && theBoard.WhiteRookTwoSquare <= 15)
             {
-                WhiteScore += ROOK_ON_SEVENTH_BONUS;
+                whiteScore += ROOK_ON_SEVENTH_BONUS;
             }
 
-            if (TheBoard.BlackRookOneSquare >= 48 && TheBoard.BlackRookOneSquare <= 55)
+            if (theBoard.BlackRookOneSquare >= 48 && theBoard.BlackRookOneSquare <= 55)
             {
-                BlackScore += ROOK_ON_SEVENTH_BONUS;
+                blackScore += ROOK_ON_SEVENTH_BONUS;
             }
 
-            if (TheBoard.BlackRookTwoSquare >= 48 && TheBoard.BlackRookTwoSquare <= 55)
+            if (theBoard.BlackRookTwoSquare >= 48 && theBoard.BlackRookTwoSquare <= 55)
             {
-                BlackScore += ROOK_ON_SEVENTH_BONUS;
+                blackScore += ROOK_ON_SEVENTH_BONUS;
             }
 
         }
 
 
-        private static void RewardPawnBishopSynergy(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        private static void RewardPawnBishopSynergy(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.BlackHasDarkSquaredBishop && !TheBoard.BlackHasLightSquaredBishop)
+            if (theBoard.BlackHasDarkSquaredBishop && !theBoard.BlackHasLightSquaredBishop)
             {
-                BlackScore -= TheBoard.BlackPawnsOnDarkSquares * BISHOP_PAWN_COLOR_PENALTY;
+                blackScore -= theBoard.BlackPawnsOnDarkSquares * BISHOP_PAWN_COLOR_PENALTY;
             }
-            if (TheBoard.BlackHasLightSquaredBishop && !TheBoard.BlackHasDarkSquaredBishop)
+            if (theBoard.BlackHasLightSquaredBishop && !theBoard.BlackHasDarkSquaredBishop)
             {
-                BlackScore -= TheBoard.BlackPawnsOnLightSquares * BISHOP_PAWN_COLOR_PENALTY;
+                blackScore -= theBoard.BlackPawnsOnLightSquares * BISHOP_PAWN_COLOR_PENALTY;
             }
 
-            if (TheBoard.WhiteHasDarkSquaredBishop && !TheBoard.WhiteHasLightSquaredBishop)
+            if (theBoard.WhiteHasDarkSquaredBishop && !theBoard.WhiteHasLightSquaredBishop)
             {
-                WhiteScore -= TheBoard.WhitePawnsOnDarkSquares * BISHOP_PAWN_COLOR_PENALTY;
+                whiteScore -= theBoard.WhitePawnsOnDarkSquares * BISHOP_PAWN_COLOR_PENALTY;
             }
-            if (TheBoard.WhiteHasLightSquaredBishop && !TheBoard.WhiteHasDarkSquaredBishop)
+            if (theBoard.WhiteHasLightSquaredBishop && !theBoard.WhiteHasDarkSquaredBishop)
             {
-                WhiteScore -= TheBoard.WhitePawnsOnLightSquares * BISHOP_PAWN_COLOR_PENALTY;
+                whiteScore -= theBoard.WhitePawnsOnLightSquares * BISHOP_PAWN_COLOR_PENALTY;
             }
 
 
         }
 
 
-        private static void EncouragePawnsOnOppositeSideToKingToAdvance(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        private static void EncouragePawnsOnOppositeSideToKingToAdvance(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.WhiteKingSquare % 8 >= 5)
+            if (theBoard.WhiteKingSquare % 8 >= 5)
             {
-                if (TheBoard.Color[48] == WHITE && TheBoard.Piece[48] == PAWN)
+                if (theBoard.Color[48] == WHITE && theBoard.Piece[48] == PAWN)
                 {
-                    WhiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    whiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[49] == WHITE && TheBoard.Piece[49] == PAWN)
+                if (theBoard.Color[49] == WHITE && theBoard.Piece[49] == PAWN)
                 {
-                    WhiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    whiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[50] == WHITE && TheBoard.Piece[50] == PAWN)
+                if (theBoard.Color[50] == WHITE && theBoard.Piece[50] == PAWN)
                 {
-                    WhiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    whiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
             }
-            else if (TheBoard.WhiteKingSquare % 8 <= 2)
+            else if (theBoard.WhiteKingSquare % 8 <= 2)
             {
-                if (TheBoard.Color[55] == WHITE && TheBoard.Piece[55] == PAWN)
+                if (theBoard.Color[55] == WHITE && theBoard.Piece[55] == PAWN)
                 {
-                    WhiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    whiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[54] == WHITE && TheBoard.Piece[54] == PAWN)
+                if (theBoard.Color[54] == WHITE && theBoard.Piece[54] == PAWN)
                 {
-                    WhiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    whiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[53] == WHITE && TheBoard.Piece[53] == PAWN)
+                if (theBoard.Color[53] == WHITE && theBoard.Piece[53] == PAWN)
                 {
-                    WhiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    whiteScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
             }
 
-            if (TheBoard.BlackKingSquare % 8 >= 5)
+            if (theBoard.BlackKingSquare % 8 >= 5)
             {
-                if (TheBoard.Color[8] == WHITE && TheBoard.Piece[8] == PAWN)
+                if (theBoard.Color[8] == WHITE && theBoard.Piece[8] == PAWN)
                 {
-                    BlackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    blackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[9] == WHITE && TheBoard.Piece[9] == PAWN)
+                if (theBoard.Color[9] == WHITE && theBoard.Piece[9] == PAWN)
                 {
-                    BlackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    blackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[10] == WHITE && TheBoard.Piece[10] == PAWN)
+                if (theBoard.Color[10] == WHITE && theBoard.Piece[10] == PAWN)
                 {
-                    BlackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    blackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
             }
-            else if (TheBoard.BlackKingSquare % 8 <= 2)
+            else if (theBoard.BlackKingSquare % 8 <= 2)
             {
-                if (TheBoard.Color[15] == WHITE && TheBoard.Piece[15] == PAWN)
+                if (theBoard.Color[15] == WHITE && theBoard.Piece[15] == PAWN)
                 {
-                    BlackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    blackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[14] == WHITE && TheBoard.Piece[14] == PAWN)
+                if (theBoard.Color[14] == WHITE && theBoard.Piece[14] == PAWN)
                 {
-                    BlackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    blackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
-                if (TheBoard.Color[13] == WHITE && TheBoard.Piece[13] == PAWN)
+                if (theBoard.Color[13] == WHITE && theBoard.Piece[13] == PAWN)
                 {
-                    BlackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
+                    blackScore -= PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY;
                 }
             }
 
         }
 
 
-        private static void RewardActiveBishop(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        private static void RewardActiveBishop(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.WhiteHasDarkSquaredBishop)
+            if (theBoard.WhiteHasDarkSquaredBishop)
             {
-                if (TheBoard.SameDiagonal[TheBoard.WhiteDarkBishopSquare][TheBoard.BlackKingSquare])
+                if (theBoard.SameDiagonal[theBoard.WhiteDarkBishopSquare][theBoard.BlackKingSquare])
                 {
-                    WhiteScore += BISHOP_ATTACKS_KING_BONUS;
+                    whiteScore += BISHOP_ATTACKS_KING_BONUS;
                 }
-                if (TheBoard.BlackQueenSquare != 255)
+                if (theBoard.BlackQueenSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteDarkBishopSquare][TheBoard.BlackQueenSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteDarkBishopSquare][theBoard.BlackQueenSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_QUEEN_BONUS;
+                        whiteScore += BISHOP_ATTACKS_QUEEN_BONUS;
                     }
                 }
-                if (TheBoard.BlackRookOneSquare != 255)
+                if (theBoard.BlackRookOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteDarkBishopSquare][TheBoard.BlackRookOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteDarkBishopSquare][theBoard.BlackRookOneSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        whiteScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.BlackRookTwoSquare != 255)
+                if (theBoard.BlackRookTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteDarkBishopSquare][TheBoard.BlackRookTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteDarkBishopSquare][theBoard.BlackRookTwoSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        whiteScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.BlackKnightOneSquare != 255)
+                if (theBoard.BlackKnightOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteDarkBishopSquare][TheBoard.BlackKnightOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteDarkBishopSquare][theBoard.BlackKnightOneSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        whiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
-                if (TheBoard.BlackKnightTwoSquare != 255)
+                if (theBoard.BlackKnightTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteDarkBishopSquare][TheBoard.BlackKnightTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteDarkBishopSquare][theBoard.BlackKnightTwoSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        whiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
             }
 
-            if (TheBoard.WhiteHasLightSquaredBishop)
+            if (theBoard.WhiteHasLightSquaredBishop)
             {
-                if (TheBoard.SameDiagonal[TheBoard.WhiteLightBishopSquare][TheBoard.BlackKingSquare])
+                if (theBoard.SameDiagonal[theBoard.WhiteLightBishopSquare][theBoard.BlackKingSquare])
                 {
-                    WhiteScore += BISHOP_ATTACKS_KING_BONUS;
+                    whiteScore += BISHOP_ATTACKS_KING_BONUS;
                 }
-                if (TheBoard.BlackQueenSquare != 255)
+                if (theBoard.BlackQueenSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteLightBishopSquare][TheBoard.BlackQueenSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteLightBishopSquare][theBoard.BlackQueenSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_QUEEN_BONUS;
+                        whiteScore += BISHOP_ATTACKS_QUEEN_BONUS;
                     }
                 }
-                if (TheBoard.BlackRookOneSquare != 255)
+                if (theBoard.BlackRookOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteLightBishopSquare][TheBoard.BlackRookOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteLightBishopSquare][theBoard.BlackRookOneSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        whiteScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.BlackRookTwoSquare != 255)
+                if (theBoard.BlackRookTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteLightBishopSquare][TheBoard.BlackRookTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteLightBishopSquare][theBoard.BlackRookTwoSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        whiteScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.BlackKnightOneSquare != 255)
+                if (theBoard.BlackKnightOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteLightBishopSquare][TheBoard.BlackKnightOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteLightBishopSquare][theBoard.BlackKnightOneSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        whiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
-                if (TheBoard.BlackKnightTwoSquare != 255)
+                if (theBoard.BlackKnightTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.WhiteLightBishopSquare][TheBoard.BlackKnightTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.WhiteLightBishopSquare][theBoard.BlackKnightTwoSquare])
                     {
-                        WhiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        whiteScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
             }
 
 
 
-            if (TheBoard.BlackHasDarkSquaredBishop)
+            if (theBoard.BlackHasDarkSquaredBishop)
             {
-                if (TheBoard.SameDiagonal[TheBoard.BlackDarkBishopSquare][TheBoard.WhiteKingSquare])
+                if (theBoard.SameDiagonal[theBoard.BlackDarkBishopSquare][theBoard.WhiteKingSquare])
                 {
-                    BlackScore += BISHOP_ATTACKS_KING_BONUS;
+                    blackScore += BISHOP_ATTACKS_KING_BONUS;
                 }
-                if (TheBoard.WhiteQueenSquare != 255)
+                if (theBoard.WhiteQueenSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackDarkBishopSquare][TheBoard.WhiteQueenSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackDarkBishopSquare][theBoard.WhiteQueenSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_QUEEN_BONUS;
+                        blackScore += BISHOP_ATTACKS_QUEEN_BONUS;
                     }
                 }
-                if (TheBoard.WhiteRookOneSquare != 255)
+                if (theBoard.WhiteRookOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackDarkBishopSquare][TheBoard.WhiteRookOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackDarkBishopSquare][theBoard.WhiteRookOneSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        blackScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.WhiteRookTwoSquare != 255)
+                if (theBoard.WhiteRookTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackDarkBishopSquare][TheBoard.WhiteRookTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackDarkBishopSquare][theBoard.WhiteRookTwoSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        blackScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.WhiteKnightOneSquare != 255)
+                if (theBoard.WhiteKnightOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackDarkBishopSquare][TheBoard.WhiteKnightOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackDarkBishopSquare][theBoard.WhiteKnightOneSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        blackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
-                if (TheBoard.WhiteKnightTwoSquare != 255)
+                if (theBoard.WhiteKnightTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackDarkBishopSquare][TheBoard.WhiteKnightTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackDarkBishopSquare][theBoard.WhiteKnightTwoSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        blackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
             }
 
-            if (TheBoard.BlackHasLightSquaredBishop)
+            if (theBoard.BlackHasLightSquaredBishop)
             {
-                if (TheBoard.SameDiagonal[TheBoard.BlackLightBishopSquare][TheBoard.WhiteKingSquare])
+                if (theBoard.SameDiagonal[theBoard.BlackLightBishopSquare][theBoard.WhiteKingSquare])
                 {
-                    BlackScore += BISHOP_ATTACKS_KING_BONUS;
+                    blackScore += BISHOP_ATTACKS_KING_BONUS;
                 }
-                if (TheBoard.WhiteQueenSquare != 255)
+                if (theBoard.WhiteQueenSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackLightBishopSquare][TheBoard.WhiteQueenSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackLightBishopSquare][theBoard.WhiteQueenSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_QUEEN_BONUS;
+                        blackScore += BISHOP_ATTACKS_QUEEN_BONUS;
                     }
                 }
-                if (TheBoard.WhiteRookOneSquare != 255)
+                if (theBoard.WhiteRookOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackLightBishopSquare][TheBoard.WhiteRookOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackLightBishopSquare][theBoard.WhiteRookOneSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        blackScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.WhiteRookTwoSquare != 255)
+                if (theBoard.WhiteRookTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackLightBishopSquare][TheBoard.WhiteRookTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackLightBishopSquare][theBoard.WhiteRookTwoSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_ROOK_BONUS;
+                        blackScore += BISHOP_ATTACKS_ROOK_BONUS;
                     }
                 }
-                if (TheBoard.WhiteKnightOneSquare != 255)
+                if (theBoard.WhiteKnightOneSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackLightBishopSquare][TheBoard.WhiteKnightOneSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackLightBishopSquare][theBoard.WhiteKnightOneSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        blackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
-                if (TheBoard.WhiteKnightTwoSquare != 255)
+                if (theBoard.WhiteKnightTwoSquare != 255)
                 {
-                    if (TheBoard.SameDiagonal[TheBoard.BlackLightBishopSquare][TheBoard.WhiteKnightTwoSquare])
+                    if (theBoard.SameDiagonal[theBoard.BlackLightBishopSquare][theBoard.WhiteKnightTwoSquare])
                     {
-                        BlackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
+                        blackScore += BISHOP_ATTACKS_KNIGHT_BONUS;
                     }
                 }
             }
@@ -1222,111 +1223,115 @@ namespace Lisa
         }
 
 
-        public static void RewardPassedPawns(ref Board TheBoard, out int WhitePPScore, out int BlackPPScore)
+        public static void RewardPassedPawns(ref Board theBoard, out int whitePPScore, out int blackPPScore)
         {
 
-            WhitePPScore = 0; BlackPPScore = 0;
-            bool[] WhiteFilePassed = new bool[8];
-            bool[] BlackFilePassed = new bool[8];
+            whitePPScore = 0; 
+            blackPPScore = 0;
 
-            for (int NN = 0; NN <= 7; NN++)
+            bool[] whiteFilePassed = new bool[8];
+            bool[] blackFilePassed = new bool[8];
+
+            for (int nn = 0; nn <= 7; nn++)
             {
-                if (TheBoard.WhiteFilePawns[NN] >= 1 && TheBoard.BlackFilePawns[NN] == 0)
+                if (theBoard.WhiteFilePawns[nn] >= 1 && theBoard.BlackFilePawns[nn] == 0)
                 {
-                    int PawnSquare = -1; bool IsPassed = true;
-                    for (int PP = 0; PP <= 7; PP++)
+                    int pawnSquare = -1; 
+                    bool isPassed = true;
+                    for (int pp = 0; pp <= 7; pp++)
                     {
-                        if (TheBoard.WhitePawnSquares[PP] != -1 && TheBoard.WhitePawnSquares[PP] % 8 == NN)
+                        if (theBoard.WhitePawnSquares[pp] != -1 && theBoard.WhitePawnSquares[pp] % 8 == nn)
                         {
-                            if (PawnSquare == -1)
+                            if (pawnSquare == -1)
                             {
-                                PawnSquare = TheBoard.WhitePawnSquares[PP];
+                                pawnSquare = theBoard.WhitePawnSquares[pp];
                             }
-                            else if (TheBoard.WhitePawnSquares[PP] < PawnSquare)
+                            else if (theBoard.WhitePawnSquares[pp] < pawnSquare)
                             {
-                                PawnSquare = TheBoard.WhitePawnSquares[PP];
+                                pawnSquare = theBoard.WhitePawnSquares[pp];
                             }
                         }
                     }
-                    for (int SQ = 0; SQ < TheBoard.WhitePassedPawnLookUps[PawnSquare].Length; SQ++)
+                    for (int sq = 0; sq < theBoard.WhitePassedPawnLookUps[pawnSquare].Length; sq++)
                     {
-                        if (TheBoard.Piece[TheBoard.WhitePassedPawnLookUps[PawnSquare][SQ]] == PAWN)
+                        if (theBoard.Piece[theBoard.WhitePassedPawnLookUps[pawnSquare][sq]] == PAWN)
                         {
-                            IsPassed = false;
+                            isPassed = false;
                             break;
                         }
                     }
-                    if (IsPassed)
+                    if (isPassed)
                     {
-                        WhiteFilePassed[NN] = true;
-                        WhitePPScore += PASSED_PAWN_BONUS;
-                        if (PawnSquare < 15)
+                        whiteFilePassed[nn] = true;
+                        whitePPScore += PASSED_PAWN_BONUS;
+                        if (pawnSquare < 15)
                         {
-                            WhitePPScore += PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS;
+                            whitePPScore += PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS;
                         }
-                        else if (PawnSquare >= 16 && PawnSquare < 24)
+                        else if (pawnSquare >= 16 && pawnSquare < 24)
                         {
-                            WhitePPScore += PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS;
+                            whitePPScore += PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS;
                         }
-                        else if (PawnSquare >= 24 && PawnSquare < 32)
+                        else if (pawnSquare >= 24 && pawnSquare < 32)
                         {
-                            WhitePPScore += PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS;
+                            whitePPScore += PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS;
                         }
-                        if (NN > 0)
+                        if (nn > 0)
                         {
-                            if (WhiteFilePassed[NN - 1])
+                            if (whiteFilePassed[nn - 1])
                             {
-                                WhitePPScore += CONNECTED_PASSED_PAWN_BONUS;
+                                whitePPScore += CONNECTED_PASSED_PAWN_BONUS;
                             }
                         }
                     }
                 }
-                if (TheBoard.BlackFilePawns[NN] >= 1 && TheBoard.WhiteFilePawns[NN] == 0)
+                if (theBoard.BlackFilePawns[nn] >= 1 && theBoard.WhiteFilePawns[nn] == 0)
                 {
-                    int PawnSquare = 255; bool IsPassed = true;
-                    for (int PP = 0; PP <= 7; PP++)
+                    int pawnSquare = 255; 
+                    bool isPassed = true;
+                    for (int pp = 0; pp <= 7; pp++)
                     {
-                        if (TheBoard.BlackPawnSquares[PP] != -1 && TheBoard.BlackPawnSquares[PP] % 8 == NN)
+                        if (theBoard.BlackPawnSquares[pp] != -1 && theBoard.BlackPawnSquares[pp] % 8 == nn)
                         {
-                            if (PawnSquare == 255)
+                            if (pawnSquare == 255)
                             {
-                                PawnSquare = TheBoard.BlackPawnSquares[PP];
+                                pawnSquare = theBoard.BlackPawnSquares[pp];
                             }
-                            else if (TheBoard.BlackPawnSquares[PP] > PawnSquare)
+                            else if (theBoard.BlackPawnSquares[pp] > pawnSquare)
                             {
-                                PawnSquare = TheBoard.BlackPawnSquares[PP];
+                                pawnSquare = theBoard.BlackPawnSquares[pp];
                             }
                         }
                     }
-                    for (int SQ = 0; SQ < TheBoard.BlackPassedPawnLookUps[PawnSquare].Length; SQ++)
+                    for (int sq = 0; sq < theBoard.BlackPassedPawnLookUps[pawnSquare].Length; sq++)
                     {
-                        if (TheBoard.Piece[TheBoard.BlackPassedPawnLookUps[PawnSquare][SQ]] == PAWN)
+                        if (theBoard.Piece[theBoard.BlackPassedPawnLookUps[pawnSquare][sq]] == PAWN)
                         {
-                            IsPassed = false;
+                            isPassed = false;
                             break;
                         }
                     }
-                    if (IsPassed)
+                    if (isPassed)
                     {
-                        BlackFilePassed[NN] = true;
-                        BlackPPScore += PASSED_PAWN_BONUS;
-                        if (PawnSquare >= 48)
+                        blackFilePassed[nn] = true;
+                        blackPPScore += PASSED_PAWN_BONUS;
+                        if (pawnSquare >= 48)
                         {
-                            BlackPPScore += PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS;
+                            blackPPScore += PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS;
                         }
-                        else if (PawnSquare >= 40 && PawnSquare < 48)
+                        else if (pawnSquare >= 40 && pawnSquare < 48)
                         {
-                            BlackPPScore += PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS;
+                            blackPPScore += PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS;
                         }
-                        else if (PawnSquare >= 32 && PawnSquare < 40)
+                        else if (pawnSquare >= 32 && pawnSquare < 40)
                         {
-                            BlackPPScore += PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS;
+                            blackPPScore += PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS;
                         }
-                        if (NN > 0)
+                        if (nn > 0)
                         {
-                            if (BlackFilePassed[NN - 1])
+                            if (blackFilePassed[nn - 1])
                             {
-                                BlackPPScore += CONNECTED_PASSED_PAWN_BONUS;
+                                blackPPScore += CONNECTED_PASSED_PAWN_BONUS;
                             }
                         }
                     }
@@ -1336,93 +1341,93 @@ namespace Lisa
         }
 
 
-        private static void PenaliseBishopPawnWeaknesses(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        private static void PenaliseBishopPawnWeaknesses(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
 
-            if (TheBoard.Color[9] == EMPTY)
+            if (theBoard.Color[9] == EMPTY)
             {
-                if (!TheBoard.BlackHasLightSquaredBishop)
+                if (!theBoard.BlackHasLightSquaredBishop)
                 {
                     //Black has not got his b pawn in place and does not have a light squared bishop
-                    BlackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                    if (TheBoard.WhiteHasLightSquaredBishop)
+                    blackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                    if (theBoard.WhiteHasLightSquaredBishop)
                     {
                         //Worse because white DOES have his light squared bishop
-                        BlackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                        blackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                     }
-                    if (TheBoard.Piece[2] == KING || TheBoard.Piece[1] == KING || TheBoard.Piece[0] == KING)
+                    if (theBoard.Piece[2] == KING || theBoard.Piece[1] == KING || theBoard.Piece[0] == KING)
                     {
                         //Worse because his king is on that side
-                        BlackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                        blackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                     }
                 }
                 else
                 {
-                    if ((TheBoard.Piece[0] == BISHOP && TheBoard.Color[0] == BLACK) ||
-                        (TheBoard.Piece[2] == BISHOP && TheBoard.Color[2] == BLACK) ||
-                        (TheBoard.Piece[16] == BISHOP && TheBoard.Color[16] == BLACK))
+                    if ((theBoard.Piece[0] == BISHOP && theBoard.Color[0] == BLACK) ||
+                        (theBoard.Piece[2] == BISHOP && theBoard.Color[2] == BLACK) ||
+                        (theBoard.Piece[16] == BISHOP && theBoard.Color[16] == BLACK))
                     {
                         //Black has his bishop well placed for this advance
-                        BlackScore += FIANCETTO_IS_GOOD_BONUS;
+                        blackScore += FIANCETTO_IS_GOOD_BONUS;
                     }
                     else
                     {
                         //If the black bishop is not well placed for it, treat it as if as bad as not having it
-                        BlackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                        if (TheBoard.WhiteHasLightSquaredBishop)
+                        blackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                        if (theBoard.WhiteHasLightSquaredBishop)
                         {
                             //Worse because white DOES have his light squared bishop
-                            BlackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                            blackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                         }
-                        if (TheBoard.Piece[2] == KING || TheBoard.Piece[1] == KING || TheBoard.Piece[0] == KING)
+                        if (theBoard.Piece[2] == KING || theBoard.Piece[1] == KING || theBoard.Piece[0] == KING)
                         {
                             //Worse because his king is on that side
-                            BlackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                            blackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[14] == EMPTY)
+            if (theBoard.Color[14] == EMPTY)
             {
-                if (!TheBoard.BlackHasDarkSquaredBishop)
+                if (!theBoard.BlackHasDarkSquaredBishop)
                 {
                     //Black has not got his g pawn in place and does not have a light squared bishop
-                    BlackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                    if (TheBoard.WhiteHasDarkSquaredBishop)
+                    blackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                    if (theBoard.WhiteHasDarkSquaredBishop)
                     {
                         //Worse because white DOES have his light squared bishop
-                        BlackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                        blackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                     }
-                    if (TheBoard.Piece[7] == KING || TheBoard.Piece[6] == KING || TheBoard.Piece[5] == KING)
+                    if (theBoard.Piece[7] == KING || theBoard.Piece[6] == KING || theBoard.Piece[5] == KING)
                     {
                         //Worse because his king is on that side
-                        BlackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                        blackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                     }
                 }
                 else
                 {
-                    if ((TheBoard.Piece[7] == BISHOP && TheBoard.Color[7] == BLACK) ||
-                        (TheBoard.Piece[5] == BISHOP && TheBoard.Color[5] == BLACK) ||
-                        (TheBoard.Piece[23] == BISHOP && TheBoard.Color[23] == BLACK))
+                    if ((theBoard.Piece[7] == BISHOP && theBoard.Color[7] == BLACK) ||
+                        (theBoard.Piece[5] == BISHOP && theBoard.Color[5] == BLACK) ||
+                        (theBoard.Piece[23] == BISHOP && theBoard.Color[23] == BLACK))
                     {
                         //Black has his bishop well placed for this advance
-                        BlackScore += FIANCETTO_IS_GOOD_BONUS;
+                        blackScore += FIANCETTO_IS_GOOD_BONUS;
                     }
                     else
                     {
                         //If the black bishop is not well placed for it, treat it as if as bad as not having it
-                        BlackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                        if (TheBoard.WhiteHasDarkSquaredBishop)
+                        blackScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                        if (theBoard.WhiteHasDarkSquaredBishop)
                         {
                             //Worse because white DOES have his light squared bishop
-                            BlackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                            blackScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                         }
-                        if (TheBoard.Piece[7] == KING || TheBoard.Piece[6] == KING || TheBoard.Piece[5] == KING)
+                        if (theBoard.Piece[7] == KING || theBoard.Piece[6] == KING || theBoard.Piece[5] == KING)
                         {
                             //Worse because his king is on that side
-                            BlackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                            blackScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                         }
                     }
                 }
@@ -1432,89 +1437,89 @@ namespace Lisa
 
 
 
-            if (TheBoard.Color[49] == EMPTY)
+            if (theBoard.Color[49] == EMPTY)
             {
-                if (!TheBoard.WhiteHasDarkSquaredBishop)
+                if (!theBoard.WhiteHasDarkSquaredBishop)
                 {
                     //White has not got his b pawn in place and does not have a dark squared bishop
-                    WhiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                    if (TheBoard.BlackHasDarkSquaredBishop)
+                    whiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                    if (theBoard.BlackHasDarkSquaredBishop)
                     {
                         //Worse because white DOES have his dark squared bishop
-                        WhiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                        whiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                     }
-                    if (TheBoard.Piece[56] == KING || TheBoard.Piece[57] == KING || TheBoard.Piece[58] == KING)
+                    if (theBoard.Piece[56] == KING || theBoard.Piece[57] == KING || theBoard.Piece[58] == KING)
                     {
                         //Worse because his king is on that side
-                        WhiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                        whiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                     }
                 }
                 else
                 {
-                    if ((TheBoard.Piece[56] == BISHOP && TheBoard.Color[56] == BLACK) ||
-                        (TheBoard.Piece[40] == BISHOP && TheBoard.Color[40] == BLACK) ||
-                        (TheBoard.Piece[58] == BISHOP && TheBoard.Color[58] == BLACK))
+                    if ((theBoard.Piece[56] == BISHOP && theBoard.Color[56] == BLACK) ||
+                        (theBoard.Piece[40] == BISHOP && theBoard.Color[40] == BLACK) ||
+                        (theBoard.Piece[58] == BISHOP && theBoard.Color[58] == BLACK))
                     {
                         //White has his bishop well placed for this advance
-                        WhiteScore += FIANCETTO_IS_GOOD_BONUS;
+                        whiteScore += FIANCETTO_IS_GOOD_BONUS;
                     }
                     else
                     {
                         //If the black bishop is not well placed for it, treat it as if as bad as not having it
-                        WhiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                        if (TheBoard.BlackHasDarkSquaredBishop)
+                        whiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                        if (theBoard.BlackHasDarkSquaredBishop)
                         {
                             //Worse because black DOES have his dark squared bishop
-                            WhiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                            whiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                         }
-                        if (TheBoard.Piece[56] == KING || TheBoard.Piece[57] == KING || TheBoard.Piece[58] == KING)
+                        if (theBoard.Piece[56] == KING || theBoard.Piece[57] == KING || theBoard.Piece[58] == KING)
                         {
                             //Worse because his king is on that side
-                            WhiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                            whiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                         }
                     }
                 }
             }
 
-            if (TheBoard.Color[54] == EMPTY)
+            if (theBoard.Color[54] == EMPTY)
             {
-                if (!TheBoard.WhiteHasLightSquaredBishop)
+                if (!theBoard.WhiteHasLightSquaredBishop)
                 {
                     //White has not got his g pawn in place and does not have a light squared bishop
-                    WhiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                    if (TheBoard.BlackHasLightSquaredBishop)
+                    whiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                    if (theBoard.BlackHasLightSquaredBishop)
                     {
                         //Worse because white DOES have his light squared bishop
-                        WhiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                        whiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                     }
-                    if (TheBoard.Piece[61] == KING || TheBoard.Piece[62] == KING || TheBoard.Piece[63] == KING)
+                    if (theBoard.Piece[61] == KING || theBoard.Piece[62] == KING || theBoard.Piece[63] == KING)
                     {
                         //Worse because his king is on that side
-                        WhiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                        whiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                     }
                 }
                 else
                 {
-                    if ((TheBoard.Piece[63] == BISHOP && TheBoard.Color[63] == BLACK) ||
-                        (TheBoard.Piece[61] == BISHOP && TheBoard.Color[61] == BLACK) ||
-                        (TheBoard.Piece[47] == BISHOP && TheBoard.Color[47] == BLACK))
+                    if ((theBoard.Piece[63] == BISHOP && theBoard.Color[63] == BLACK) ||
+                        (theBoard.Piece[61] == BISHOP && theBoard.Color[61] == BLACK) ||
+                        (theBoard.Piece[47] == BISHOP && theBoard.Color[47] == BLACK))
                     {
                         //Black has his bishop well placed for this advance
-                        WhiteScore += FIANCETTO_IS_GOOD_BONUS;
+                        whiteScore += FIANCETTO_IS_GOOD_BONUS;
                     }
                     else
                     {
                         //If the black bishop is not well placed for it, treat it as if as bad as not having it
-                        WhiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
-                        if (TheBoard.BlackHasLightSquaredBishop)
+                        whiteScore -= FIANCETTO_WITHOUT_BISHOP_PENALTY;
+                        if (theBoard.BlackHasLightSquaredBishop)
                         {
                             //Worse because white DOES have his light squared bishop
-                            WhiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
+                            whiteScore -= FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY;
                         }
-                        if (TheBoard.Piece[61] == KING || TheBoard.Piece[62] == KING || TheBoard.Piece[63] == KING)
+                        if (theBoard.Piece[61] == KING || theBoard.Piece[62] == KING || theBoard.Piece[63] == KING)
                         {
                             //Worse because his king is on that side
-                            WhiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
+                            whiteScore -= FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY;
                         }
                     }
                 }
@@ -1523,88 +1528,88 @@ namespace Lisa
         }
 
 
-        private static void PenaliseTrappedBishop(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        private static void PenaliseTrappedBishop(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.Piece[8] == BISHOP && TheBoard.Color[8] == WHITE)
+            if (theBoard.Piece[8] == BISHOP && theBoard.Color[8] == WHITE)
             {
-                if (TheBoard.Piece[10] == PAWN && TheBoard.Piece[10] == BLACK)
+                if (theBoard.Piece[10] == PAWN && theBoard.Piece[10] == BLACK)
                 {
-                    if ((TheBoard.Piece[9] == PAWN && TheBoard.Color[9] == BLACK))
+                    if ((theBoard.Piece[9] == PAWN && theBoard.Color[9] == BLACK))
                     {
 
                         //White bishop on a7 can be trapped by b6 next move
-                        WhiteScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
+                        whiteScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
-                    else if (TheBoard.Piece[17] == PAWN && TheBoard.Color[17] == BLACK)
+                    else if (theBoard.Piece[17] == PAWN && theBoard.Color[17] == BLACK)
                     {
 
                         //White bishop on a7 already trapped by b6
-                        WhiteScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
+                        whiteScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
                 }
             }
 
-            if (TheBoard.Piece[15] == BISHOP && TheBoard.Color[15] == WHITE)
+            if (theBoard.Piece[15] == BISHOP && theBoard.Color[15] == WHITE)
             {
-                if (TheBoard.Piece[13] == PAWN && TheBoard.Piece[13] == BLACK)
+                if (theBoard.Piece[13] == PAWN && theBoard.Piece[13] == BLACK)
                 {
-                    if ((TheBoard.Piece[14] == PAWN && TheBoard.Color[14] == BLACK))
+                    if ((theBoard.Piece[14] == PAWN && theBoard.Color[14] == BLACK))
                     {
 
                         //White bishop on h7 can be trapped by g6 next move
-                        WhiteScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
+                        whiteScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
-                    else if (TheBoard.Piece[22] == PAWN && TheBoard.Color[22] == BLACK)
+                    else if (theBoard.Piece[22] == PAWN && theBoard.Color[22] == BLACK)
                     {
 
                         //White bishop on h7 already trapped by g6
-                        WhiteScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
+                        whiteScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
                 }
             }
 
-            if (TheBoard.Piece[48] == BISHOP && TheBoard.Color[48] == BLACK)
+            if (theBoard.Piece[48] == BISHOP && theBoard.Color[48] == BLACK)
             {
-                if (TheBoard.Piece[50] == PAWN && TheBoard.Piece[50] == WHITE)
+                if (theBoard.Piece[50] == PAWN && theBoard.Piece[50] == WHITE)
                 {
-                    if ((TheBoard.Piece[49] == PAWN && TheBoard.Color[49] == WHITE))
+                    if ((theBoard.Piece[49] == PAWN && theBoard.Color[49] == WHITE))
                     {
 
                         //Black bishop on a2 can be trapped by b3 next move
-                        BlackScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
+                        blackScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
-                    else if (TheBoard.Piece[41] == PAWN && TheBoard.Color[41] == WHITE)
+                    else if (theBoard.Piece[41] == PAWN && theBoard.Color[41] == WHITE)
                     {
 
                         //Black bishop on a2 already trapped by b3
-                        BlackScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
+                        blackScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
                 }
             }
 
-            if (TheBoard.Piece[55] == BISHOP && TheBoard.Color[55] == BLACK)
+            if (theBoard.Piece[55] == BISHOP && theBoard.Color[55] == BLACK)
             {
-                if (TheBoard.Piece[53] == PAWN && TheBoard.Piece[53] == WHITE)
+                if (theBoard.Piece[53] == PAWN && theBoard.Piece[53] == WHITE)
                 {
-                    if ((TheBoard.Piece[52] == PAWN && TheBoard.Color[52] == WHITE))
+                    if ((theBoard.Piece[52] == PAWN && theBoard.Color[52] == WHITE))
                     {
 
                         //Black bishop on h2 can be trapped by g3 next move
-                        BlackScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
+                        blackScore -= BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
-                    else if (TheBoard.Piece[46] == PAWN && TheBoard.Color[46] == WHITE)
+                    else if (theBoard.Piece[46] == PAWN && theBoard.Color[46] == WHITE)
                     {
 
                         //Black bishop on h2 already trapped by g3
-                        BlackScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
+                        blackScore -= BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY;
 
                     }
                 }
@@ -1613,136 +1618,137 @@ namespace Lisa
         }
 
 
-        private static void RewardRooksOnOpenFiles(ref Board TheBoard, int[] WhiteFilePawns, int[] BlackFilePawns, ref int WhiteScore, ref int BlackScore)
+        private static void RewardRooksOnOpenFiles(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.WhiteRookOneSquare != 255 && WhiteFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
+            if (theBoard.WhiteRookOneSquare != 255 && theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
             {
                 //White rook one on semi open file
-                WhiteScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
-                if (BlackFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
+                whiteScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
+                if (theBoard.BlackFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
                 {
                     //White rook one on fully open file
-                    WhiteScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
+                    whiteScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
                 }
             }
 
-            if (TheBoard.WhiteRookTwoSquare != 255 && WhiteFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
+            if (theBoard.WhiteRookTwoSquare != 255 && theBoard.WhiteFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
             {
                 //White rook two on open file
-                WhiteScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
-                if (BlackFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
+                whiteScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
+                if (theBoard.BlackFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
                 {
                     //White rook two on fully open file
-                    WhiteScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
+                    whiteScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
                 }
             }
 
-            if (TheBoard.BlackRookOneSquare != 255 && BlackFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
+            if (theBoard.BlackRookOneSquare != 255 && theBoard.BlackFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
             {
                 //Black rook one on open file
-                BlackScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
-                if (WhiteFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
+                blackScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
+                if (theBoard.WhiteFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
                 {
                     //Black rook one on fully open file
-                    BlackScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
+                    blackScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
                 }
             }
 
-            if (TheBoard.BlackRookTwoSquare != 255 && BlackFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
+            if (theBoard.BlackRookTwoSquare != 255 && theBoard.BlackFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
             {
                 //Black rook two on open file
-                BlackScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
-                if (WhiteFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
+                blackScore += ROOK_ON_SEMI_OPEN_FILE_BONUS;
+                if (theBoard.WhiteFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
                 {
                     //Black rook two on fully open file
-                    BlackScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
+                    blackScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
                 }
             }
 
         }
 
 
-        private static void PenaliseIsolatedPawns(ref Board TheBoard, out int WhiteIsoPawnScore, out int BlackIsoPawnScore)
+        private static void PenaliseIsolatedPawns(ref Board theBoard, out int whiteIsoPawnScore, out int blackIsoPawnScore)
         {
 
-            WhiteIsoPawnScore = 0; BlackIsoPawnScore = 0;
+            whiteIsoPawnScore = 0; blackIsoPawnScore = 0;
 
-            if (TheBoard.WhiteFilePawns[0] == 1 && TheBoard.WhiteFilePawns[1] == 0)
+            if (theBoard.WhiteFilePawns[0] == 1 && theBoard.WhiteFilePawns[1] == 0)
             {
                 //white a pawn isolated
-                WhiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                whiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
             }
-            if (TheBoard.WhiteFilePawns[7] == 1 && TheBoard.WhiteFilePawns[6] == 0)
+            if (theBoard.WhiteFilePawns[7] == 1 && theBoard.WhiteFilePawns[6] == 0)
             {
                 //white h pawn isolated
-                WhiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                whiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
             }
-            if (TheBoard.BlackFilePawns[0] == 1 && TheBoard.BlackFilePawns[1] == 0)
+            if (theBoard.BlackFilePawns[0] == 1 && theBoard.BlackFilePawns[1] == 0)
             {
                 //black a pawn isolated
-                BlackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                blackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
             }
-            if (TheBoard.BlackFilePawns[7] == 1 && TheBoard.BlackFilePawns[6] == 0)
+            if (theBoard.BlackFilePawns[7] == 1 && theBoard.BlackFilePawns[6] == 0)
             {
                 //black h pawn isolated
-                BlackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                blackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
             }
 
             for (int NN = 1; NN <= 6; NN++)
             {
-                if (TheBoard.WhiteFilePawns[NN] == 1 && TheBoard.WhiteFilePawns[NN - 1] == 0 && TheBoard.WhiteFilePawns[NN + 1] == 0)
+                if (theBoard.WhiteFilePawns[NN] == 1 && theBoard.WhiteFilePawns[NN - 1] == 0 && theBoard.WhiteFilePawns[NN + 1] == 0)
                 {
                     //a more central white pawn is isolated
-                    WhiteIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY;
+                    whiteIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY;
                 }
-                if (TheBoard.BlackFilePawns[NN] == 1 && TheBoard.BlackFilePawns[NN - 1] == 0 && TheBoard.BlackFilePawns[NN + 1] == 0)
+                if (theBoard.BlackFilePawns[NN] == 1 && theBoard.BlackFilePawns[NN - 1] == 0 && theBoard.BlackFilePawns[NN + 1] == 0)
                 {
                     //a more central black pawn is isolated
-                    BlackIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY;
+                    blackIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY;
                 }
             }
 
         }
 
 
-        private static void PenaliseDoubledAndTripledPawns(ref Board TheBoard, out int WhiteDblPawnScore, out int BlackDblPawnScore)
+        private static void PenaliseDoubledAndTripledPawns(ref Board theBoard, out int whiteDblPawnScore, out int blackDblPawnScore)
         {
 
-            WhiteDblPawnScore = 0; BlackDblPawnScore = 0;
+            whiteDblPawnScore = 0; 
+            blackDblPawnScore = 0;
 
             for (int NN = 0; NN <= 7; NN++)
             {
-                if (TheBoard.WhiteFilePawns[NN] == 2)
+                if (theBoard.WhiteFilePawns[NN] == 2)
                 {
-                    WhiteDblPawnScore -= DOUBLED_PAWN_PENALTY;
-                    if (TheBoard.BlackFilePawns[NN] > 0)
+                    whiteDblPawnScore -= DOUBLED_PAWN_PENALTY;
+                    if (theBoard.BlackFilePawns[NN] > 0)
                     {
-                        WhiteDblPawnScore -= DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
+                        whiteDblPawnScore -= DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
                     }
                 }
-                else if (TheBoard.WhiteFilePawns[NN] > 2)
+                else if (theBoard.WhiteFilePawns[NN] > 2)
                 {
-                    WhiteDblPawnScore -= TRIPLED_PAWN_PENALTY;
-                    if (TheBoard.BlackFilePawns[NN] > 0)
+                    whiteDblPawnScore -= TRIPLED_PAWN_PENALTY;
+                    if (theBoard.BlackFilePawns[NN] > 0)
                     {
-                        WhiteDblPawnScore -= TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
+                        whiteDblPawnScore -= TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
                     }
                 }
-                if (TheBoard.BlackFilePawns[NN] == 2)
+                if (theBoard.BlackFilePawns[NN] == 2)
                 {
-                    BlackDblPawnScore -= DOUBLED_PAWN_PENALTY;
-                    if (TheBoard.WhiteFilePawns[NN] > 0)
+                    blackDblPawnScore -= DOUBLED_PAWN_PENALTY;
+                    if (theBoard.WhiteFilePawns[NN] > 0)
                     {
-                        BlackDblPawnScore -= DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
+                        blackDblPawnScore -= DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
                     }
                 }
-                else if (TheBoard.BlackFilePawns[NN] > 2)
+                else if (theBoard.BlackFilePawns[NN] > 2)
                 {
-                    BlackDblPawnScore -= TRIPLED_PAWN_PENALTY;
-                    if (TheBoard.WhiteFilePawns[NN] > 0)
+                    blackDblPawnScore -= TRIPLED_PAWN_PENALTY;
+                    if (theBoard.WhiteFilePawns[NN] > 0)
                     {
-                        BlackDblPawnScore -= TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
+                        blackDblPawnScore -= TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY;
                     }
                 }
             }
@@ -1750,670 +1756,670 @@ namespace Lisa
         }
 
 
-        private static void RewardKingSafety(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        private static void RewardKingSafety(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
 
             //###TODO: Knights?
 
-            if (TheBoard.WhiteKingSquare < 48)
+            if (theBoard.WhiteKingSquare < 48)
             {
-                if (TheBoard.BlackQueenSquare != 255)
+                if (theBoard.BlackQueenSquare != 255)
                 {
-                    WhiteScore -= KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY;
+                    whiteScore -= KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY;
                 }
                 else
                 {
-                    WhiteScore -= KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY;
+                    whiteScore -= KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY;
                 }
             }
-            else if (TheBoard.WhiteKingSquare < 56 && TheBoard.WhiteKingSquare >= 48)
+            else if (theBoard.WhiteKingSquare < 56 && theBoard.WhiteKingSquare >= 48)
             {
-                WhiteScore -= KING_STEPPED_UP_EARLY_PENALTY;
-                if (TheBoard.Color[TheBoard.WhiteKingSquare - 8] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 8] == PAWN)
+                whiteScore -= KING_STEPPED_UP_EARLY_PENALTY;
+                if (theBoard.Color[theBoard.WhiteKingSquare - 8] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 8] == PAWN)
                 {
-                    WhiteScore += KING_STEPPED_UP_PAWN_SHIELD_MITIGATION;
+                    whiteScore += KING_STEPPED_UP_PAWN_SHIELD_MITIGATION;
                 }
-                else if (TheBoard.Color[TheBoard.WhiteKingSquare - 16] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 16] == PAWN)
+                else if (theBoard.Color[theBoard.WhiteKingSquare - 16] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 16] == PAWN)
                 {
-                    WhiteScore += KING_STEPPED_UP_PAWN_SHIELD_ADVANCED_MITIGATION;
+                    whiteScore += KING_STEPPED_UP_PAWN_SHIELD_ADVANCED_MITIGATION;
                 }
-                if (TheBoard.WhiteKingSquare != 48 && TheBoard.Color[TheBoard.WhiteKingSquare - 9] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 9] == PAWN)
+                if (theBoard.WhiteKingSquare != 48 && theBoard.Color[theBoard.WhiteKingSquare - 9] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 9] == PAWN)
                 {
-                    WhiteScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
+                    whiteScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
                 }
-                if (TheBoard.WhiteKingSquare != 48 && TheBoard.Color[TheBoard.WhiteKingSquare - 1] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 1] == PAWN)
+                if (theBoard.WhiteKingSquare != 48 && theBoard.Color[theBoard.WhiteKingSquare - 1] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 1] == PAWN)
                 {
-                    WhiteScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
+                    whiteScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
                 }
-                if (TheBoard.WhiteKingSquare != 55 && TheBoard.Color[TheBoard.WhiteKingSquare - 7] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 7] == PAWN)
+                if (theBoard.WhiteKingSquare != 55 && theBoard.Color[theBoard.WhiteKingSquare - 7] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 7] == PAWN)
                 {
-                    WhiteScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
+                    whiteScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
                 }
-                if (TheBoard.WhiteKingSquare != 55 && TheBoard.Color[TheBoard.WhiteKingSquare + 1] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare + 1] == PAWN)
+                if (theBoard.WhiteKingSquare != 55 && theBoard.Color[theBoard.WhiteKingSquare + 1] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare + 1] == PAWN)
                 {
-                    WhiteScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
+                    whiteScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
                 }
             }
             else
             {
-                if (TheBoard.Color[TheBoard.WhiteKingSquare - 8] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 8] == PAWN)
+                if (theBoard.Color[theBoard.WhiteKingSquare - 8] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 8] == PAWN)
                 {
-                    WhiteScore += KING_STAYED_BACK_HAS_PAWN_SHIELD_BONUS;
-                    if (TheBoard.BlackHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 8][TheBoard.BlackDarkBishopSquare])
+                    whiteScore += KING_STAYED_BACK_HAS_PAWN_SHIELD_BONUS;
+                    if (theBoard.BlackHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 8][theBoard.BlackDarkBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 8][TheBoard.BlackLightBishopSquare])
+                    if (theBoard.BlackHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 8][theBoard.BlackLightBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackRookOneSquare != 255 && TheBoard.WhiteKingSquare % 8 == TheBoard.BlackRookOneSquare % 8)
+                    if (theBoard.BlackRookOneSquare != 255 && theBoard.WhiteKingSquare % 8 == theBoard.BlackRookOneSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackRookTwoSquare != 255 && TheBoard.WhiteKingSquare % 8 == TheBoard.BlackRookTwoSquare % 8)
+                    if (theBoard.BlackRookTwoSquare != 255 && theBoard.WhiteKingSquare % 8 == theBoard.BlackRookTwoSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 8][TheBoard.BlackQueenSquare])
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 8][theBoard.BlackQueenSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.WhiteKingSquare % 8 == TheBoard.BlackQueenSquare % 8)
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.WhiteKingSquare % 8 == theBoard.BlackQueenSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackQueenSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackQueenSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][TheBoard.WhiteKingSquare - 8])
+                    if (theBoard.BlackKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][theBoard.WhiteKingSquare - 8])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.BlackKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][TheBoard.WhiteKingSquare - 8])
+                    if (theBoard.BlackKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][theBoard.WhiteKingSquare - 8])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
                 else
                 {
-                    WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_PENALTY;
-                    if (TheBoard.BlackHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 8][TheBoard.BlackDarkBishopSquare])
+                    whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_PENALTY;
+                    if (theBoard.BlackHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 8][theBoard.BlackDarkBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 8][TheBoard.BlackLightBishopSquare])
+                    if (theBoard.BlackHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 8][theBoard.BlackLightBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackRookOneSquare != 255 && TheBoard.WhiteKingSquare % 8 == TheBoard.BlackRookOneSquare % 8)
+                    if (theBoard.BlackRookOneSquare != 255 && theBoard.WhiteKingSquare % 8 == theBoard.BlackRookOneSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackRookTwoSquare != 255 && TheBoard.WhiteKingSquare % 8 == TheBoard.BlackRookTwoSquare % 8)
+                    if (theBoard.BlackRookTwoSquare != 255 && theBoard.WhiteKingSquare % 8 == theBoard.BlackRookTwoSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 8][TheBoard.BlackQueenSquare])
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 8][theBoard.BlackQueenSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.WhiteKingSquare % 8 == TheBoard.BlackQueenSquare % 8)
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.WhiteKingSquare % 8 == theBoard.BlackQueenSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackQueenSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackQueenSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][TheBoard.WhiteKingSquare - 8])
+                    if (theBoard.BlackKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][theBoard.WhiteKingSquare - 8])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.BlackKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][TheBoard.WhiteKingSquare - 8])
+                    if (theBoard.BlackKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][theBoard.WhiteKingSquare - 8])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
-                if (TheBoard.WhiteKingSquare != 56 && TheBoard.Color[TheBoard.WhiteKingSquare - 9] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 9] == PAWN)
+                if (theBoard.WhiteKingSquare != 56 && theBoard.Color[theBoard.WhiteKingSquare - 9] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 9] == PAWN)
                 {
-                    WhiteScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
-                    if (TheBoard.BlackHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 9][TheBoard.BlackDarkBishopSquare])
+                    whiteScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
+                    if (theBoard.BlackHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 9][theBoard.BlackDarkBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 9][TheBoard.BlackLightBishopSquare])
+                    if (theBoard.BlackHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 9][theBoard.BlackLightBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackRookOneSquare != 255 && TheBoard.WhiteKingSquare % 8 - 1 == TheBoard.BlackRookOneSquare % 8)
+                    if (theBoard.BlackRookOneSquare != 255 && theBoard.WhiteKingSquare % 8 - 1 == theBoard.BlackRookOneSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackRookTwoSquare != 255 && TheBoard.WhiteKingSquare % 8 - 1 == TheBoard.BlackRookTwoSquare % 8)
+                    if (theBoard.BlackRookTwoSquare != 255 && theBoard.WhiteKingSquare % 8 - 1 == theBoard.BlackRookTwoSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 9][TheBoard.BlackQueenSquare])
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 9][theBoard.BlackQueenSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.WhiteKingSquare % 8 - 1 == TheBoard.BlackQueenSquare % 8)
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.WhiteKingSquare % 8 - 1 == theBoard.BlackQueenSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackQueenSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackQueenSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][TheBoard.WhiteKingSquare - 9])
+                    if (theBoard.BlackKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][theBoard.WhiteKingSquare - 9])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.BlackKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][TheBoard.WhiteKingSquare - 9])
+                    if (theBoard.BlackKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][theBoard.WhiteKingSquare - 9])
                     {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                }
-                else
-                {
-                    WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
-                    if (TheBoard.BlackHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 9][TheBoard.BlackDarkBishopSquare])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.BlackHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 9][TheBoard.BlackLightBishopSquare])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.BlackRookOneSquare != 255 && TheBoard.WhiteKingSquare % 8 - 1 == TheBoard.BlackRookOneSquare % 8)
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
-                        {
-                            WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.BlackRookTwoSquare != 255 && TheBoard.WhiteKingSquare % 8 - 1 == TheBoard.BlackRookTwoSquare % 8)
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
-                        {
-                            WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 9][TheBoard.BlackQueenSquare])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
-                    }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.WhiteKingSquare % 8 - 1 == TheBoard.BlackQueenSquare % 8)
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackQueenSquare % 8] == 0)
-                        {
-                            WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.BlackKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][TheBoard.WhiteKingSquare - 9])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                    if (TheBoard.BlackKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][TheBoard.WhiteKingSquare - 9])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                }
-                if (TheBoard.WhiteKingSquare != 63 && TheBoard.Color[TheBoard.WhiteKingSquare - 7] == WHITE && TheBoard.Piece[TheBoard.WhiteKingSquare - 7] == PAWN)
-                {
-                    WhiteScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
-                    if (TheBoard.BlackHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 7][TheBoard.BlackDarkBishopSquare])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.BlackHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 7][TheBoard.BlackLightBishopSquare])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.BlackRookOneSquare != 255 && TheBoard.WhiteKingSquare % 8 + 1 == TheBoard.BlackRookOneSquare % 8)
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
-                        {
-                            WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.BlackRookTwoSquare != 255 && TheBoard.WhiteKingSquare % 8 + 1 == TheBoard.BlackRookTwoSquare % 8)
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
-                        {
-                            WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 7][TheBoard.BlackQueenSquare])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
-                    }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.WhiteKingSquare % 8 + 1 == TheBoard.BlackQueenSquare % 8)
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackQueenSquare % 8] == 0)
-                        {
-                            WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.BlackKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][TheBoard.WhiteKingSquare - 7])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                    if (TheBoard.BlackKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][TheBoard.WhiteKingSquare - 7])
-                    {
-                        WhiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
                 else
                 {
-                    WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
-                    if (TheBoard.BlackHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 7][TheBoard.BlackDarkBishopSquare])
+                    whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
+                    if (theBoard.BlackHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 9][theBoard.BlackDarkBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 7][TheBoard.BlackLightBishopSquare])
+                    if (theBoard.BlackHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 9][theBoard.BlackLightBishopSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.BlackRookOneSquare != 255 && TheBoard.WhiteKingSquare % 8 + 1 == TheBoard.BlackRookOneSquare % 8)
+                    if (theBoard.BlackRookOneSquare != 255 && theBoard.WhiteKingSquare % 8 - 1 == theBoard.BlackRookOneSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookOneSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackRookTwoSquare != 255 && TheBoard.WhiteKingSquare % 8 + 1 == TheBoard.BlackRookTwoSquare % 8)
+                    if (theBoard.BlackRookTwoSquare != 255 && theBoard.WhiteKingSquare % 8 - 1 == theBoard.BlackRookTwoSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackRookTwoSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.WhiteKingSquare - 7][TheBoard.BlackQueenSquare])
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 9][theBoard.BlackQueenSquare])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.BlackQueenSquare != 255 && TheBoard.WhiteKingSquare % 8 + 1 == TheBoard.BlackQueenSquare % 8)
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.WhiteKingSquare % 8 - 1 == theBoard.BlackQueenSquare % 8)
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.BlackFilePawns[TheBoard.BlackQueenSquare % 8] == 0)
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackQueenSquare % 8] == 0)
                         {
-                            WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.BlackKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightOneSquare][TheBoard.WhiteKingSquare - 7])
+                    if (theBoard.BlackKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][theBoard.WhiteKingSquare - 9])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.BlackKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.BlackKnightTwoSquare][TheBoard.WhiteKingSquare - 7])
+                    if (theBoard.BlackKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][theBoard.WhiteKingSquare - 9])
                     {
-                        WhiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                }
+                if (theBoard.WhiteKingSquare != 63 && theBoard.Color[theBoard.WhiteKingSquare - 7] == WHITE && theBoard.Piece[theBoard.WhiteKingSquare - 7] == PAWN)
+                {
+                    whiteScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
+                    if (theBoard.BlackHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 7][theBoard.BlackDarkBishopSquare])
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.BlackHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 7][theBoard.BlackLightBishopSquare])
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.BlackRookOneSquare != 255 && theBoard.WhiteKingSquare % 8 + 1 == theBoard.BlackRookOneSquare % 8)
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
+                        {
+                            whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.BlackRookTwoSquare != 255 && theBoard.WhiteKingSquare % 8 + 1 == theBoard.BlackRookTwoSquare % 8)
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
+                        {
+                            whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 7][theBoard.BlackQueenSquare])
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                    }
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.WhiteKingSquare % 8 + 1 == theBoard.BlackQueenSquare % 8)
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackQueenSquare % 8] == 0)
+                        {
+                            whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.BlackKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][theBoard.WhiteKingSquare - 7])
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                    if (theBoard.BlackKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][theBoard.WhiteKingSquare - 7])
+                    {
+                        whiteScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                }
+                else
+                {
+                    whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
+                    if (theBoard.BlackHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 7][theBoard.BlackDarkBishopSquare])
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.BlackHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 7][theBoard.BlackLightBishopSquare])
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.BlackRookOneSquare != 255 && theBoard.WhiteKingSquare % 8 + 1 == theBoard.BlackRookOneSquare % 8)
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookOneSquare % 8] == 0)
+                        {
+                            whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.BlackRookTwoSquare != 255 && theBoard.WhiteKingSquare % 8 + 1 == theBoard.BlackRookTwoSquare % 8)
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackRookTwoSquare % 8] == 0)
+                        {
+                            whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.SameDiagonal[theBoard.WhiteKingSquare - 7][theBoard.BlackQueenSquare])
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                    }
+                    if (theBoard.BlackQueenSquare != 255 && theBoard.WhiteKingSquare % 8 + 1 == theBoard.BlackQueenSquare % 8)
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.BlackFilePawns[theBoard.BlackQueenSquare % 8] == 0)
+                        {
+                            whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.BlackKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][theBoard.WhiteKingSquare - 7])
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                    if (theBoard.BlackKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][theBoard.WhiteKingSquare - 7])
+                    {
+                        whiteScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
             }
 
-            if (TheBoard.BlackKingSquare > 15)
+            if (theBoard.BlackKingSquare > 15)
             {
-                if (TheBoard.WhiteQueenSquare != 255)
+                if (theBoard.WhiteQueenSquare != 255)
                 {
-                    BlackScore -= KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY;
+                    blackScore -= KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY;
                 }
                 else
                 {
-                    BlackScore -= KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY;
+                    blackScore -= KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY;
                 }
             }
-            else if (TheBoard.BlackKingSquare > 7 && TheBoard.BlackKingSquare <= 15)
+            else if (theBoard.BlackKingSquare > 7 && theBoard.BlackKingSquare <= 15)
             {
-                BlackScore -= KING_STEPPED_UP_EARLY_PENALTY;
-                if (TheBoard.Color[TheBoard.BlackKingSquare + 8] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 8] == PAWN)
+                blackScore -= KING_STEPPED_UP_EARLY_PENALTY;
+                if (theBoard.Color[theBoard.BlackKingSquare + 8] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 8] == PAWN)
                 {
-                    BlackScore += KING_STEPPED_UP_PAWN_SHIELD_MITIGATION;
+                    blackScore += KING_STEPPED_UP_PAWN_SHIELD_MITIGATION;
                 }
-                else if (TheBoard.Color[TheBoard.BlackKingSquare + 16] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 16] == PAWN)
+                else if (theBoard.Color[theBoard.BlackKingSquare + 16] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 16] == PAWN)
                 {
-                    BlackScore += KING_STEPPED_UP_PAWN_SHIELD_ADVANCED_MITIGATION;
+                    blackScore += KING_STEPPED_UP_PAWN_SHIELD_ADVANCED_MITIGATION;
                 }
-                if (TheBoard.BlackKingSquare != 15 && TheBoard.Color[TheBoard.BlackKingSquare + 9] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 9] == PAWN)
+                if (theBoard.BlackKingSquare != 15 && theBoard.Color[theBoard.BlackKingSquare + 9] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 9] == PAWN)
                 {
-                    BlackScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
+                    blackScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
                 }
-                if (TheBoard.BlackKingSquare != 15 && TheBoard.Color[TheBoard.BlackKingSquare + 1] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 1] == PAWN)
+                if (theBoard.BlackKingSquare != 15 && theBoard.Color[theBoard.BlackKingSquare + 1] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 1] == PAWN)
                 {
-                    BlackScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
+                    blackScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
                 }
-                if (TheBoard.BlackKingSquare != 8 && TheBoard.Color[TheBoard.BlackKingSquare + 7] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 7] == PAWN)
+                if (theBoard.BlackKingSquare != 8 && theBoard.Color[theBoard.BlackKingSquare + 7] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 7] == PAWN)
                 {
-                    BlackScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
+                    blackScore += KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION;
                 }
-                if (TheBoard.BlackKingSquare != 8 && TheBoard.Color[TheBoard.BlackKingSquare - 1] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare - 1] == PAWN)
+                if (theBoard.BlackKingSquare != 8 && theBoard.Color[theBoard.BlackKingSquare - 1] == BLACK && theBoard.Piece[theBoard.BlackKingSquare - 1] == PAWN)
                 {
-                    BlackScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
+                    blackScore += KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION;
                 }
             }
             else
             {
-                if (TheBoard.Color[TheBoard.BlackKingSquare + 8] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 8] == PAWN)
+                if (theBoard.Color[theBoard.BlackKingSquare + 8] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 8] == PAWN)
                 {
-                    BlackScore += KING_STAYED_BACK_HAS_PAWN_SHIELD_BONUS;
-                    if (TheBoard.WhiteHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 8][TheBoard.WhiteDarkBishopSquare])
+                    blackScore += KING_STAYED_BACK_HAS_PAWN_SHIELD_BONUS;
+                    if (theBoard.WhiteHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 8][theBoard.WhiteDarkBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 8][TheBoard.WhiteLightBishopSquare])
+                    if (theBoard.WhiteHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 8][theBoard.WhiteLightBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.BlackKingSquare % 8 == TheBoard.WhiteRookOneSquare % 8)
+                    if (theBoard.WhiteRookOneSquare != 255 && theBoard.BlackKingSquare % 8 == theBoard.WhiteRookOneSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteRookTwoSquare != 255 && TheBoard.BlackKingSquare % 8 == TheBoard.WhiteRookTwoSquare % 8)
+                    if (theBoard.WhiteRookTwoSquare != 255 && theBoard.BlackKingSquare % 8 == theBoard.WhiteRookTwoSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 8][TheBoard.WhiteQueenSquare])
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.SameDiagonal[theBoard.BlackKingSquare + 8][theBoard.WhiteQueenSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.BlackKingSquare % 8 == TheBoard.WhiteQueenSquare % 8)
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.BlackKingSquare % 8 == theBoard.WhiteQueenSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteQueenSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteQueenSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][TheBoard.BlackKingSquare + 8])
+                    if (theBoard.WhiteKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][theBoard.BlackKingSquare + 8])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.WhiteKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][TheBoard.BlackKingSquare + 8])
+                    if (theBoard.WhiteKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][theBoard.BlackKingSquare + 8])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
                 else
                 {
-                    BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_PENALTY;
-                    if (TheBoard.WhiteHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 8][TheBoard.WhiteDarkBishopSquare])
+                    blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_PENALTY;
+                    if (theBoard.WhiteHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 8][theBoard.WhiteDarkBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 8][TheBoard.WhiteLightBishopSquare])
+                    if (theBoard.WhiteHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 8][theBoard.WhiteLightBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.BlackKingSquare % 8 == TheBoard.WhiteRookOneSquare % 8)
+                    if (theBoard.WhiteRookOneSquare != 255 && theBoard.BlackKingSquare % 8 == theBoard.WhiteRookOneSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteRookTwoSquare != 255 && TheBoard.BlackKingSquare % 8 == TheBoard.WhiteRookTwoSquare % 8)
+                    if (theBoard.WhiteRookTwoSquare != 255 && theBoard.BlackKingSquare % 8 == theBoard.WhiteRookTwoSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 8][TheBoard.WhiteQueenSquare])
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.SameDiagonal[theBoard.BlackKingSquare + 8][theBoard.WhiteQueenSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.BlackKingSquare % 8 == TheBoard.WhiteQueenSquare % 8)
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.BlackKingSquare % 8 == theBoard.WhiteQueenSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteQueenSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteQueenSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][TheBoard.BlackKingSquare + 8])
+                    if (theBoard.WhiteKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][theBoard.BlackKingSquare + 8])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.WhiteKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][TheBoard.BlackKingSquare + 8])
+                    if (theBoard.WhiteKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][theBoard.BlackKingSquare + 8])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
-                if (TheBoard.BlackKingSquare != 7 && TheBoard.Color[TheBoard.BlackKingSquare + 9] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 9] == PAWN)
+                if (theBoard.BlackKingSquare != 7 && theBoard.Color[theBoard.BlackKingSquare + 9] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 9] == PAWN)
                 {
-                    BlackScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
-                    if (TheBoard.WhiteHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 9][TheBoard.WhiteDarkBishopSquare])
+                    blackScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
+                    if (theBoard.WhiteHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 9][theBoard.WhiteDarkBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 9][TheBoard.WhiteLightBishopSquare])
+                    if (theBoard.WhiteHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 9][theBoard.WhiteLightBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.BlackKingSquare % 8 + 1 == TheBoard.WhiteRookOneSquare % 8)
+                    if (theBoard.WhiteRookOneSquare != 255 && theBoard.BlackKingSquare % 8 + 1 == theBoard.WhiteRookOneSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteRookTwoSquare != 255 && TheBoard.BlackKingSquare % 8 + 1 == TheBoard.WhiteRookTwoSquare % 8)
+                    if (theBoard.WhiteRookTwoSquare != 255 && theBoard.BlackKingSquare % 8 + 1 == theBoard.WhiteRookTwoSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 9][TheBoard.WhiteQueenSquare])
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.SameDiagonal[theBoard.BlackKingSquare + 9][theBoard.WhiteQueenSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.BlackKingSquare % 8 + 1 == TheBoard.WhiteQueenSquare % 8)
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.BlackKingSquare % 8 + 1 == theBoard.WhiteQueenSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteQueenSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteQueenSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][TheBoard.BlackKingSquare + 9])
+                    if (theBoard.WhiteKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][theBoard.BlackKingSquare + 9])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.WhiteKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][TheBoard.BlackKingSquare + 9])
+                    if (theBoard.WhiteKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][theBoard.BlackKingSquare + 9])
                     {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                }
-                else
-                {
-                    BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
-                    if (TheBoard.WhiteHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 9][TheBoard.WhiteDarkBishopSquare])
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.WhiteHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 9][TheBoard.WhiteLightBishopSquare])
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.BlackKingSquare % 8 + 1 == TheBoard.WhiteRookOneSquare % 8)
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
-                        {
-                            BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.WhiteRookTwoSquare != 255 && TheBoard.BlackKingSquare % 8 + 1 == TheBoard.WhiteRookTwoSquare % 8)
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
-                        {
-                            BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 9][TheBoard.WhiteQueenSquare])
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
-                    }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.BlackKingSquare % 8 + 1 == TheBoard.WhiteQueenSquare % 8)
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteQueenSquare % 8] == 0)
-                        {
-                            BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.WhiteKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][TheBoard.BlackKingSquare + 9])
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                    if (TheBoard.WhiteKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][TheBoard.BlackKingSquare + 9])
-                    {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                }
-                if (TheBoard.BlackKingSquare != 0 && TheBoard.Color[TheBoard.BlackKingSquare + 7] == BLACK && TheBoard.Piece[TheBoard.BlackKingSquare + 7] == PAWN)
-                {
-                    BlackScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
-                    if (TheBoard.WhiteHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 7][TheBoard.WhiteDarkBishopSquare])
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.WhiteHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 7][TheBoard.WhiteLightBishopSquare])
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
-                    }
-                    if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.BlackKingSquare % 8 - 1 == TheBoard.WhiteRookOneSquare % 8)
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
-                        {
-                            BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.WhiteRookTwoSquare != 255 && TheBoard.BlackKingSquare % 8 - 1 == TheBoard.WhiteRookTwoSquare % 8)
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
-                        {
-                            BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 7][TheBoard.WhiteQueenSquare])
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
-                    }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.BlackKingSquare % 8 - 1 == TheBoard.WhiteQueenSquare % 8)
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteQueenSquare % 8] == 0)
-                        {
-                            BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
-                        }
-                    }
-                    if (TheBoard.WhiteKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][TheBoard.BlackKingSquare + 7])
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
-                    }
-                    if (TheBoard.WhiteKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][TheBoard.BlackKingSquare + 7])
-                    {
-                        BlackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
                 else
                 {
-                    BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
-                    if (TheBoard.WhiteHasDarkSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 7][TheBoard.WhiteDarkBishopSquare])
+                    blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
+                    if (theBoard.WhiteHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 9][theBoard.WhiteDarkBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteHasLightSquaredBishop && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 7][TheBoard.WhiteLightBishopSquare])
+                    if (theBoard.WhiteHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 9][theBoard.WhiteLightBishopSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
                     }
-                    if (TheBoard.WhiteRookOneSquare != 255 && TheBoard.BlackKingSquare % 8 - 1 == TheBoard.WhiteRookOneSquare % 8)
+                    if (theBoard.WhiteRookOneSquare != 255 && theBoard.BlackKingSquare % 8 + 1 == theBoard.WhiteRookOneSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookOneSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteRookTwoSquare != 255 && TheBoard.BlackKingSquare % 8 - 1 == TheBoard.WhiteRookTwoSquare % 8)
+                    if (theBoard.WhiteRookTwoSquare != 255 && theBoard.BlackKingSquare % 8 + 1 == theBoard.WhiteRookTwoSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteRookTwoSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.SameDiagonal[TheBoard.BlackKingSquare + 7][TheBoard.WhiteQueenSquare])
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.SameDiagonal[theBoard.BlackKingSquare + 9][theBoard.WhiteQueenSquare])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
                     }
-                    if (TheBoard.WhiteQueenSquare != 255 && TheBoard.BlackKingSquare % 8 - 1 == TheBoard.WhiteQueenSquare % 8)
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.BlackKingSquare % 8 + 1 == theBoard.WhiteQueenSquare % 8)
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
-                        if (TheBoard.WhiteFilePawns[TheBoard.WhiteQueenSquare % 8] == 0)
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteQueenSquare % 8] == 0)
                         {
-                            BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                            blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
                         }
                     }
-                    if (TheBoard.WhiteKnightOneSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightOneSquare][TheBoard.BlackKingSquare + 7])
+                    if (theBoard.WhiteKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][theBoard.BlackKingSquare + 9])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
-                    if (TheBoard.WhiteKnightTwoSquare != 255 && TheBoard.KnightDestinations[TheBoard.WhiteKnightTwoSquare][TheBoard.BlackKingSquare + 7])
+                    if (theBoard.WhiteKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][theBoard.BlackKingSquare + 9])
                     {
-                        BlackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                }
+                if (theBoard.BlackKingSquare != 0 && theBoard.Color[theBoard.BlackKingSquare + 7] == BLACK && theBoard.Piece[theBoard.BlackKingSquare + 7] == PAWN)
+                {
+                    blackScore += KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS;
+                    if (theBoard.WhiteHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 7][theBoard.WhiteDarkBishopSquare])
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.WhiteHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 7][theBoard.WhiteLightBishopSquare])
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.WhiteRookOneSquare != 255 && theBoard.BlackKingSquare % 8 - 1 == theBoard.WhiteRookOneSquare % 8)
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
+                        {
+                            blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.WhiteRookTwoSquare != 255 && theBoard.BlackKingSquare % 8 - 1 == theBoard.WhiteRookTwoSquare % 8)
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
+                        {
+                            blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.SameDiagonal[theBoard.BlackKingSquare + 7][theBoard.WhiteQueenSquare])
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                    }
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.BlackKingSquare % 8 - 1 == theBoard.WhiteQueenSquare % 8)
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteQueenSquare % 8] == 0)
+                        {
+                            blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.WhiteKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][theBoard.BlackKingSquare + 7])
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                    if (theBoard.WhiteKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][theBoard.BlackKingSquare + 7])
+                    {
+                        blackScore -= KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                }
+                else
+                {
+                    blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY;
+                    if (theBoard.WhiteHasDarkSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 7][theBoard.WhiteDarkBishopSquare])
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.WhiteHasLightSquaredBishop && theBoard.SameDiagonal[theBoard.BlackKingSquare + 7][theBoard.WhiteLightBishopSquare])
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY;
+                    }
+                    if (theBoard.WhiteRookOneSquare != 255 && theBoard.BlackKingSquare % 8 - 1 == theBoard.WhiteRookOneSquare % 8)
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
+                        {
+                            blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.WhiteRookTwoSquare != 255 && theBoard.BlackKingSquare % 8 - 1 == theBoard.WhiteRookTwoSquare % 8)
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteRookTwoSquare % 8] == 0)
+                        {
+                            blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.SameDiagonal[theBoard.BlackKingSquare + 7][theBoard.WhiteQueenSquare])
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY;
+                    }
+                    if (theBoard.WhiteQueenSquare != 255 && theBoard.BlackKingSquare % 8 - 1 == theBoard.WhiteQueenSquare % 8)
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY;
+                        if (theBoard.WhiteFilePawns[theBoard.WhiteQueenSquare % 8] == 0)
+                        {
+                            blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY;
+                        }
+                    }
+                    if (theBoard.WhiteKnightOneSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][theBoard.BlackKingSquare + 7])
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
+                    }
+                    if (theBoard.WhiteKnightTwoSquare != 255 && theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][theBoard.BlackKingSquare + 7])
+                    {
+                        blackScore -= KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY;
                     }
                 }
             }
@@ -2421,82 +2427,82 @@ namespace Lisa
         }
 
 
-        private static void RewardBeingCastled(ref Board TheBoard, ref int WhiteScore, ref int BlackScore)
+        private static void RewardBeingCastled(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
 
-            if (TheBoard.Color[62] == WHITE && TheBoard.Piece[62] == KING && TheBoard.Color[63] == EMPTY)
+            if (theBoard.Color[62] == WHITE && theBoard.Piece[62] == KING && theBoard.Color[63] == EMPTY)
             {
-                WhiteScore += KSIDE_CASTLE_BONUS;
+                whiteScore += KSIDE_CASTLE_BONUS;
             }
-            else if (TheBoard.Color[63] == WHITE && TheBoard.Piece[63] == KING)
+            else if (theBoard.Color[63] == WHITE && theBoard.Piece[63] == KING)
             {
-                WhiteScore += KSIDE_CASTLE_BONUS;
-            }
-
-            if (TheBoard.Color[58] == WHITE && TheBoard.Piece[58] == KING && TheBoard.Color[56] == EMPTY && TheBoard.Color[57] == EMPTY)
-            {
-                WhiteScore += QSIDE_CASTLE_BONUS;
-            }
-            else if (TheBoard.Color[57] == WHITE && TheBoard.Piece[57] == KING && TheBoard.Color[56] == EMPTY)
-            {
-                WhiteScore += QSIDE_CASTLE_BONUS;
-            }
-            else if (TheBoard.Color[56] == WHITE && TheBoard.Piece[56] == KING)
-            {
-                WhiteScore += QSIDE_CASTLE_BONUS;
+                whiteScore += KSIDE_CASTLE_BONUS;
             }
 
-            if (TheBoard.Color[6] == BLACK && TheBoard.Piece[6] == KING && TheBoard.Color[7] == EMPTY)
+            if (theBoard.Color[58] == WHITE && theBoard.Piece[58] == KING && theBoard.Color[56] == EMPTY && theBoard.Color[57] == EMPTY)
             {
-                BlackScore += KSIDE_CASTLE_BONUS;
+                whiteScore += QSIDE_CASTLE_BONUS;
             }
-            else if (TheBoard.Color[7] == BLACK && TheBoard.Piece[7] == KING)
+            else if (theBoard.Color[57] == WHITE && theBoard.Piece[57] == KING && theBoard.Color[56] == EMPTY)
             {
-                BlackScore += KSIDE_CASTLE_BONUS;
+                whiteScore += QSIDE_CASTLE_BONUS;
             }
-
-            if (TheBoard.Color[2] == BLACK && TheBoard.Piece[2] == KING && TheBoard.Color[1] == EMPTY && TheBoard.Color[0] == EMPTY)
+            else if (theBoard.Color[56] == WHITE && theBoard.Piece[56] == KING)
             {
-                BlackScore += QSIDE_CASTLE_BONUS;
-            }
-            else if (TheBoard.Color[1] == BLACK && TheBoard.Piece[1] == KING && TheBoard.Color[0] == EMPTY)
-            {
-                BlackScore += QSIDE_CASTLE_BONUS;
-            }
-            else if (TheBoard.Color[0] == BLACK && TheBoard.Piece[0] == KING)
-            {
-                BlackScore += QSIDE_CASTLE_BONUS;
+                whiteScore += QSIDE_CASTLE_BONUS;
             }
 
-            if (TheBoard.Color[56] == WHITE && TheBoard.Piece[56] == ROOK)
+            if (theBoard.Color[6] == BLACK && theBoard.Piece[6] == KING && theBoard.Color[7] == EMPTY)
             {
-                if (TheBoard.WhiteKingSquare == 60)
+                blackScore += KSIDE_CASTLE_BONUS;
+            }
+            else if (theBoard.Color[7] == BLACK && theBoard.Piece[7] == KING)
+            {
+                blackScore += KSIDE_CASTLE_BONUS;
+            }
+
+            if (theBoard.Color[2] == BLACK && theBoard.Piece[2] == KING && theBoard.Color[1] == EMPTY && theBoard.Color[0] == EMPTY)
+            {
+                blackScore += QSIDE_CASTLE_BONUS;
+            }
+            else if (theBoard.Color[1] == BLACK && theBoard.Piece[1] == KING && theBoard.Color[0] == EMPTY)
+            {
+                blackScore += QSIDE_CASTLE_BONUS;
+            }
+            else if (theBoard.Color[0] == BLACK && theBoard.Piece[0] == KING)
+            {
+                blackScore += QSIDE_CASTLE_BONUS;
+            }
+
+            if (theBoard.Color[56] == WHITE && theBoard.Piece[56] == ROOK)
+            {
+                if (theBoard.WhiteKingSquare == 60)
                 {
-                    WhiteScore += QSIDE_CASTLE_RIGHTS;
+                    whiteScore += QSIDE_CASTLE_RIGHTS;
                 }
             }
 
-            if (TheBoard.Color[63] == WHITE && TheBoard.Piece[63] == ROOK)
+            if (theBoard.Color[63] == WHITE && theBoard.Piece[63] == ROOK)
             {
-                if (TheBoard.WhiteKingSquare == 60)
+                if (theBoard.WhiteKingSquare == 60)
                 {
-                    WhiteScore += KSIDE_CASTLE_RIGHTS;
+                    whiteScore += KSIDE_CASTLE_RIGHTS;
                 }
             }
 
-            if (TheBoard.Color[0] == BLACK && TheBoard.Piece[0] == ROOK)
+            if (theBoard.Color[0] == BLACK && theBoard.Piece[0] == ROOK)
             {
-                if (TheBoard.BlackKingSquare == 4)
+                if (theBoard.BlackKingSquare == 4)
                 {
-                    BlackScore += QSIDE_CASTLE_RIGHTS;
+                    blackScore += QSIDE_CASTLE_RIGHTS;
                 }
             }
 
-            if (TheBoard.Color[7] == BLACK && TheBoard.Piece[7] == ROOK)
+            if (theBoard.Color[7] == BLACK && theBoard.Piece[7] == ROOK)
             {
-                if (TheBoard.BlackKingSquare == 4)
+                if (theBoard.BlackKingSquare == 4)
                 {
-                    BlackScore += KSIDE_CASTLE_RIGHTS;
+                    blackScore += KSIDE_CASTLE_RIGHTS;
                 }
             }
 

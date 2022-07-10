@@ -827,29 +827,29 @@ namespace Lisa
         }
 
 
-        public static string ConvertMoveToAlgebraic(Move Made, ref Board TheBoard)
+        public static string ConvertMoveToAlgebraic(Move Made, ref Board theBoard)
         {
 
 
             string PieceOnSquare = ""; string ToRank = ""; string ToFile = ""; bool IsEP = false;
 
-            if (TheBoard.Piece[Made.From] == KNIGHT)
+            if (theBoard.Piece[Made.From] == KNIGHT)
             {
                 PieceOnSquare = "N";
             }
-            else if (TheBoard.Piece[Made.From] == BISHOP)
+            else if (theBoard.Piece[Made.From] == BISHOP)
             {
                 PieceOnSquare = "B";
             }
-            else if (TheBoard.Piece[Made.From] == ROOK)
+            else if (theBoard.Piece[Made.From] == ROOK)
             {
                 PieceOnSquare = "R";
             }
-            else if (TheBoard.Piece[Made.From] == QUEEN)
+            else if (theBoard.Piece[Made.From] == QUEEN)
             {
                 PieceOnSquare = "Q";
             }
-            else if (TheBoard.Piece[Made.From] == KING)
+            else if (theBoard.Piece[Made.From] == KING)
             {
                 if (Made.To == Made.From - 2)
                 {
@@ -864,7 +864,7 @@ namespace Lisa
                     PieceOnSquare = "K";
                 }
             }
-            else if (TheBoard.Piece[Made.From] == PAWN && Made.IsCapture)
+            else if (theBoard.Piece[Made.From] == PAWN && Made.IsCapture)
             {
                 if (Made.From == 0 || Made.From % 8 == 0)
                 {
@@ -898,7 +898,7 @@ namespace Lisa
                 {
                     PieceOnSquare = "h";
                 }
-                if (Made.To == TheBoard.EnPasantCapSquare)
+                if (Made.To == theBoard.EnPasantCapSquare)
                 {
                     IsEP = true;
                 }
