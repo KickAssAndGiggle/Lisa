@@ -4,9 +4,6 @@ namespace Lisa
     public class UCIInterface
     {
 
-        private static TextReader _reader = null;
-        private static TextWriter _writer = null;
-
         private Board _gameBoard;
         private Searcher _search;
 
@@ -16,9 +13,6 @@ namespace Lisa
 
         public void InitiateUCI()
         {
-
-            _reader = Console.In;
-            _writer = Console.Out;
 
             bool exit = false;
 
@@ -38,7 +32,7 @@ namespace Lisa
                 do
                 {
 
-                    int streamVal = _reader.Read();
+                    int streamVal = Console.In.Read();
                     if (streamVal != -1)
                     {
                         if (streamVal < 32)
@@ -65,7 +59,7 @@ namespace Lisa
                         CancelSearch();
                     }
                     ReconfigureAfterOptions();
-                    _writer.Write("readyok" + Convert.ToChar(10));
+                    Console.Out.Write("readyok" + Convert.ToChar(10));
                 }
                 else if (command.StartsWith("setoption"))
                 {
@@ -1131,7 +1125,7 @@ namespace Lisa
 
         private void UCISendToGUI(string Value)
         {
-            _writer.Write(Value + Convert.ToChar(10));
+            Console.Out.Write(Value + Convert.ToChar(10));
         }
 
     }

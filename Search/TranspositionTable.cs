@@ -173,14 +173,10 @@ namespace Lisa
 
         public void Clear()
         {
-            PrimaryMoveList = null;
-            ScoreList = null;
-            PawnStructList = null;
-            GC.Collect();
             PrimaryMoveList = new TTMove[TTSize];
             ScoreList = new TTScore[ScoreSize];
             PawnStructList = new TTPawnAnalysis[PassedPawnSize];
-
+            GC.Collect();
         }
 
     }

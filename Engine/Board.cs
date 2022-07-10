@@ -470,10 +470,6 @@ namespace Lisa
                         {
                             compass = 2;
                         }
-                        else
-                        {
-                            int xx = 1;
-                        }
                     }
                     else if (fromY > toY)
                     {
@@ -485,14 +481,6 @@ namespace Lisa
                         {
                             compass = 4;
                         }
-                        else
-                        {
-                            int xx = 1;
-                        }
-                    }
-                    else
-                    {
-                        int xx = 1;
                     }
 
                     if (currentCompass != 0 && currentCompass != compass)

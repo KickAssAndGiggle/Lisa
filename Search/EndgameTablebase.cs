@@ -38,24 +38,24 @@ namespace Lisa
             public int? dtm;
         }
 
-        public string FindBestMoveFrom7ManTablebase(string Fen)
+        public string FindBestMoveFrom7ManTablebase(string fen)
         {
 
-            Fen = Fen.Replace(" ", "_");
+            fen = fen.Replace(" ", "_");
             try
             {
-                using (WebClient Cli = new())
+                using (WebClient cli = new())
                 {
-                    string JSON = Cli.DownloadString("http://tablebase.lichess.ovh/standard?fen=" + Fen);
-                    TablebasePosition TBP = (TablebasePosition)JsonConvert.DeserializeObject(JSON, typeof(TablebasePosition));
+                    string json = cli.DownloadString("http://tablebase.lichess.ovh/standard?fen=" + fen);
+                    TablebasePosition TBP = (TablebasePosition)JsonConvert.DeserializeObject(json, typeof(TablebasePosition));
                     return TBP.moves[0].uci;
                 }
             }
             catch
             {
-                System.IO.StreamWriter SW = System.IO.File.AppendText("C:\\PSOutput\\Fen_TB_Misses.txt");
-                SW.WriteLine("http://tablebase.lichess.ovh/standard?fen=" + Fen);
-                SW.Close();
+                System.IO.StreamWriter sw = System.IO.File.AppendText("C:\\PSOutput\\Fen_TB_Misses.txt");
+                sw.WriteLine("http://tablebase.lichess.ovh/standard?fen=" + fen);
+                sw.Close();
                 return "";
             }
 

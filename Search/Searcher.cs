@@ -269,8 +269,6 @@ namespace Lisa
             _infoMaxSearchDepth = maxDepth;
             Dictionary<int, Move[]> pvDict = new();
 
-            Sorter.InitialiseSorter(maxDepth);
-
             _startingWhiteMaterial = _theBoard.WhiteMaterial;
             _startingBlackMaterial = _theBoard.BlackMaterial;
 

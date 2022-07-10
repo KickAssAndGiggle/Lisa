@@ -4,6 +4,9 @@ namespace Lisa
     public static class Sorter
     {
 
+        private const int MAX_DEPTH = 30;
+
+#pragma warning disable CA2211 // Non-constant fields should not be visible
         public static int[] History;
         public static int[,] SingleMoveHistory;
 
@@ -15,25 +18,26 @@ namespace Lisa
 
         public static Move[] Refutations;
         public static int[] RefutationPieces;
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
-
-        public static void InitialiseSorter(byte MaxDepth)
+        static Sorter()
         {
 
             History = new int[6363];
             SingleMoveHistory = new int[6363, 6363];
 
             //Create a new array of Killer Move trackers, for each From Square/To Square/Depth
-            KillerScores = new int[64, 64, MaxDepth];
-            KillerOnes = new Move[MaxDepth];
-            KillerTwos = new Move[MaxDepth];
-            FirstKillerPieces = new int[MaxDepth];
-            SecondKillerPieces = new int[MaxDepth];
+            KillerScores = new int[64, 64, MAX_DEPTH];
+            KillerOnes = new Move[MAX_DEPTH];
+            KillerTwos = new Move[MAX_DEPTH];
+            FirstKillerPieces = new int[MAX_DEPTH];
+            SecondKillerPieces = new int[MAX_DEPTH];
 
-            Refutations = new Move[MaxDepth];
-            RefutationPieces = new int[MaxDepth];
+            Refutations = new Move[MAX_DEPTH];
+            RefutationPieces = new int[MAX_DEPTH];
 
         }
+
 
         public static Move[] GetSortedMoves(ref Board theBoard, int RootMoveKey, bool CapturesOnly, bool NonCapturesOnly, bool LowDepth = false)
         {

@@ -6,36 +6,36 @@ namespace Lisa
         static void Main(string[] args)
         {
 
-            Globals.Initialise();
+            Initialise();
 
-            if (Globals.Mode == ProgramMode.Perft)
+            if (Mode == ProgramMode.Perft)
             {
-                Globals.ReconfigureAfterOptions();
-                PerftRunner Perfter = new(Globals.PerftFen, Globals.PerftDepth, Globals.OutputFile);
-                Perfter.DoPerft();
+                ReconfigureAfterOptions();
+                PerftRunner perfter = new(PerftFen, PerftDepth, OutputFile);
+                perfter.DoPerft();
             }
-            else if (Globals.Mode == ProgramMode.UCI)
+            else if (Mode == ProgramMode.UCI)
             {
-                UCIInterface UCI = new();
-                UCI.InitiateUCI();
+                UCIInterface uci = new();
+                uci.InitiateUCI();
             }
-            else if (Globals.Mode == ProgramMode.MultiFen)
+            else if (Mode == ProgramMode.MultiFen)
             {
-                Globals.ReconfigureAfterOptions();
-                FenTester Fenner = new(Globals.FensToTest, Globals.OutputFile);
-                Fenner.Test();
+                ReconfigureAfterOptions();
+                FenTester fenner = new(FensToTest, OutputFile);
+                fenner.Test();
             }
-            else if (Globals.Mode == ProgramMode.FenToZobrist)
+            else if (Mode == ProgramMode.FenToZobrist)
             {
-                Globals.ReconfigureAfterOptions();
-                FenToZobristConverter FenZob = new();
-                FenZob.ConvertFenToZobrist(Globals.PerftFen, Globals.OutputFile);
+                ReconfigureAfterOptions();
+                FenToZobristConverter fenZob = new();
+                fenZob.ConvertFenToZobrist(PerftFen, OutputFile);
             }
-            else if (Globals.Mode == ProgramMode.EPD)
+            else if (Mode == ProgramMode.EPD)
             {
-                Globals.ReconfigureAfterOptions();
-                EPDTester EPD = new(EPDInput, EPDOutput);
-                EPD.AnalyzePositions(MultiFenDepth);
+                ReconfigureAfterOptions();
+                EPDTester epd = new(EPDInput, EPDOutput);
+                epd.AnalyzePositions(MultiFenDepth);
             }
 
         }
