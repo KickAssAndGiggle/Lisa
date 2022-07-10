@@ -4,71 +4,79 @@ namespace Lisa
     public sealed class OpeningBook
     {
 
-        BookPosition[] BookPositions;
+        BookPosition[] _bookPositions;
 
-        public OpeningBook(string BookFile)
+        public OpeningBook(string bookFile)
         {
 
-            string[] Lines = File.ReadAllLines(BookFile);
-            List<BookPosition> PosList = new();
-            foreach (string Line in Lines)
+            string[] lines = File.ReadAllLines(BookFile);
+            List<BookPosition> posList = new();
+
+            foreach (string line in lines)
             {
 
-                string L = Line.Trim();
-                if (L != "" && !L.StartsWith("#"))
+                string trimmed = line.Trim();
+                if (trimmed != "" && !trimmed.StartsWith("#"))
                 {
-                    BookPosition Pos = new();
-                    string[] Splits = L.Split(Convert.ToChar("="));
+
+                    string[] splits = trimmed.Split('=');
+                    BookPosition pos = new()
                     {
-                        Pos.Zobrist = Convert.ToInt64(Splits[0]);
-                        string[] Moves = Splits[1].Split(Convert.ToChar("|"));
-                        List<BookMove> PosMovesList = new();
-                        foreach (string M in Moves)
+                        Zobrist = Convert.ToInt64(splits[0])
+                    };
+
+                    string[] moves = splits[1].Split('|');
+                    List<BookMove> PosMovesList = new();
+
+                    foreach (string move in moves)
+                    {
+                        string[] parts = move.Split(',');
+                        BookMove fromBook = new()
                         {
-                            BookMove Bm = new();
-                            string[] Parts = M.Split(Convert.ToChar(","));
-                            Bm.From = Convert.ToByte(Parts[0]);
-                            Bm.To = Convert.ToByte(Parts[1]);
-                            PosMovesList.Add(Bm);
-                        }
-                        Pos.Moves = PosMovesList.ToArray();
+                            From = Convert.ToByte(parts[0]),
+                            To = Convert.ToByte(parts[1])
+                        };
+                        PosMovesList.Add(fromBook);
                     }
-                    PosList.Add(Pos);
+
+                    pos.Moves = PosMovesList.ToArray();
+                    posList.Add(pos);
+
                 }
 
             }
 
-            BookPositions = PosList.ToArray();
-
+            _bookPositions = posList.ToArray();
 
         }
 
-        public bool LookInBook(long Zobrist, out byte FromSquare, out byte ToSquare)
+        public bool LookInBook(long zobrist, out byte fromSquare, out byte toSquare)
         {
 
-            Random BookRnd = new(DateTime.Now.Millisecond * DateTime.Now.Second * DateTime.Now.Minute);
-            for (int NN = 0; NN < BookPositions.Length; NN++)
+            Random bookRnd = new(DateTime.Now.Millisecond * DateTime.Now.Second * DateTime.Now.Minute);
+            for (int nn = 0; nn < _bookPositions.Length; nn++)
             {
-                if (BookPositions[NN].Zobrist == Zobrist)
+                if (_bookPositions[nn].Zobrist == zobrist)
                 {
-                    if (BookPositions[NN].Moves.Length > 1)
+                    if (_bookPositions[nn].Moves.Length > 1)
                     {
-                        int RandomMove = BookRnd.Next(0, BookPositions[NN].Moves.Length);
-                        FromSquare = BookPositions[NN].Moves[RandomMove].From;
-                        ToSquare = BookPositions[NN].Moves[RandomMove].To;
+                        int randomMove = bookRnd.Next(0, _bookPositions[nn].Moves.Length);
+                        fromSquare = _bookPositions[nn].Moves[randomMove].From;
+                        toSquare = _bookPositions[nn].Moves[randomMove].To;
 
                     }
                     else
                     {
-                        FromSquare = BookPositions[NN].Moves[0].From;
-                        ToSquare = BookPositions[NN].Moves[0].To;
+                        fromSquare = _bookPositions[nn].Moves[0].From;
+                        toSquare = _bookPositions[nn].Moves[0].To;
                     }
                     return true;
-
                 }
             }
 
-            FromSquare = 255; ToSquare = 255;
+            fromSquare = 255; 
+            toSquare = 255;
+
             return false;
 
         }
