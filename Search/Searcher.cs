@@ -1115,13 +1115,15 @@ namespace Lisa
                                         ref bool capsOnlyCut,
                                         ref bool capsOnlyAlphaRaised,
                                         ref int alpha,
-                                        bool refutationSeparated
+                                        bool refutationSeparated,
+                                        bool sortedUsingIID,
+                                        int staticScore
                                        )
         {
 
             for (int nn = 0; nn < allOppCaps.Length; nn++)
             {
-                if ((isInCheck || allOppCaps[nn].Score >= 4000) && _theBoard.MoveIsLegal(allOppCaps[nn], _theBoard.OnMove) &&
+                if ((isInCheck || (allOppCaps[nn].Score >= 4000 || (sortedUsingIID && allOppCaps[nn].Score >= staticScore))) && _theBoard.MoveIsLegal(allOppCaps[nn], _theBoard.OnMove) &&
                     (allOppCaps[nn].From != ttMove.From || allOppCaps[nn].To != ttMove.To))
                 {
                     if (refutationSeparated && allOppCaps[nn].From == Sorter.Refutations[_fullDepth - depth].From &&
@@ -1505,13 +1507,15 @@ namespace Lisa
                                        ref bool capsOnlyCut,
                                        ref bool capsOnlyAlphaRaised,
                                        ref int alpha,
-                                       bool refutationSeparated
+                                       bool refutationSeparated,
+                                       bool sortedUsingIID,
+                                       int staticScore
                                       )
         {
 
             for (int LC = 0; LC < allOpCaps.Length; LC++)
             {
-                if (allOpCaps[LC].Score < 4000 && _theBoard.MoveIsLegal(allOpCaps[LC], _theBoard.OnMove) && (allOpCaps[LC].From != ttMove.From || allOpCaps[LC].To != ttMove.To))
+                if ((allOpCaps[LC].Score < 4000 || (sortedUsingIID && allOpCaps[LC].Score < staticScore)) && _theBoard.MoveIsLegal(allOpCaps[LC], _theBoard.OnMove) && (allOpCaps[LC].From != ttMove.From || allOpCaps[LC].To != ttMove.To))
                 {
 
                     if (refutationSeparated && allOpCaps[LC].From == Sorter.Refutations[_fullDepth - depth].From &&
@@ -1665,12 +1669,15 @@ namespace Lisa
                 goto ReturnEarly;
             }
 
+            bool iidUsedForCaps = false;
             if (!hasTTMove && (nodeType != NodeTypes.All || depth >= _fullDepth - 1) && depth >= 6)
             {
+
+                iidUsedForCaps = true;
+                
                 int iidAlpha = alpha;
                 int iidBeta = beta;
                 allOpCaps = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, true, false, true);
-                allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, true);
 
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOpCaps.Length; nn++)
@@ -1681,16 +1688,7 @@ namespace Lisa
                         iidAlpha = allOpCaps[nn].Score;
                     }
                 }
-                for (int nn = 0; nn < allOppMoves.Length; nn++)
-                {
-                    allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
-                    if (allOppMoves[nn].Score > iidAlpha)
-                    {
-                        iidAlpha = allOppMoves[nn].Score;
-                    }
-                }
                 Array.Sort(allOpCaps);
-                Array.Sort(allOppMoves);
             }
 
             if (allOpCaps == null)
@@ -1699,7 +1697,7 @@ namespace Lisa
             }
 
             bool winningCapsCut = TryWinningCaptures(allOpCaps, ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV,
-                ref pv, ref betaCutoff, ref bestIndex, ref capsOnlyCut, ref capsOnlyAlphaRaised, ref alpha, refutationSeparated);
+                ref pv, ref betaCutoff, ref bestIndex, ref capsOnlyCut, ref capsOnlyAlphaRaised, ref alpha, refutationSeparated, iidUsedForCaps, staticEval);
 
             if (winningCapsCut)
             {
@@ -1739,10 +1737,29 @@ namespace Lisa
 
             bool losingCapsCut = TryLosingCaptures(allOpCaps, ttMove, nodeType, depth, beta, rootMoveKey, ref played, ref alphaRaised, ref localPV,
                 ref pv, ref betaCutoff, ref bestIndex, ref capsOnlyCut,
-                ref capsOnlyAlphaRaised, ref alpha, refutationSeparated);
+                ref capsOnlyAlphaRaised, ref alpha, refutationSeparated, iidUsedForCaps, staticEval);
             if (losingCapsCut)
             {
                 goto StoreInTransTable;
+            }
+
+            if (!hasTTMove && (nodeType != NodeTypes.All || depth >= _fullDepth - 1) && depth >= 6)
+            {
+                int iidAlpha = alpha;
+                int iidBeta = beta;
+
+                allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, true);
+
+                byte iidReduceDepth = (byte)(depth - 4);
+                for (int nn = 0; nn < allOppMoves.Length; nn++)
+                {
+                    allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
+                    if (allOppMoves[nn].Score > iidAlpha)
+                    {
+                        iidAlpha = allOppMoves[nn].Score;
+                    }
+                }
+                Array.Sort(allOppMoves);
             }
 
             if (allOppMoves == null)
