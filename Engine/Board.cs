@@ -1494,10 +1494,10 @@ namespace Lisa
                             {
                                 if ((byte)(sq - 8) <= 7)
                                 {
-                                    AddMoveToList(sq, (byte)(sq - 8), false, KNIGHT);
-                                    AddMoveToList(sq, (byte)(sq - 8), false, BISHOP);
-                                    AddMoveToList(sq, (byte)(sq - 8), false, ROOK);
                                     AddMoveToList(sq, (byte)(sq - 8), false, QUEEN);
+                                    AddMoveToList(sq, (byte)(sq - 8), false, ROOK);
+                                    AddMoveToList(sq, (byte)(sq - 8), false, BISHOP);
+                                    AddMoveToList(sq, (byte)(sq - 8), false, KNIGHT);
                                 }
                                 else
                                 {
@@ -1521,10 +1521,10 @@ namespace Lisa
                             {
                                 if ((byte)(sq + 8) >= 56)
                                 {
-                                    AddMoveToList(sq, (byte)(sq + 8), false, KNIGHT);
-                                    AddMoveToList(sq, (byte)(sq + 8), false, BISHOP);
-                                    AddMoveToList(sq, (byte)(sq + 8), false, ROOK);
                                     AddMoveToList(sq, (byte)(sq + 8), false, QUEEN);
+                                    AddMoveToList(sq, (byte)(sq + 8), false, ROOK);
+                                    AddMoveToList(sq, (byte)(sq + 8), false, BISHOP);
+                                    AddMoveToList(sq, (byte)(sq + 8), false, KNIGHT);
                                 }
                                 else
                                 {
@@ -1657,10 +1657,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq - 7) <= 7)
                                     {
-                                        AddMoveToList(sq, (byte)(sq - 7), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq - 7), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq - 7), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq - 7), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq - 7), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq - 7), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq - 7), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1679,10 +1679,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq - 9) <= 7)
                                     {
-                                        AddMoveToList(sq, (byte)(sq - 9), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq - 9), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq - 9), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq - 9), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq - 9), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq - 9), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq - 9), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1706,10 +1706,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq + 7) >= 56)
                                     {
-                                        AddMoveToList(sq, (byte)(sq + 7), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq + 7), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq + 7), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq + 7), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq + 7), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq + 7), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq + 7), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1728,10 +1728,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq + 9) >= 56)
                                     {
-                                        AddMoveToList(sq, (byte)(sq + 9), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq + 9), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq + 9), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq + 9), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq + 9), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq + 9), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq + 9), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1820,10 +1820,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq - 7) <= 7)
                                     {
-                                        AddMoveToList(sq, (byte)(sq - 7), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq - 7), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq - 7), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq - 7), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq - 7), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq - 7), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq - 7), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1842,10 +1842,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq - 9) <= 7)
                                     {
-                                        AddMoveToList(sq, (byte)(sq - 9), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq - 9), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq - 9), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq - 9), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq - 9), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq - 9), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq - 9), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1869,10 +1869,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq + 7) >= 56)
                                     {
-                                        AddMoveToList(sq, (byte)(sq + 7), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq + 7), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq + 7), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq + 7), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq + 7), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq + 7), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq + 7), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1891,10 +1891,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq + 9) >= 56)
                                     {
-                                        AddMoveToList(sq, (byte)(sq + 9), true, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq + 9), true, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq + 9), true, ROOK);
                                         AddMoveToList(sq, (byte)(sq + 9), true, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq + 9), true, ROOK);
+                                        AddMoveToList(sq, (byte)(sq + 9), true, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq + 9), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -1983,10 +1983,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq - 7) <= 7)
                                     {
-                                        AddMoveToListWithScore(sq, (byte)(sq - 7), true, KNIGHT);
-                                        AddMoveToListWithScore(sq, (byte)(sq - 7), true, BISHOP);
-                                        AddMoveToListWithScore(sq, (byte)(sq - 7), true, ROOK);
                                         AddMoveToListWithScore(sq, (byte)(sq - 7), true, QUEEN);
+                                        AddMoveToListWithScore(sq, (byte)(sq - 7), true, ROOK);
+                                        AddMoveToListWithScore(sq, (byte)(sq - 7), true, BISHOP);
+                                        AddMoveToListWithScore(sq, (byte)(sq - 7), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -2005,10 +2005,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq - 9) <= 7)
                                     {
-                                        AddMoveToListWithScore(sq, (byte)(sq - 9), true, KNIGHT);
-                                        AddMoveToListWithScore(sq, (byte)(sq - 9), true, BISHOP);
-                                        AddMoveToListWithScore(sq, (byte)(sq - 9), true, ROOK);
                                         AddMoveToListWithScore(sq, (byte)(sq - 9), true, QUEEN);
+                                        AddMoveToListWithScore(sq, (byte)(sq - 9), true, ROOK);
+                                        AddMoveToListWithScore(sq, (byte)(sq - 9), true, BISHOP);
+                                        AddMoveToListWithScore(sq, (byte)(sq - 9), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -2032,10 +2032,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq + 7) >= 56)
                                     {
-                                        AddMoveToListWithScore(sq, (byte)(sq + 7), true, KNIGHT);
-                                        AddMoveToListWithScore(sq, (byte)(sq + 7), true, BISHOP);
-                                        AddMoveToListWithScore(sq, (byte)(sq + 7), true, ROOK);
                                         AddMoveToListWithScore(sq, (byte)(sq + 7), true, QUEEN);
+                                        AddMoveToListWithScore(sq, (byte)(sq + 7), true, ROOK);
+                                        AddMoveToListWithScore(sq, (byte)(sq + 7), true, BISHOP);
+                                        AddMoveToListWithScore(sq, (byte)(sq + 7), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -2054,10 +2054,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq + 9) >= 56)
                                     {
-                                        AddMoveToListWithScore(sq, (byte)(sq + 9), true, KNIGHT);
-                                        AddMoveToListWithScore(sq, (byte)(sq + 9), true, BISHOP);
-                                        AddMoveToListWithScore(sq, (byte)(sq + 9), true, ROOK);
                                         AddMoveToListWithScore(sq, (byte)(sq + 9), true, QUEEN);
+                                        AddMoveToListWithScore(sq, (byte)(sq + 9), true, ROOK);
+                                        AddMoveToListWithScore(sq, (byte)(sq + 9), true, BISHOP);
+                                        AddMoveToListWithScore(sq, (byte)(sq + 9), true, KNIGHT);
                                     }
                                     else
                                     {
@@ -2295,10 +2295,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq - 8) <= 7)
                                     {
-                                        AddMoveToList(sq, (byte)(sq - 8), false, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq - 8), false, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq - 8), false, ROOK);
                                         AddMoveToList(sq, (byte)(sq - 8), false, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq - 8), false, ROOK);
+                                        AddMoveToList(sq, (byte)(sq - 8), false, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq - 8), false, KNIGHT);
                                     }
                                     else
                                     {
@@ -2320,10 +2320,10 @@ namespace Lisa
                                     {
                                         if ((byte)(sq - 7) <= 7 && !isLegalityCheck)
                                         {
-                                            AddMoveToList(sq, (byte)(sq - 7), true, KNIGHT);
-                                            AddMoveToList(sq, (byte)(sq - 7), true, BISHOP);
-                                            AddMoveToList(sq, (byte)(sq - 7), true, ROOK);
                                             AddMoveToList(sq, (byte)(sq - 7), true, QUEEN);
+                                            AddMoveToList(sq, (byte)(sq - 7), true, ROOK);
+                                            AddMoveToList(sq, (byte)(sq - 7), true, BISHOP);
+                                            AddMoveToList(sq, (byte)(sq - 7), true, KNIGHT);
                                         }
                                         else
                                         {
@@ -2342,10 +2342,10 @@ namespace Lisa
                                     {
                                         if ((byte)(sq - 9) <= 7 && !isLegalityCheck)
                                         {
-                                            AddMoveToList(sq, (byte)(sq - 9), true, KNIGHT);
-                                            AddMoveToList(sq, (byte)(sq - 9), true, BISHOP);
-                                            AddMoveToList(sq, (byte)(sq - 9), true, ROOK);
                                             AddMoveToList(sq, (byte)(sq - 9), true, QUEEN);
+                                            AddMoveToList(sq, (byte)(sq - 9), true, ROOK);
+                                            AddMoveToList(sq, (byte)(sq - 9), true, BISHOP);
+                                            AddMoveToList(sq, (byte)(sq - 9), true, KNIGHT);
                                         }
                                         else
                                         {
@@ -2369,10 +2369,10 @@ namespace Lisa
                                 {
                                     if ((byte)(sq + 8) >= 56)
                                     {
-                                        AddMoveToList(sq, (byte)(sq + 8), false, KNIGHT);
-                                        AddMoveToList(sq, (byte)(sq + 8), false, BISHOP);
-                                        AddMoveToList(sq, (byte)(sq + 8), false, ROOK);
                                         AddMoveToList(sq, (byte)(sq + 8), false, QUEEN);
+                                        AddMoveToList(sq, (byte)(sq + 8), false, ROOK);
+                                        AddMoveToList(sq, (byte)(sq + 8), false, BISHOP);
+                                        AddMoveToList(sq, (byte)(sq + 8), false, KNIGHT);
                                     }
                                     else
                                     {
@@ -2393,10 +2393,10 @@ namespace Lisa
                                     {
                                         if ((byte)(sq + 7) >= 56 && !isLegalityCheck)
                                         {
-                                            AddMoveToList(sq, (byte)(sq + 7), true, KNIGHT);
-                                            AddMoveToList(sq, (byte)(sq + 7), true, BISHOP);
-                                            AddMoveToList(sq, (byte)(sq + 7), true, ROOK);
                                             AddMoveToList(sq, (byte)(sq + 7), true, QUEEN);
+                                            AddMoveToList(sq, (byte)(sq + 7), true, ROOK);
+                                            AddMoveToList(sq, (byte)(sq + 7), true, BISHOP);
+                                            AddMoveToList(sq, (byte)(sq + 7), true, KNIGHT);
                                         }
                                         else
                                         {
@@ -2415,10 +2415,10 @@ namespace Lisa
                                     {
                                         if ((byte)(sq + 9) >= 56 && !isLegalityCheck)
                                         {
-                                            AddMoveToList(sq, (byte)(sq + 9), true, KNIGHT);
-                                            AddMoveToList(sq, (byte)(sq + 9), true, BISHOP);
-                                            AddMoveToList(sq, (byte)(sq + 9), true, ROOK);
                                             AddMoveToList(sq, (byte)(sq + 9), true, QUEEN);
+                                            AddMoveToList(sq, (byte)(sq + 9), true, ROOK);
+                                            AddMoveToList(sq, (byte)(sq + 9), true, BISHOP);
+                                            AddMoveToList(sq, (byte)(sq + 9), true, KNIGHT);
                                         }
                                         else
                                         {
