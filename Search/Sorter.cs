@@ -106,19 +106,6 @@ namespace Lisa
                     int MoveKey = List[NN].From * 100 + List[NN].To;
                     List[NN].Score = History[MoveKey];
                     List[NN].Score += (SingleMoveHistory[RootMoveKey, MoveKey]);
-                    int piecePressure = Material[theBoard.Piece[List[NN].From]];
-                    if (piecePressure == 0)
-                    {
-                        piecePressure = 75;
-                    }
-                    if (theBoard.OnMove == WHITE)
-                    {
-                        List[NN].Score += (((theBoard.WhitePressureMap[List[NN].To] - piecePressure) - theBoard.WhitePressureMap[List[NN].From]) / 2);
-                    }
-                    else
-                    {
-                        List[NN].Score += (((theBoard.BlackPressureMap[List[NN].To] - piecePressure) - theBoard.BlackPressureMap[List[NN].From]) / 2);
-                    }
 
                 }
             }

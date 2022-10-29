@@ -1,4 +1,5 @@
 ﻿using static Lisa.Globals;
+using System.Runtime.CompilerServices;
 namespace Lisa
 {
     public sealed class Board
@@ -25,9 +26,6 @@ namespace Lisa
 
         public int[] WhiteFilePawns = new int[8];
         public int[] BlackFilePawns = new int[8];
-
-        public int[] WhitePressureMap = new int[64];
-        public int[] BlackPressureMap = new int[64];
 
         #endregion
 
@@ -170,8 +168,6 @@ namespace Lisa
         private readonly byte[] _undoBlackLightBishopSquare = new byte[40];
         private readonly byte[] _undoBlackDarkBishopSquare = new byte[40];
         private readonly int[] _undoGamePhase = new int[40];
-        private readonly int[][] _undoWhitePressureMap = new int[40][];
-        private readonly int[][] _undoBlackPressureMap = new int[40][];
 
         private readonly byte[] _undoWhiteRookOneSquare = new byte[40];
         private readonly byte[] _undoWhiteRookTwoSquare = new byte[40];
@@ -194,7 +190,7 @@ namespace Lisa
         private int _halfMoveClock;
         private int _fullMoveClock;
 
-        private readonly long[][] _zobristPieceSquares = new long[64][];
+        private readonly long[] _zobristPieceSquares = new long[1200]; // new long[64][];
         private readonly long[] _zobristEPSquares = new long[64];
 
         // If you change these numbers, the opening book will not work as it
@@ -392,12 +388,12 @@ namespace Lisa
 
             for (int sq = 0; sq <= 63; sq++)
             {
-                _zobristPieceSquares[sq] = new long[12];
+                //_zobristPieceSquares[sq] = new long[12];
                 for (int cp = 0; cp <= 11; cp++)
                 {
                     byte[] randBytes = new byte[8];
                     rnd.NextBytes(randBytes);
-                    _zobristPieceSquares[sq][cp] = BitConverter.ToInt64(randBytes, 0);
+                    _zobristPieceSquares[cp * 100 + sq] = BitConverter.ToInt64(randBytes, 0);
                 }
             }
 
@@ -654,18 +650,18 @@ namespace Lisa
             {
                 if (Color[sq] == WHITE)
                 {
-                    CurrentZobrist ^= _zobristPieceSquares[sq][Piece[sq]];
+                    CurrentZobrist ^= _zobristPieceSquares[Piece[sq] * 100 + sq];
                     if (Piece[sq] == PAWN)
                     {
-                        PawnOnlyZobrist ^= _zobristPieceSquares[sq][PAWN];
+                        PawnOnlyZobrist ^= _zobristPieceSquares[PAWN * 100 + sq];
                     }
                 }
                 else if (Color[sq] == BLACK)
                 {
-                    CurrentZobrist ^= _zobristPieceSquares[sq][Piece[sq] + 6];
+                    CurrentZobrist ^= _zobristPieceSquares[(Piece[sq] + 6) * 100 + sq];
                     if (Piece[sq] == PAWN)
                     {
-                        PawnOnlyZobrist ^= _zobristPieceSquares[sq][PAWN + 6];
+                        PawnOnlyZobrist ^= _zobristPieceSquares[(PAWN + 6) * 100 + sq];
                     }
                 }
             }
@@ -727,22 +723,23 @@ namespace Lisa
         }
 
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ToggleZobristPieceOnSquare(int pSquare, int pColor, int pPiece)
         {
             if (pColor == WHITE)
             {
-                CurrentZobrist ^= _zobristPieceSquares[pSquare][pPiece];
+                CurrentZobrist ^= _zobristPieceSquares[pPiece * 100 + pSquare];
                 if (pPiece == PAWN)
                 {
-                    PawnOnlyZobrist ^= _zobristPieceSquares[pSquare][pPiece];
+                    PawnOnlyZobrist ^= _zobristPieceSquares[pPiece * 100 + pSquare];
                 }
             }
             else
             {
-                CurrentZobrist ^= _zobristPieceSquares[pSquare][pPiece + 6];
+                CurrentZobrist ^= _zobristPieceSquares[(pPiece + 6) * 100 + pSquare];
                 if (pPiece == PAWN)
                 {
-                    PawnOnlyZobrist ^= _zobristPieceSquares[pSquare][pPiece + 6];
+                    PawnOnlyZobrist ^= _zobristPieceSquares[(pPiece + 6) * 100 + pSquare];
                 }
             }
         }
@@ -1330,20 +1327,6 @@ namespace Lisa
             if (BlackQueenSquare != 255)
             {
                 GamePhase -= 4;
-            }
-
-            for (int nn = 0; nn < 64; nn++)
-            {
-                WhitePressureMap[nn] = 0;
-                BlackPressureMap[nn] = 0;
-            }
-
-            for (int nn = 0; nn < 64; nn++)
-            {
-                if (Piece[nn] != -1)
-                {
-                    ApplyPressure((byte)nn);
-                }
             }
 
         }
@@ -2443,143 +2426,7 @@ namespace Lisa
             Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
             return ret.ToArray();
 
-        }
-
-        private void ApplyPressure(byte fromSquare)
-        {
-
-            int piece = Piece[fromSquare];
-            int color = Color[fromSquare];
-            int pressure = Material[piece];
-            if (piece == KING)
-            {
-                pressure = 75;
-            }
-
-            if (piece != PAWN) //It's not a pawn
-            {
-                for (int off = 0; off < _offsets[piece]; off++)
-                {
-                    for (byte nextSq = fromSquare; ;)
-                    {
-                        nextSq = _mailbox[_mailbox64[nextSq] + _offset[piece][off]]; // next square along the ray
-                        if (nextSq == 255) //off the board
-                        {
-                            break;
-                        }
-                        if (color == WHITE)
-                        {
-                            WhitePressureMap[nextSq] += pressure;
-                        }
-                        else
-                        {
-                            BlackPressureMap[nextSq] += pressure;
-                        }
-                        if (Color[nextSq] != EMPTY)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (fromSquare > 7 && fromSquare < 56)
-                {
-                    if (fromSquare % 8 != 0)
-                    {
-                        if (color == WHITE)
-                        {
-                            WhitePressureMap[fromSquare - 9] += pressure;
-                        }
-                        else
-                        {
-                            BlackPressureMap[fromSquare + 7] += pressure;
-                        }
-                    }
-                    if (fromSquare % 8 != 7)
-                    {
-                        if (color == WHITE)
-                        {
-                            WhitePressureMap[fromSquare - 7] += pressure;
-                        }
-                        else
-                        {
-                            BlackPressureMap[fromSquare + 9] += pressure;
-                        }
-                    }
-                }
-            }
-
-        }
-
-        private void RemovePressure(byte fromSquare)
-        {
-
-            int piece = Piece[fromSquare];
-            int color = Color[fromSquare];
-            int pressure = Material[piece];
-            if (piece == KING)
-            {
-                pressure = 75;
-            }
-
-            if (piece != PAWN) //It's not a pawn
-            {
-                for (int off = 0; off < _offsets[piece]; off++)
-                {
-                    for (byte nextSq = fromSquare; ;)
-                    {
-                        nextSq = _mailbox[_mailbox64[nextSq] + _offset[piece][off]]; // next square along the ray
-                        if (nextSq == 255) //off the board
-                        {
-                            break;
-                        }
-                        if (color == WHITE)
-                        {
-                            WhitePressureMap[nextSq] -= pressure;
-                        }
-                        else
-                        {
-                            BlackPressureMap[nextSq] -= pressure;
-                        }
-                        if (Color[nextSq] != EMPTY)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (fromSquare > 7 && fromSquare < 56)
-                {
-                    if (fromSquare % 8 != 0)
-                    {
-                        if (color == WHITE)
-                        {
-                            WhitePressureMap[fromSquare - 9] -= pressure;
-                        }
-                        else
-                        {
-                            BlackPressureMap[fromSquare + 7] -= pressure;
-                        }
-                    }
-                    if (fromSquare % 8 != 7)
-                    {
-                        if (color == WHITE)
-                        {
-                            WhitePressureMap[fromSquare - 7] -= pressure;
-                        }
-                        else
-                        {
-                            BlackPressureMap[fromSquare + 9] -= pressure;
-                        }
-                    }
-                }
-            }
-
-        }
+        }      
 
 
         public bool MoveIsLegal(Move theMove, int toMove, bool isKillerValidCheck = false)
@@ -2973,15 +2820,11 @@ namespace Lisa
             _undoBlackRookOneSquare[_undoMoveCount] = BlackRookOneSquare;
             _undoBlackRookTwoSquare[_undoMoveCount] = BlackRookTwoSquare;
             _undoGamePhase[_undoMoveCount] = GamePhase;
-            _undoWhitePressureMap[_undoMoveCount] = new Span<int>(WhitePressureMap, 0, 64).ToArray();// (int[])WhitePressureMap.Clone();
-            _undoBlackPressureMap[_undoMoveCount] = new Span<int>(BlackPressureMap, 0, 64).ToArray(); //(int[])BlackPressureMap.Clone();
 
             _undoLastMoveWasNull[_undoMoveCount] = NullMove;
 
             if (!NullMove)
             {
-
-                RemovePressure(theMove.From);
 
                 if (Piece[theMove.From] == PAWN)
                 {
@@ -3243,7 +3086,6 @@ namespace Lisa
                         if (toMove == WHITE)
                         {
                             _undoCapColor[_undoMoveCount] = BLACK;
-                            RemovePressure((byte)(theMove.To + 8));
                             Color[theMove.To + 8] = EMPTY;
                             Piece[theMove.To + 8] = -1;
                             for (int pp = 0; pp <= 7; pp++)
@@ -3276,7 +3118,6 @@ namespace Lisa
                         else
                         {
                             _undoCapColor[_undoMoveCount] = WHITE;
-                            RemovePressure((byte)(theMove.To - 8));
                             Color[theMove.To - 8] = EMPTY;
                             Piece[theMove.To - 8] = -1;
                             for (int pp = 0; pp <= 7; pp++)
@@ -3310,7 +3151,6 @@ namespace Lisa
                         ToggleZobristPieceOnSquare(theMove.From, Color[theMove.From], Piece[theMove.From]);
                         Color[theMove.To] = Color[theMove.From];
                         Piece[theMove.To] = Piece[theMove.From];
-                        ApplyPressure(theMove.To);
                         Color[theMove.From] = EMPTY;
                         Piece[theMove.From] = -1;
                         ToggleZobristPieceOnSquare(theMove.To, Color[theMove.To], Piece[theMove.To]);
@@ -3509,10 +3349,8 @@ namespace Lisa
                         }
 
                         ToggleZobristPieceOnSquare(theMove.To, Color[theMove.To], Piece[theMove.To]);
-                        RemovePressure(theMove.To);
                         Color[theMove.To] = Color[theMove.From];
                         Piece[theMove.To] = Piece[theMove.From];
-                        ApplyPressure(theMove.To);
                         ToggleZobristPieceOnSquare(theMove.To, Color[theMove.To], Piece[theMove.To]);
                         ToggleZobristPieceOnSquare(theMove.From, Color[theMove.To], Piece[theMove.To]);
                         Color[theMove.From] = EMPTY;
@@ -3575,7 +3413,6 @@ namespace Lisa
                     }
                     Color[theMove.To] = Color[theMove.From];
                     Piece[theMove.To] = Piece[theMove.From];
-                    ApplyPressure(theMove.To);
                     Color[theMove.From] = EMPTY;
                     Piece[theMove.From] = -1;
                     ToggleZobristPieceOnSquare(theMove.To, Color[theMove.To], Piece[theMove.To]);
@@ -3614,12 +3451,10 @@ namespace Lisa
                             if (theMove.From == 60)
                             {
                                 //white;
-                                RemovePressure(63);
                                 Color[61] = WHITE;
                                 Piece[61] = ROOK;
                                 Color[63] = EMPTY;
                                 Piece[63] = -1;
-                                ApplyPressure(61);
                                 WhiteEarlyPSTScore -= _earlyWhitePST[ROOK][63];
                                 WhiteLatePSTScore -= _lateWhitePST[ROOK][63];
                                 WhiteEarlyPSTScore += _earlyWhitePST[ROOK][61];
@@ -3638,12 +3473,10 @@ namespace Lisa
                             else
                             {
                                 //black;
-                                RemovePressure(7);
                                 Color[5] = BLACK;
                                 Piece[5] = ROOK;
                                 Color[7] = EMPTY;
                                 Piece[7] = -1;
-                                ApplyPressure(5);
                                 BlackEarlyPSTScore -= _earlyBlackPST[ROOK][7];
                                 BlackLatePSTScore -= _lateBlackPST[ROOK][7];
                                 BlackEarlyPSTScore += _earlyBlackPST[ROOK][5];
@@ -3667,12 +3500,10 @@ namespace Lisa
                             if (theMove.From == 60)
                             {
                                 //white;
-                                RemovePressure(56);
                                 Color[59] = WHITE;
                                 Piece[59] = ROOK;
                                 Color[56] = EMPTY;
                                 Piece[56] = -1;
-                                ApplyPressure(59);
                                 WhiteEarlyPSTScore -= _earlyWhitePST[ROOK][56];
                                 WhiteLatePSTScore -= _lateWhitePST[ROOK][56];
                                 WhiteEarlyPSTScore += _earlyWhitePST[ROOK][59];
@@ -3691,12 +3522,10 @@ namespace Lisa
                             else
                             {
                                 //black;
-                                RemovePressure(0);
                                 Color[3] = BLACK;
                                 Piece[3] = ROOK;
                                 Color[0] = EMPTY;
                                 Piece[0] = -1;
-                                ApplyPressure(3);
                                 BlackEarlyPSTScore -= _earlyBlackPST[ROOK][0];
                                 BlackLatePSTScore -= _lateBlackPST[ROOK][0];
                                 BlackEarlyPSTScore += _earlyBlackPST[ROOK][3];
@@ -3794,7 +3623,6 @@ namespace Lisa
                     }
                     ToggleZobristPieceOnSquare(theMove.To, Color[theMove.To], PAWN);
                     Piece[theMove.To] = theMove.PromotionPiece;
-                    ApplyPressure(theMove.To);
                     ToggleZobristPieceOnSquare(theMove.To, Color[theMove.To], theMove.PromotionPiece);
                 }
 
@@ -3891,9 +3719,6 @@ namespace Lisa
                 WhitePawnsOnLightSquares = _undoWhitePawnsOnLightSquares[_undoMoveCount];
                 BlackPawnsOnDarkSquares = _undoBlackPawnsOnDarkSquares[_undoMoveCount];
                 BlackPawnsOnLightSquares = _undoBlackPawnsOnLightSquares[_undoMoveCount];
-
-                WhitePressureMap = new Span<int>(_undoWhitePressureMap[_undoMoveCount], 0, 64).ToArray(); // (int[])_undoWhitePressureMap[_undoMoveCount].Clone();
-                BlackPressureMap = new Span<int>(_undoBlackPressureMap[_undoMoveCount], 0, 64).ToArray();
 
                 GamePhase = _undoGamePhase[_undoMoveCount];
 
