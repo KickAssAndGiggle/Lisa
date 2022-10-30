@@ -61,6 +61,7 @@ namespace Lisa
         private int _infoPVTTCutoffs;
         private int _infoBetaTTCutoffs;
         private int _infoAlphaTTCutoffs;
+        private int _infoLMRReSearches;
 
         public int InfoSecondsUsed => _infoSecondsUsed;
         public int InfoNodesLookedAt => _infoNodesLookedAt;
@@ -95,6 +96,7 @@ namespace Lisa
         public int InfoAlphaTTCutoffs => _infoAlphaTTCutoffs;
         public int InfoProbCutCutOffs => _infoProbCutCutOffs;
         public int InfoProbCutAttempts => _infoProbCutAttempts;
+        public int InfoLMRReSearches => _infoLMRReSearches;
 
         #endregion
 
@@ -1848,6 +1850,7 @@ namespace Lisa
                     {
                         WasReduced = false;
                         ByteDepth = originalDepth;
+                        _infoLMRReSearches += 1;
                         goto ReducedBeatAlpha;
                     }
 

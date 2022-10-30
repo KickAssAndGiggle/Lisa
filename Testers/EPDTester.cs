@@ -161,6 +161,8 @@ namespace Lisa
                     OutputLines.Add("CutOffWithThirdSortedMove: " + Search.InfoNodesCutOffWithThirdSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
                     OutputLines.Add("CutOffWithLaterSortedMove: " + Search.InfoNodesCutOffWithLaterSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
                     OutputLines.Add(" ");
+                    OutputLines.Add("LMR ReSearches: " + Search.InfoLMRReSearches.ToString());
+                    OutputLines.Add(" ");
 
                     Move[]? PV = Search.BestPV;
                     string PVString = "";
