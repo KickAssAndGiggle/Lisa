@@ -1804,11 +1804,11 @@ namespace Lisa
                         }
                         else
                         {
-                            if (_fullDepth > 8 && SearchDepth - 5 >= 1 && quietPlayed > 5)
+                            if (_fullDepth > 10 && SearchDepth - 5 >= 1 && quietPlayed > 5)
                             {
                                 ByteDepth = (byte)(SearchDepth - 5);
                             }
-                            else if (_fullDepth > 8 && SearchDepth - 4 >= 1)
+                            else if (_fullDepth > 10 && SearchDepth - 4 >= 1)
                             {
                                 ByteDepth = (byte)(SearchDepth - 4);
                             }
