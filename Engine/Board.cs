@@ -12,7 +12,7 @@ namespace Lisa
         // code that will need to use them
 
         public int[] Piece = new int[64];
-        public int[] Color = new int[64];
+        public byte[] Color = new byte[64];
         public int[] SquareColor = new int[64];
         public bool[][] SameDiagonal = new bool[64][];
         public bool[][] KnightDestinations = new bool[64][];
@@ -92,7 +92,7 @@ namespace Lisa
 
         private readonly int[] _seeUndoSquares = new int[32];
         private readonly int[] _seeUndoPieces = new int[32];
-        private readonly int[] _seeUndoColors = new int[32];
+        private readonly byte[] _seeUndoColors = new byte[32];
         private int _seeUndoCount;
 
         private readonly byte[] _mailbox = new byte[120]
@@ -142,7 +142,7 @@ namespace Lisa
 
         private readonly Move[] _undoMoves = new Move[40];
         private readonly int[] _undoCapPiece = new int[40];
-        private readonly int[] _undoCapColor = new int[40];
+        private readonly byte[] _undoCapColor = new byte[40];
         private readonly bool[] _undoCapWasEnPasant = new bool[40];
         private readonly bool[] _undoWhiteCouldCastleKSide = new bool[40];
         private readonly bool[] _undoWhiteCouldCastleQSide = new bool[40];
@@ -1388,11 +1388,13 @@ namespace Lisa
         public Move[] GenerateNonCaptureMoves(int toMove)
         {
 
+            Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
+
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
 
-                if (Color[sq] == toMove) //sq has a piece of right color for toMove
+                if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
 
                     int P = Piece[sq];
@@ -1412,7 +1414,7 @@ namespace Lisa
                                 {
                                     break;
                                 }
-                                if (Color[nextSq] != EMPTY)
+                                if (localColor[nextSq] != EMPTY)
                                 {
                                     break;
                                 }
@@ -1434,14 +1436,14 @@ namespace Lisa
                             {
                                 if (_whiteCanKSideCastle)
                                 {
-                                    if (Color[62] == EMPTY && Color[61] == EMPTY)
+                                    if (localColor[62] == EMPTY && localColor[61] == EMPTY)
                                     {
                                         AddMoveToList(60, 62, false);
                                     }
                                 }
                                 if (_whiteCanQSideCastle)
                                 {
-                                    if (Color[59] == EMPTY && Color[58] == EMPTY && Color[57] == EMPTY)
+                                    if (localColor[59] == EMPTY && localColor[58] == EMPTY && localColor[57] == EMPTY)
                                     {
                                         AddMoveToList(60, 58, false);
                                     }
@@ -1451,14 +1453,14 @@ namespace Lisa
                             {
                                 if (_blackCanKSideCastle)
                                 {
-                                    if (Color[5] == EMPTY && Color[6] == EMPTY)
+                                    if (localColor[5] == EMPTY && localColor[6] == EMPTY)
                                     {
                                         AddMoveToList(4, 6, false);
                                     }
                                 }
                                 if (_blackCanQSideCastle)
                                 {
-                                    if (Color[3] == EMPTY && Color[2] == EMPTY && Color[1] == EMPTY)
+                                    if (localColor[3] == EMPTY && localColor[2] == EMPTY && localColor[1] == EMPTY)
                                     {
                                         AddMoveToList(4, 2, false);
                                     }
@@ -1473,7 +1475,7 @@ namespace Lisa
                         if (toMove == WHITE)
                         {
 
-                            if (Color[(byte)(sq - 8)] == EMPTY)
+                            if (localColor[(byte)(sq - 8)] == EMPTY)
                             {
                                 if ((byte)(sq - 8) <= 7)
                                 {
@@ -1489,7 +1491,7 @@ namespace Lisa
 
                                 if (sq >= 48 && sq <= 55)
                                 {
-                                    if (Color[(byte)(sq - 16)] == EMPTY)
+                                    if (localColor[(byte)(sq - 16)] == EMPTY)
                                     {
                                         AddMoveToList(sq, (byte)(sq - 16), false);
                                     }
@@ -1500,7 +1502,7 @@ namespace Lisa
                         else
                         {
 
-                            if (Color[(byte)(sq + 8)] == EMPTY)
+                            if (localColor[(byte)(sq + 8)] == EMPTY)
                             {
                                 if ((byte)(sq + 8) >= 56)
                                 {
@@ -1515,7 +1517,7 @@ namespace Lisa
                                 }
                                 if (sq >= 8 && sq <= 15)
                                 {
-                                    if (Color[(byte)(sq + 16)] == EMPTY)
+                                    if (localColor[(byte)(sq + 16)] == EMPTY)
                                     {
                                         AddMoveToList(sq, (byte)(sq + 16), false);
                                     }
@@ -1540,11 +1542,13 @@ namespace Lisa
         public Move[] GenerateCapsToSquare(int toMove, int ToSquare)
         {
 
+            Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
+
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
 
-                if (Color[sq] == toMove) //sq has a piece of right color for toMove
+                if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
 
                     int P = Piece[sq];
@@ -1606,9 +1610,9 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (Color[nextSq] != EMPTY)
+                                if (localColor[nextSq] != EMPTY)
                                 {
-                                    if (nextSq == ToSquare && Color[nextSq] != toMove)
+                                    if (nextSq == ToSquare && localColor[nextSq] != toMove)
                                     {
                                         if (Piece[nextSq] != KING) //Capturing the king is not actually a move...
                                         {
@@ -1636,7 +1640,7 @@ namespace Lisa
 
                             if ((byte)(sq - 7) == ToSquare && sq % 8 != 7)
                             {
-                                if (Color[(byte)(sq - 7)] != EMPTY && Color[(byte)(sq - 7)] != toMove)
+                                if (localColor[(byte)(sq - 7)] != EMPTY && localColor[(byte)(sq - 7)] != toMove)
                                 {
                                     if ((byte)(sq - 7) <= 7)
                                     {
@@ -1658,7 +1662,7 @@ namespace Lisa
 
                             if ((byte)(sq - 9) == ToSquare && sq % 8 != 0)
                             {
-                                if (Color[(byte)(sq - 9)] != EMPTY && Color[(byte)(sq - 9)] != toMove)
+                                if (localColor[(byte)(sq - 9)] != EMPTY && localColor[(byte)(sq - 9)] != toMove)
                                 {
                                     if ((byte)(sq - 9) <= 7)
                                     {
@@ -1685,7 +1689,7 @@ namespace Lisa
 
                             if ((byte)(sq + 7) == ToSquare && sq % 8 != 0)
                             {
-                                if (Color[(byte)(sq + 7)] != EMPTY && Color[(byte)(sq + 7)] != toMove)
+                                if (localColor[(byte)(sq + 7)] != EMPTY && localColor[(byte)(sq + 7)] != toMove)
                                 {
                                     if ((byte)(sq + 7) >= 56)
                                     {
@@ -1707,7 +1711,7 @@ namespace Lisa
 
                             if ((byte)(sq + 9) == ToSquare && sq % 8 != 7)
                             {
-                                if (Color[(byte)(sq + 9)] != EMPTY && Color[(byte)(sq + 9)] != toMove)
+                                if (localColor[(byte)(sq + 9)] != EMPTY && localColor[(byte)(sq + 9)] != toMove)
                                 {
                                     if ((byte)(sq + 9) >= 56)
                                     {
@@ -1744,11 +1748,13 @@ namespace Lisa
         public Move[] GenerateCaptureMoves(int toMove)
         {
 
+            Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
+
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
 
-                if (Color[sq] == toMove) //sq has a piece of right color for toMove
+                if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
 
                     int P = Piece[sq];
@@ -1769,9 +1775,9 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (Color[nextSq] != EMPTY)
+                                if (localColor[nextSq] != EMPTY)
                                 {
-                                    if (Color[nextSq] != toMove)
+                                    if (localColor[nextSq] != toMove)
                                     {
                                         if (Piece[nextSq] != KING) //Capturing the king is not actually a move...
                                         {
@@ -1799,7 +1805,7 @@ namespace Lisa
 
                             if (sq % 8 != 7)
                             {
-                                if (Color[(byte)(sq - 7)] != EMPTY && Color[(byte)(sq - 7)] != toMove)
+                                if (localColor[(byte)(sq - 7)] != EMPTY && localColor[(byte)(sq - 7)] != toMove)
                                 {
                                     if ((byte)(sq - 7) <= 7)
                                     {
@@ -1821,7 +1827,7 @@ namespace Lisa
 
                             if (sq % 8 != 0)
                             {
-                                if (Color[(byte)(sq - 9)] != EMPTY && Color[(byte)(sq - 9)] != toMove)
+                                if (localColor[(byte)(sq - 9)] != EMPTY && localColor[(byte)(sq - 9)] != toMove)
                                 {
                                     if ((byte)(sq - 9) <= 7)
                                     {
@@ -1848,7 +1854,7 @@ namespace Lisa
 
                             if (sq % 8 != 0)
                             {
-                                if (Color[(byte)(sq + 7)] != EMPTY && Color[(byte)(sq + 7)] != toMove)
+                                if (localColor[(byte)(sq + 7)] != EMPTY && localColor[(byte)(sq + 7)] != toMove)
                                 {
                                     if ((byte)(sq + 7) >= 56)
                                     {
@@ -1870,7 +1876,7 @@ namespace Lisa
 
                             if (sq % 8 != 7)
                             {
-                                if (Color[(byte)(sq + 9)] != EMPTY && Color[(byte)(sq + 9)] != toMove)
+                                if (localColor[(byte)(sq + 9)] != EMPTY && localColor[(byte)(sq + 9)] != toMove)
                                 {
                                     if ((byte)(sq + 9) >= 56)
                                     {
@@ -1907,11 +1913,13 @@ namespace Lisa
         public Move[] GenerateCaptureMovesWithScore(int toMove)
         {
 
+            Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
+
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
 
-                if (Color[sq] == toMove) //sq has a piece of right color for toMove
+                if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
 
                     int P = Piece[sq];
@@ -1932,9 +1940,9 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (Color[nextSq] != EMPTY)
+                                if (localColor[nextSq] != EMPTY)
                                 {
-                                    if (Color[nextSq] != toMove)
+                                    if (localColor[nextSq] != toMove)
                                     {
                                         if (Piece[nextSq] != KING) //Capturing the king is not actually a move...
                                         {
@@ -1962,7 +1970,7 @@ namespace Lisa
 
                             if (sq % 8 != 7)
                             {
-                                if (Color[(byte)(sq - 7)] != EMPTY && Color[(byte)(sq - 7)] != toMove)
+                                if (localColor[(byte)(sq - 7)] != EMPTY && localColor[(byte)(sq - 7)] != toMove)
                                 {
                                     if ((byte)(sq - 7) <= 7)
                                     {
@@ -1984,7 +1992,7 @@ namespace Lisa
 
                             if (sq % 8 != 0)
                             {
-                                if (Color[(byte)(sq - 9)] != EMPTY && Color[(byte)(sq - 9)] != toMove)
+                                if (localColor[(byte)(sq - 9)] != EMPTY && localColor[(byte)(sq - 9)] != toMove)
                                 {
                                     if ((byte)(sq - 9) <= 7)
                                     {
@@ -2011,7 +2019,7 @@ namespace Lisa
 
                             if (sq % 8 != 0)
                             {
-                                if (Color[(byte)(sq + 7)] != EMPTY && Color[(byte)(sq + 7)] != toMove)
+                                if (localColor[(byte)(sq + 7)] != EMPTY && localColor[(byte)(sq + 7)] != toMove)
                                 {
                                     if ((byte)(sq + 7) >= 56)
                                     {
@@ -2033,7 +2041,7 @@ namespace Lisa
 
                             if (sq % 8 != 7)
                             {
-                                if (Color[(byte)(sq + 9)] != EMPTY && Color[(byte)(sq + 9)] != toMove)
+                                if (localColor[(byte)(sq + 9)] != EMPTY && localColor[(byte)(sq + 9)] != toMove)
                                 {
                                     if ((byte)(sq + 9) >= 56)
                                     {
@@ -2072,11 +2080,13 @@ namespace Lisa
         public Move[] GeneratePieceMovesWithoutKing(int toMove)
         {
 
+            Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
+
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
 
-                if (Color[sq] == toMove) //sq has a piece of right color for toMove
+                if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
 
                     int P = Piece[sq];
@@ -2097,9 +2107,9 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (Color[nextSq] != EMPTY)
+                                if (localColor[nextSq] != EMPTY)
                                 {
-                                    if (Color[nextSq] != toMove)
+                                    if (localColor[nextSq] != toMove)
                                     {
                                         if (Piece[nextSq] != KING) //If we are not doing a check test, capturing the king is not actually a move...
                                         {
@@ -2135,11 +2145,13 @@ namespace Lisa
         public Move[] GenerateAllMoves(int toMove, bool isLegalityCheck = false, int legalityCheckKingSquare = -1, bool legalityCheckLastMoveWasCastle = false)
         {
 
+            Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
+
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
 
-                if (Color[sq] == toMove) //sq has a piece of right color for toMove
+                if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
 
                     int P = Piece[sq];
@@ -2201,9 +2213,9 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (Color[nextSq] != EMPTY)
+                                if (localColor[nextSq] != EMPTY)
                                 {
-                                    if (Color[nextSq] != toMove)
+                                    if (localColor[nextSq] != toMove)
                                     {
                                         if (Piece[nextSq] != KING || isLegalityCheck) //If we are not doing a check test, capturing the king is not actually a move...
                                         {
@@ -2233,14 +2245,14 @@ namespace Lisa
                             {
                                 if (_whiteCanKSideCastle)
                                 {
-                                    if (Color[62] == EMPTY && Color[61] == EMPTY)
+                                    if (Color[62] == EMPTY && localColor[61] == EMPTY)
                                     {
                                         AddMoveToList(60, 62, false);
                                     }
                                 }
                                 if (_whiteCanQSideCastle)
                                 {
-                                    if (Color[59] == EMPTY && Color[58] == EMPTY && Color[57] == EMPTY)
+                                    if (Color[59] == EMPTY && localColor[58] == EMPTY && localColor[57] == EMPTY)
                                     {
                                         AddMoveToList(60, 58, false);
                                     }
@@ -2250,14 +2262,14 @@ namespace Lisa
                             {
                                 if (_blackCanKSideCastle)
                                 {
-                                    if (Color[5] == EMPTY && Color[6] == EMPTY)
+                                    if (Color[5] == EMPTY && localColor[6] == EMPTY)
                                     {
                                         AddMoveToList(4, 6, false);
                                     }
                                 }
                                 if (_blackCanQSideCastle)
                                 {
-                                    if (Color[3] == EMPTY && Color[2] == EMPTY && Color[1] == EMPTY)
+                                    if (Color[3] == EMPTY && localColor[2] == EMPTY && localColor[1] == EMPTY)
                                     {
                                         AddMoveToList(4, 2, false);
                                     }
@@ -2274,7 +2286,7 @@ namespace Lisa
 
                             if (!isLegalityCheck || sq / 8 == legalityCheckKingSquare / 8 + 1)
                             {
-                                if (Color[(byte)(sq - 8)] == EMPTY && !isLegalityCheck)
+                                if (localColor[(byte)(sq - 8)] == EMPTY && !isLegalityCheck)
                                 {
                                     if ((byte)(sq - 8) <= 7)
                                     {
@@ -2290,7 +2302,7 @@ namespace Lisa
 
                                     if (sq >= 48 && sq <= 55)
                                     {
-                                        if (Color[(byte)(sq - 16)] == EMPTY)
+                                        if (localColor[(byte)(sq - 16)] == EMPTY)
                                         {
                                             AddMoveToList(sq, (byte)(sq - 16), false);
                                         }
@@ -2299,7 +2311,7 @@ namespace Lisa
 
                                 if (sq % 8 != 7)
                                 {
-                                    if (Color[(byte)(sq - 7)] != EMPTY && Color[(byte)(sq - 7)] != toMove)
+                                    if (localColor[(byte)(sq - 7)] != EMPTY && localColor[(byte)(sq - 7)] != toMove)
                                     {
                                         if ((byte)(sq - 7) <= 7 && !isLegalityCheck)
                                         {
@@ -2321,7 +2333,7 @@ namespace Lisa
 
                                 if (sq % 8 != 0)
                                 {
-                                    if (Color[(byte)(sq - 9)] != EMPTY && Color[(byte)(sq - 9)] != toMove)
+                                    if (localColor[(byte)(sq - 9)] != EMPTY && localColor[(byte)(sq - 9)] != toMove)
                                     {
                                         if ((byte)(sq - 9) <= 7 && !isLegalityCheck)
                                         {
@@ -2348,7 +2360,7 @@ namespace Lisa
 
                             if (!isLegalityCheck || sq / 8 == legalityCheckKingSquare / 8 - 1)
                             {
-                                if (Color[(byte)(sq + 8)] == EMPTY && !isLegalityCheck)
+                                if (localColor[(byte)(sq + 8)] == EMPTY && !isLegalityCheck)
                                 {
                                     if ((byte)(sq + 8) >= 56)
                                     {
@@ -2363,7 +2375,7 @@ namespace Lisa
                                     }
                                     if (sq >= 8 && sq <= 15)
                                     {
-                                        if (Color[(byte)(sq + 16)] == EMPTY)
+                                        if (localColor[(byte)(sq + 16)] == EMPTY)
                                         {
                                             AddMoveToList(sq, (byte)(sq + 16), false);
                                         }
@@ -2372,7 +2384,7 @@ namespace Lisa
 
                                 if (sq % 8 != 0)
                                 {
-                                    if (Color[(byte)(sq + 7)] != EMPTY && Color[(byte)(sq + 7)] != toMove)
+                                    if (localColor[(byte)(sq + 7)] != EMPTY && localColor[(byte)(sq + 7)] != toMove)
                                     {
                                         if ((byte)(sq + 7) >= 56 && !isLegalityCheck)
                                         {
@@ -2394,7 +2406,7 @@ namespace Lisa
 
                                 if (sq % 8 != 7)
                                 {
-                                    if (Color[(byte)(sq + 9)] != EMPTY && Color[(byte)(sq + 9)] != toMove)
+                                    if (localColor[(byte)(sq + 9)] != EMPTY && localColor[(byte)(sq + 9)] != toMove)
                                     {
                                         if ((byte)(sq + 9) >= 56 && !isLegalityCheck)
                                         {
