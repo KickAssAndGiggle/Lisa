@@ -129,6 +129,12 @@ namespace Lisa
             SingleMoveHistory[RootMoveKey, MoveKey] += (Depth * Depth * Depth * Depth * Depth);
         }
 
+        public static void ReduceHistory(int RootMoveKey, int MoveKey, int Depth)
+        {
+            History[MoveKey] -= (Depth * Depth);
+            SingleMoveHistory[RootMoveKey, MoveKey] -= Depth;
+        }
+
 
         public static void IncreaseKillerScore(int FullDepth, int Depth, Move M, int Piece, int Score)
         {

@@ -1883,6 +1883,14 @@ namespace Lisa
                         }
                         break;
                     }
+                    else
+                    {
+                        if (quietPlayed < 3)
+                        {
+                            int thisKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
+                            Sorter.ReduceHistory(rootMoveKey, thisKey, SearchDepth);
+                        }
+                    }
                     if (score > alpha)
                     {
                         pv[depth - 1] = allOppMoves[nn];
