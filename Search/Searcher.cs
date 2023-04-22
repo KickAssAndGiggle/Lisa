@@ -1590,6 +1590,9 @@ namespace Lisa
                                 )
         {
 
+            bool lateCutoff = false;
+            bool lateAlphaRaise = false;
+
             Move[] localPV = new Move[depth];
 
             if (depth == 1)
@@ -1776,7 +1779,7 @@ namespace Lisa
                 }
             }
 
-            int quietPlayed = 0;
+            int quietPlayed = 0;            
             for (int nn = 0; nn < allOppMoves.Length; nn++)
             {
                 if ((ttMove.From == allOppMoves[nn].From && ttMove.To == allOppMoves[nn].To) ||
@@ -1881,6 +1884,7 @@ namespace Lisa
                         {
                             _infoNodesCutOffWithLaterSortedMove += 1;
                         }
+                        lateCutoff = (quietPlayed > 3);
                         break;
                     }
                     else
@@ -1903,6 +1907,7 @@ namespace Lisa
                         bestIndex = nn;
                         capsOnlyAlphaRaised = false;
                         alphaRaisedByNonGeneratedMove = false;
+                        lateAlphaRaise = (quietPlayed > 3);
                     }
 
                 }
@@ -1917,7 +1922,15 @@ namespace Lisa
                 {
                     _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TransTablePosTypeBetaCutoff);
                     int MoveKey = allOppMoves[bestIndex].From * 100 + allOppMoves[bestIndex].To;
-                    Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
+                    //Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
+                    if (lateCutoff)
+                    {
+                        Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                    }
+                    else
+                    {
+                        Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
+                    }                                        
                 }
                 else
                 {
@@ -1930,7 +1943,15 @@ namespace Lisa
                 {
                     _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TransTablePosTypeExact);
                     int MoveKey = allOppMoves[bestIndex].From * 100 + allOppMoves[bestIndex].To;
-                    Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                    //Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                    if (lateAlphaRaise)
+                    {
+                        Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                    }
+                    else
+                    {
+                        Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
+                    }
                 }
                 else if (!alphaRaisedByNonGeneratedMove)
                 {
