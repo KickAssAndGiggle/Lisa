@@ -11,58 +11,58 @@ namespace Lisa
 
         public int MaxTimeToUse;
 
-        public TimeManager(int TotalTimeLeftForGame, Board B)
+        public TimeManager(int millisecondsLeft, Board theBoard)
         {
 
-            if (TotalTimeLeftForGame < 500)
+            if (millisecondsLeft < 500)
             {
                 MaxTimeToUse = 50;
             }
-            else if (TotalTimeLeftForGame < 1750)
+            else if (millisecondsLeft < 1750)
             {
                 MaxTimeToUse = 100;
             }
-            else if (TotalTimeLeftForGame < 3500)
+            else if (millisecondsLeft < 3500)
             {
                 MaxTimeToUse = 150;
             }
-            else if (TotalTimeLeftForGame < 5000)
+            else if (millisecondsLeft < 5000)
             {
                 MaxTimeToUse = 300;
             }
-            else if (TotalTimeLeftForGame >= 5000 && TotalTimeLeftForGame < 15000)
+            else if (millisecondsLeft >= 5000 && millisecondsLeft < 15000)
             {
                 MaxTimeToUse = 600;
             }
-            else if (TotalTimeLeftForGame >= 15000 && TotalTimeLeftForGame < 30000)
+            else if (millisecondsLeft >= 15000 && millisecondsLeft < 30000)
             {
                 MaxTimeToUse = 1200;
             }
-            else if (TotalTimeLeftForGame >= 30000 && TotalTimeLeftForGame < 60000)
+            else if (millisecondsLeft >= 30000 && millisecondsLeft < 60000)
             {
                 MaxTimeToUse = 5000;
             }
-            else if (TotalTimeLeftForGame >= 60000 && TotalTimeLeftForGame < 120000)
+            else if (millisecondsLeft >= 60000 && millisecondsLeft < 120000)
             {
                 MaxTimeToUse = 9000;
             }
             else
             {
-                if (B.PieceCount >= 28)
+                if (theBoard.PieceCount >= 28)
                 {
-                    MaxTimeToUse = Convert.ToInt32(TotalTimeLeftForGame * 0.04);
+                    MaxTimeToUse = Convert.ToInt32(millisecondsLeft * 0.04);
                 }
-                else if (B.PieceCount < 28 && B.PieceCount >= 20)
+                else if (theBoard.PieceCount < 28 && theBoard.PieceCount >= 20)
                 {
-                    MaxTimeToUse = Convert.ToInt32(TotalTimeLeftForGame * 0.05);
+                    MaxTimeToUse = Convert.ToInt32(millisecondsLeft * 0.05);
                 }
-                else if (B.PieceCount < 20 && B.PieceCount >= 14)
+                else if (theBoard.PieceCount < 20 && theBoard.PieceCount >= 14)
                 {
-                    MaxTimeToUse = Convert.ToInt32(TotalTimeLeftForGame * 0.10);
+                    MaxTimeToUse = Convert.ToInt32(millisecondsLeft * 0.10);
                 }
                 else
                 {
-                    MaxTimeToUse = Convert.ToInt32(TotalTimeLeftForGame * 0.12);
+                    MaxTimeToUse = Convert.ToInt32(millisecondsLeft * 0.12);
                 }
             }
 
