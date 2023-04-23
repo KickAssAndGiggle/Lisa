@@ -4,91 +4,91 @@ namespace Lisa
     public class PerftRunner
     {
 
-        private readonly string PerftFen = "";
-        private readonly int PerftDepth = 0;
-        private readonly string PerftOutputFile;
+        private readonly string _perftFen = "";
+        private readonly int _perftDepth = 0;
+        private readonly string _perftOutputFile;
 
-        public PerftRunner(string Fen, int Depth, string OutputFile)
+        public PerftRunner(string fen, int depth, string outputFile)
         {
-            PerftFen = Fen;
-            PerftDepth = Depth;
-            PerftOutputFile = OutputFile;
+            _perftFen = fen;
+            _perftDepth = depth;
+            _perftOutputFile = outputFile;
         }
 
 
         public void DoPerft()
         {
 
-            List<string> Lines = new();
-            Board PerftBoard = new();
-            PerftBoard.InitialiseFromFEN(PerftFen);
-            int Depth = 0;
+            List<string> lines = new();
+            Board perftBoard = new();
+            perftBoard.InitialiseFromFEN(_perftFen);
+            int depth = 0;
 
             do
             {
 
-                long PerftMovesAtDepth = 0;
-                Depth += 1;
+                long perftMovesAtDepth = 0;
+                depth += 1;
 
-                Lines.Add("Perft @ depth " + Depth.ToString());
+                lines.Add("Perft @ depth " + depth.ToString());
 
-                int StartTicks = System.Environment.TickCount;
-                Move[] Moves;
-                if (PerftBoard.OnMove == WHITE)
+                int startTicks = System.Environment.TickCount;
+                Move[] moves;
+
+                if (perftBoard.OnMove == WHITE)
                 {
-                    Moves = PerftBoard.GenerateAllMoves(WHITE);
+                    moves = perftBoard.GenerateAllMoves(WHITE);
                 }
                 else
                 {
-                    Moves = PerftBoard.GenerateAllMoves(BLACK);
+                    moves = perftBoard.GenerateAllMoves(BLACK);
                 }
-                Perft(Moves, Depth, PerftBoard.OnMove, ref PerftBoard, ref PerftMovesAtDepth);
-                int EndTicks = System.Environment.TickCount;
-                Lines.Add("Moves: " + PerftMovesAtDepth.ToString());
-                Lines.Add("Milliseconds: " + (EndTicks - StartTicks).ToString());
-                Lines.Add(" ");
-                Lines.Add(" ");
 
-            } while (Depth < PerftDepth);
+                Perft(moves, depth, perftBoard.OnMove, ref perftBoard, ref perftMovesAtDepth);
 
-            StreamWriter SW = File.CreateText(PerftOutputFile);
-            foreach (string L in Lines)
+                int endTicks = System.Environment.TickCount;
+
+                lines.Add("Moves: " + perftMovesAtDepth.ToString());
+                lines.Add("Milliseconds: " + (endTicks - startTicks).ToString());
+                lines.Add(" ");
+                lines.Add(" ");
+
+            } while (depth < _perftDepth);
+
+            StreamWriter sw = File.CreateText(_perftOutputFile);
+            foreach (string line in lines)
             {
-                SW.WriteLine(L);
+                sw.WriteLine(line);
             }
-            SW.Close();
+            sw.Close();
 
         }
 
 
-        private void Perft(Move[] Moves, int Depth, int OnMove, ref Board B, ref long TotalMoveCount)
+        private void Perft(Move[] moves, int depth, int onMove, ref Board theBoard, ref long totalMoveCount)
         {
-
-            if (Depth == 1)
+            if (depth == 1)
             {
-                foreach (Move M in Moves)
+                foreach (Move M in moves)
                 {
-                    if (B.MoveIsLegal(M, OnMove))
+                    if (theBoard.MoveIsLegal(M, onMove))
                     {
-                        TotalMoveCount += 1;
+                        totalMoveCount += 1;
                     }
                 }
                 return;
             }
 
-            foreach (Move M in Moves)
+            foreach (Move m in moves)
             {
-                if (B.MoveIsLegal(M, OnMove))
+                if (theBoard.MoveIsLegal(m, onMove))
                 {
-                    long StartZobrist = B.CurrentZobrist;
-                    B.MakeMove(M, OnMove, false);
-                    Move[] NewMoves = B.GenerateAllMoves(OnMove == WHITE ? BLACK : WHITE);
-                    Perft(NewMoves, Depth - 1, OnMove == WHITE ? BLACK : WHITE, ref B, ref TotalMoveCount);
-                    B.UnmakeLastMove();
-                    long EndZobrist = B.CurrentZobrist;
+                    theBoard.MakeMove(m, onMove, false);
+                    Move[] NewMoves = theBoard.GenerateAllMoves(onMove == WHITE ? BLACK : WHITE);
+                    Perft(NewMoves, depth - 1, onMove == WHITE ? BLACK : WHITE, ref theBoard, ref totalMoveCount);
+                    theBoard.UnmakeLastMove();
                 }
             }
-
         }
     }
 }
