@@ -1068,7 +1068,7 @@ namespace Lisa
                         Piece[rank + indent] = ROOK;
                         Color[rank + indent] = BLACK;
                         PieceCount += 1;
-                        BlackMaterial += Material[ROOK];
+                        BlackMaterial += MATERIAL[ROOK];
                         if (BlackRookOneSquare == 255)
                         {
                             BlackRookOneSquare = (byte)(rank + indent);
@@ -1085,7 +1085,7 @@ namespace Lisa
                         Piece[rank + indent] = KNIGHT;
                         Color[rank + indent] = BLACK;
                         PieceCount += 1;
-                        BlackMaterial += Material[KNIGHT];
+                        BlackMaterial += MATERIAL[KNIGHT];
                         BlackEarlyPSTScore += _earlyBlackPST[KNIGHT][rank + indent];
                         BlackLatePSTScore += _lateBlackPST[KNIGHT][rank + indent];
                         if (BlackKnightOneSquare == 255)
@@ -1102,7 +1102,7 @@ namespace Lisa
                         Piece[rank + indent] = BISHOP;
                         Color[rank + indent] = BLACK;
                         PieceCount += 1;
-                        BlackMaterial += Material[BISHOP];
+                        BlackMaterial += MATERIAL[BISHOP];
                         if (SquareColor[rank + indent] == DARKSQUARE)
                         {
                             BlackHasDarkSquaredBishop = true;
@@ -1121,7 +1121,7 @@ namespace Lisa
                         Piece[rank + indent] = QUEEN;
                         Color[rank + indent] = BLACK;
                         PieceCount += 1;
-                        BlackMaterial += Material[QUEEN];
+                        BlackMaterial += MATERIAL[QUEEN];
                         BlackQueenSquare = (byte)(rank + indent);
                         BlackEarlyPSTScore += _earlyBlackPST[QUEEN][rank + indent];
                         BlackLatePSTScore += _lateBlackPST[QUEEN][rank + indent];
@@ -1140,7 +1140,7 @@ namespace Lisa
                         Piece[rank + indent] = PAWN;
                         Color[rank + indent] = BLACK;
                         PieceCount += 1;
-                        BlackMaterial += Material[PAWN];
+                        BlackMaterial += MATERIAL[PAWN];
                         BlackFilePawns[indent] += 1;
                         BlackEarlyPSTScore += _earlyBlackPST[PAWN][rank + indent];
                         BlackLatePSTScore += _lateBlackPST[PAWN][rank + indent];
@@ -1160,7 +1160,7 @@ namespace Lisa
                         Piece[rank + indent] = ROOK;
                         Color[rank + indent] = WHITE;
                         PieceCount += 1;
-                        WhiteMaterial += Material[ROOK];
+                        WhiteMaterial += MATERIAL[ROOK];
                         if (WhiteRookOneSquare == 255)
                         {
                             WhiteRookOneSquare = (byte)(rank + indent);
@@ -1177,7 +1177,7 @@ namespace Lisa
                         Piece[rank + indent] = KNIGHT;
                         Color[rank + indent] = WHITE;
                         PieceCount += 1;
-                        WhiteMaterial += Material[KNIGHT];
+                        WhiteMaterial += MATERIAL[KNIGHT];
                         WhiteEarlyPSTScore += _earlyWhitePST[KNIGHT][rank + indent];
                         WhiteLatePSTScore += _lateWhitePST[KNIGHT][rank + indent];
                         if (WhiteKnightOneSquare == 255)
@@ -1194,7 +1194,7 @@ namespace Lisa
                         Piece[rank + indent] = BISHOP;
                         Color[rank + indent] = WHITE;
                         PieceCount += 1;
-                        WhiteMaterial += Material[BISHOP];
+                        WhiteMaterial += MATERIAL[BISHOP];
                         if (SquareColor[rank + indent] == DARKSQUARE)
                         {
                             WhiteHasDarkSquaredBishop = true;
@@ -1213,7 +1213,7 @@ namespace Lisa
                         Piece[rank + indent] = QUEEN;
                         Color[rank + indent] = WHITE;
                         PieceCount += 1;
-                        WhiteMaterial += Material[QUEEN];
+                        WhiteMaterial += MATERIAL[QUEEN];
                         WhiteQueenSquare = (byte)(rank + indent);
                         WhiteEarlyPSTScore += _earlyWhitePST[QUEEN][rank + indent];
                         WhiteLatePSTScore += _lateWhitePST[QUEEN][rank + indent];
@@ -1232,7 +1232,7 @@ namespace Lisa
                         Piece[rank + indent] = PAWN;
                         Color[rank + indent] = WHITE;
                         PieceCount += 1;
-                        WhiteMaterial += Material[PAWN];
+                        WhiteMaterial += MATERIAL[PAWN];
                         WhiteFilePawns[indent] += 1;
                         WhiteEarlyPSTScore += _earlyWhitePST[PAWN][rank + indent];
                         WhiteLatePSTScore += _lateWhitePST[PAWN][rank + indent];
@@ -1357,7 +1357,7 @@ namespace Lisa
             }
             else
             {
-                _moveList[_moveListTopIndex].Score = 4000 + (Material[Piece[to]] - Material[Piece[from]]);
+                _moveList[_moveListTopIndex].Score = 4000 + (MATERIAL[Piece[to]] - MATERIAL[Piece[from]]);
             }
             if (_moveList[_moveListTopIndex].Score == 4000)
             {
@@ -3116,7 +3116,7 @@ namespace Lisa
                                 BlackPawnsOnLightSquares -= 1;
                             }
                             ToggleZobristPieceOnSquare(theMove.To + 8, BLACK, PAWN);
-                            BlackMaterial -= Material[PAWN];
+                            BlackMaterial -= MATERIAL[PAWN];
                             WhiteFilePawns[theMove.From % 8] -= 1;
                             WhiteFilePawns[theMove.To % 8] += 1;
                             BlackFilePawns[theMove.To % 8] -= 1;
@@ -3148,7 +3148,7 @@ namespace Lisa
                                 WhitePawnsOnLightSquares -= 1;
                             }
                             ToggleZobristPieceOnSquare(theMove.To - 8, WHITE, PAWN);
-                            WhiteMaterial -= Material[PAWN];
+                            WhiteMaterial -= MATERIAL[PAWN];
                             BlackFilePawns[theMove.From % 8] -= 1;
                             BlackFilePawns[theMove.To % 8] += 1;
                             WhiteFilePawns[theMove.To % 8] -= 1;
@@ -3292,7 +3292,7 @@ namespace Lisa
 
                         if (toMove == WHITE)
                         {
-                            BlackMaterial -= Material[Piece[theMove.To]];
+                            BlackMaterial -= MATERIAL[Piece[theMove.To]];
                             BlackEarlyPSTScore -= _earlyBlackPST[Piece[theMove.To]][theMove.To];
                             BlackLatePSTScore -= _lateBlackPST[Piece[theMove.To]][theMove.To];
                             WhiteEarlyPSTScore -= _earlyWhitePST[Piece[theMove.From]][theMove.From];
@@ -3327,7 +3327,7 @@ namespace Lisa
                         }
                         else
                         {
-                            WhiteMaterial -= Material[Piece[theMove.To]];
+                            WhiteMaterial -= MATERIAL[Piece[theMove.To]];
                             WhiteEarlyPSTScore -= _earlyWhitePST[Piece[theMove.To]][theMove.To];
                             WhiteLatePSTScore -= _lateWhitePST[Piece[theMove.To]][theMove.To];
                             BlackEarlyPSTScore -= _earlyBlackPST[Piece[theMove.From]][theMove.From];
@@ -3601,8 +3601,8 @@ namespace Lisa
                 {
                     if (toMove == WHITE)
                     {
-                        WhiteMaterial -= Material[PAWN];
-                        WhiteMaterial += Material[theMove.PromotionPiece];
+                        WhiteMaterial -= MATERIAL[PAWN];
+                        WhiteMaterial += MATERIAL[theMove.PromotionPiece];
                         if (!theMove.IsCapture)
                         {
                             WhiteFilePawns[theMove.From % 8] -= 1;
@@ -3618,8 +3618,8 @@ namespace Lisa
                     }
                     else
                     {
-                        BlackMaterial -= Material[PAWN];
-                        BlackMaterial += Material[theMove.PromotionPiece];
+                        BlackMaterial -= MATERIAL[PAWN];
+                        BlackMaterial += MATERIAL[theMove.PromotionPiece];
                         if (!theMove.IsCapture)
                         {
                             BlackFilePawns[theMove.From % 8] -= 1;
@@ -3785,7 +3785,7 @@ namespace Lisa
                                 }
                             }
                             ToggleZobristPieceOnSquare(toUndo.To - 8, WHITE, PAWN);
-                            WhiteMaterial += Material[PAWN];
+                            WhiteMaterial += MATERIAL[PAWN];
                             WhiteFilePawns[toUndo.To % 8] += 1;
                             BlackFilePawns[toUndo.To % 8] -= 1;
                         }
@@ -3802,7 +3802,7 @@ namespace Lisa
                                 }
                             }
                             ToggleZobristPieceOnSquare(toUndo.To + 8, BLACK, PAWN);
-                            BlackMaterial += Material[PAWN];
+                            BlackMaterial += MATERIAL[PAWN];
                             BlackFilePawns[toUndo.To % 8] += 1;
                             WhiteFilePawns[toUndo.To % 8] -= 1;
                         }
@@ -3852,11 +3852,11 @@ namespace Lisa
                         ToggleZobristPieceOnSquare(toUndo.To, Color[toUndo.To], Piece[toUndo.To]);
                         if (Color[toUndo.To] == WHITE)
                         {
-                            WhiteMaterial += Material[Piece[toUndo.To]];
+                            WhiteMaterial += MATERIAL[Piece[toUndo.To]];
                         }
                         else
                         {
-                            BlackMaterial += Material[Piece[toUndo.To]];
+                            BlackMaterial += MATERIAL[Piece[toUndo.To]];
                         }
                     }
                 }
@@ -3954,8 +3954,8 @@ namespace Lisa
                 {
                     if (Color[toUndo.From] == WHITE)
                     {
-                        WhiteMaterial -= Material[Piece[toUndo.From]];
-                        WhiteMaterial += Material[PAWN];
+                        WhiteMaterial -= MATERIAL[Piece[toUndo.From]];
+                        WhiteMaterial += MATERIAL[PAWN];
                         WhiteFilePawns[toUndo.From % 8] += 1;
                         for (int pp = 0; pp <= 7; pp++)
                         {
@@ -3968,8 +3968,8 @@ namespace Lisa
                     }
                     else
                     {
-                        BlackMaterial -= Material[Piece[toUndo.From]];
-                        BlackMaterial += Material[PAWN];
+                        BlackMaterial -= MATERIAL[Piece[toUndo.From]];
+                        BlackMaterial += MATERIAL[PAWN];
                         BlackFilePawns[toUndo.From % 8] += 1;
                         for (int pp = 0; pp <= 7; pp++)
                         {
@@ -4037,9 +4037,9 @@ namespace Lisa
 
                 for (int nn = 0; nn < capsToSquare.Length; nn++)
                 {
-                    if (Material[Piece[capsToSquare[nn].From]] < lowestValPieceScore)
+                    if (MATERIAL[Piece[capsToSquare[nn].From]] < lowestValPieceScore)
                     {
-                        lowestValPieceScore = Material[Piece[capsToSquare[nn].From]];
+                        lowestValPieceScore = MATERIAL[Piece[capsToSquare[nn].From]];
                         lowestCap = nn;
                     }
                 }
@@ -4051,11 +4051,11 @@ namespace Lisa
 
                 if (Color[toSquare] == BLACK)
                 {
-                    whiteGains += SeeMaterial[Piece[toSquare]];
+                    whiteGains += SEE_MATERIAL[Piece[toSquare]];
                 }
                 else
                 {
-                    blackGains += SeeMaterial[Piece[toSquare]];
+                    blackGains += SEE_MATERIAL[Piece[toSquare]];
                 }
 
                 Piece[toSquare] = Piece[capsToSquare[lowestCap].From];

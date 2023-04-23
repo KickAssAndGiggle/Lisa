@@ -4,168 +4,168 @@ namespace Lisa
     public sealed class TranspositionTable
     {
 
-        private TTMove[] PrimaryMoveList;
-        private TTScore[] ScoreList;
-        private TTPawnAnalysis[] PawnStructList;
+        private TTMove[] _primaryMoveList;
+        private TTScore[] _scoreList;
+        private TTPawnAnalysis[] _pawnStructList;
 
-        private readonly int TTSize;
-        private readonly int ScoreSize;
-        private readonly int PassedPawnSize;
+        private readonly int _ttSize;
+        private readonly int _scoreSize;
+        private readonly int _passedPawnSize;
 
         public TranspositionTable()
         {
 
-            int TTByteSize;
-            int ScoreByteSize;
-            int PawnByteSize;
+            int ttByteSize;
+            int scoreByteSize;
+            int pawnByteSize;
 
             unsafe
             {
-                TTByteSize = sizeof(TTMove);
-                ScoreByteSize = sizeof(TTScore);
-                PawnByteSize = sizeof(TTPawnAnalysis);
+                ttByteSize = sizeof(TTMove);
+                scoreByteSize = sizeof(TTScore);
+                pawnByteSize = sizeof(TTPawnAnalysis);
             }
 
-            int TotalAllowedTTSize = TTHashSizeMB * 1024 * 1024;
-            int TotalAllowedScoreSize = PositionScoreHashSizeMB * 1024 * 1024;
-            int TotalAllowedPassedPawnSize = PawnStructureHashSizeMB * 1024 * 1024;
+            int totalAllowed_ttSize = TT_HASH_SIZE_MB * 1024 * 1024;
+            int totalAllowed_scoreSize = POSITION_SCORE_HASH_SIZE_MB * 1024 * 1024;
+            int totalAllowed_passedPawnSize = PAWN_STRUCTURE_HASH_SIZE_MB * 1024 * 1024;
 
-            TTSize = TotalAllowedTTSize / TTByteSize;
-            ScoreSize = TotalAllowedScoreSize / ScoreByteSize;
-            PassedPawnSize = TotalAllowedPassedPawnSize / PawnByteSize;
+            _ttSize = totalAllowed_ttSize / ttByteSize;
+            _scoreSize = totalAllowed_scoreSize / scoreByteSize;
+            _passedPawnSize = totalAllowed_passedPawnSize / pawnByteSize;
 
-            PrimaryMoveList = new TTMove[TTSize];
-            ScoreList = new TTScore[ScoreSize];
-            PawnStructList = new TTPawnAnalysis[PassedPawnSize];
+            _primaryMoveList = new TTMove[_ttSize];
+            _scoreList = new TTScore[_scoreSize];
+            _pawnStructList = new TTPawnAnalysis[_passedPawnSize];
 
         }
 
 
-        private int MakeTTHash(long Zobrist)
+        private int MakeTTHash(long zobrist)
         {
-            return (int)Math.Abs(Zobrist % TTSize);
+            return (int)Math.Abs(zobrist % _ttSize);
         }
 
-        private int MakeScoreTTHash(long Zobrist)
+        private int MakeScoreTTHash(long zobrist)
         {
-            return (int)Math.Abs(Zobrist % ScoreSize);
+            return (int)Math.Abs(zobrist % _scoreSize);
         }
 
-        private int MakePawnTTHash(long PawnOnlyZobrist)
+        private int MakePawnTTHash(long pawnOnlyZobrist)
         {
-            return (int)Math.Abs(PawnOnlyZobrist % PassedPawnSize);
+            return (int)Math.Abs(pawnOnlyZobrist % _passedPawnSize);
         }
 
-        public void AddToTranstable(long Zobrist, int PosScore, byte PosDepth, Move PosBestResponse, byte PosType)
+        public void AddToTranstable(long zobrist, int posScore, byte posDepth, Move bestResponse, byte posType)
         {
 
-            int TTHash = MakeTTHash(Zobrist);
-            byte PrimaryCurrentDepth;
-            if (PrimaryMoveList[TTHash].PositionFlag >= 200)
+            int ttHash = MakeTTHash(zobrist);
+            byte primaryCurrentDepth;
+            if (_primaryMoveList[ttHash].PositionFlag >= 200)
             {
-                PrimaryCurrentDepth = (byte)(PrimaryMoveList[TTHash].PositionFlag - 200);
+                primaryCurrentDepth = (byte)(_primaryMoveList[ttHash].PositionFlag - 200);
             }
-            else if (PrimaryMoveList[TTHash].PositionFlag >= 100)
+            else if (_primaryMoveList[ttHash].PositionFlag >= 100)
             {
-                PrimaryCurrentDepth = (byte)(PrimaryMoveList[TTHash].PositionFlag - 100);
+                primaryCurrentDepth = (byte)(_primaryMoveList[ttHash].PositionFlag - 100);
             }
             else
             {
-                PrimaryCurrentDepth = (byte)(PrimaryMoveList[TTHash].PositionFlag);
+                primaryCurrentDepth = (byte)(_primaryMoveList[ttHash].PositionFlag);
             }
 
-            if (PrimaryCurrentDepth < PosDepth)
+            if (primaryCurrentDepth < posDepth)
             {
-                PrimaryMoveList[TTHash].PositionFlag = (byte)((PosType * 100) + PosDepth);
-                PrimaryMoveList[TTHash].BestResponseFrom = PosBestResponse.From;
-                PrimaryMoveList[TTHash].BestResponseTo = PosBestResponse.To;
-                PrimaryMoveList[TTHash].Score = PosScore;
-                PrimaryMoveList[TTHash].Zobrist = Zobrist;
-                PrimaryMoveList[TTHash].MoveAttributeFlag = (byte)((PosBestResponse.IsCapture ? 100 : 0) + PosBestResponse.PromotionPiece);
+                _primaryMoveList[ttHash].PositionFlag = (byte)((posType * 100) + posDepth);
+                _primaryMoveList[ttHash].BestResponseFrom = bestResponse.From;
+                _primaryMoveList[ttHash].BestResponseTo = bestResponse.To;
+                _primaryMoveList[ttHash].Score = posScore;
+                _primaryMoveList[ttHash].Zobrist = zobrist;
+                _primaryMoveList[ttHash].MoveAttributeFlag = (byte)((bestResponse.IsCapture ? 100 : 0) + bestResponse.PromotionPiece);
             }
 
         }
 
 
-        public void AddPawnStructureToTransTable(long PawnOnlyZobrist, int WhitePPScore, int BlackPPScore, int WhiteBWPScore,
-            int BlackBWPScore, int WhiteChainScore, int BlackChainPawn, int WhiteDblPawnScore, int BlackDblPawnScore,
-            int WhiteIsoPawnScore, int BlackIsoPawnScore)
+        public void AddPawnStructureToTransTable(long pawnOnlyZobrist, int whitePPScore, int blackPPScore, int whiteBWPScore,
+            int blackBWPScore, int whiteChainScore, int blackChainPawn, int whiteDblPawnScore, int blackDblPawnScore,
+            int whiteIsoPawnScore, int blackIsoPawnScore)
         {
 
-            int TTPPHash = MakePawnTTHash(PawnOnlyZobrist);
-            PawnStructList[TTPPHash].WhitePassedPawnScore = WhitePPScore;
-            PawnStructList[TTPPHash].BlackPassedPawnScore = BlackPPScore;
-            PawnStructList[TTPPHash].WhiteBackwardsPawnScore = WhiteBWPScore;
-            PawnStructList[TTPPHash].BlackBackwardPawnScore = BlackBWPScore;
-            PawnStructList[TTPPHash].WhitePawnChainScore = WhiteChainScore;
-            PawnStructList[TTPPHash].BlackPawnChainScore = BlackChainPawn;
-            PawnStructList[TTPPHash].WhiteDoubledPawnScore = WhiteDblPawnScore;
-            PawnStructList[TTPPHash].BlackDoubledPawnScore = BlackDblPawnScore;
-            PawnStructList[TTPPHash].WhiteIsolatedPawnScore = WhiteIsoPawnScore;
-            PawnStructList[TTPPHash].BlackIsolatedPawnScore = BlackIsoPawnScore;
+            int ttPPHash = MakePawnTTHash(pawnOnlyZobrist);
+            _pawnStructList[ttPPHash].WhitePassedPawnScore = whitePPScore;
+            _pawnStructList[ttPPHash].BlackPassedPawnScore = blackPPScore;
+            _pawnStructList[ttPPHash].WhiteBackwardsPawnScore = whiteBWPScore;
+            _pawnStructList[ttPPHash].BlackBackwardPawnScore = blackBWPScore;
+            _pawnStructList[ttPPHash].WhitePawnChainScore = whiteChainScore;
+            _pawnStructList[ttPPHash].BlackPawnChainScore = blackChainPawn;
+            _pawnStructList[ttPPHash].WhiteDoubledPawnScore = whiteDblPawnScore;
+            _pawnStructList[ttPPHash].BlackDoubledPawnScore = blackDblPawnScore;
+            _pawnStructList[ttPPHash].WhiteIsolatedPawnScore = whiteIsoPawnScore;
+            _pawnStructList[ttPPHash].BlackIsolatedPawnScore = blackIsoPawnScore;
 
-            PawnStructList[TTPPHash].Zobrist = PawnOnlyZobrist;
+            _pawnStructList[ttPPHash].Zobrist = pawnOnlyZobrist;
 
         }
 
 
-        public bool LookupPPScore(long Zobrist, out TTPawnAnalysis PosScore)
+        public bool LookupPPScore(long zobrist, out TTPawnAnalysis posScore)
         {
 
-            int TTHash = MakePawnTTHash(Zobrist);
-            if (PawnStructList[TTHash].Zobrist == Zobrist)
+            int ttHash = MakePawnTTHash(zobrist);
+            if (_pawnStructList[ttHash].Zobrist == zobrist)
             {
-                PosScore = PawnStructList[TTHash];
+                posScore = _pawnStructList[ttHash];
                 return true;
             }
             else
             {
-                PosScore = new TTPawnAnalysis();
+                posScore = new TTPawnAnalysis();
                 return false;
             }
         }
 
 
-        public void AddScoreToTransTable(long Zobrist, int WhiteScore, int BlackScore)
+        public void AddScoreToTransTable(long zobrist, int whiteScore, int blackScore)
         {
 
-            int TTHash = MakeScoreTTHash(Zobrist);
-            ScoreList[TTHash].WhiteScore = WhiteScore;
-            ScoreList[TTHash].BlackScore = BlackScore;
-            ScoreList[TTHash].Zobrist = Zobrist;
+            int TTHash = MakeScoreTTHash(zobrist);
+            _scoreList[TTHash].WhiteScore = whiteScore;
+            _scoreList[TTHash].BlackScore = blackScore;
+            _scoreList[TTHash].Zobrist = zobrist;
 
         }
 
 
-        public bool LookupScore(long Zobrist, out TTScore PosScore)
+        public bool LookupScore(long zobrist, out TTScore posScore)
         {
 
-            int TTHash = MakeScoreTTHash(Zobrist);
-            if (ScoreList[TTHash].Zobrist == Zobrist)
+            int ttHash = MakeScoreTTHash(zobrist);
+            if (_scoreList[ttHash].Zobrist == zobrist)
             {
-                PosScore = ScoreList[TTHash];
+                posScore = _scoreList[ttHash];
                 return true;
             }
             else
             {
-                PosScore = new TTScore();
+                posScore = new TTScore();
                 return false;
             }
 
         }
 
-        public bool LookupPos(long Zobrist, out TTMove PosEntry)
+        public bool LookupPos(long zobrist, out TTMove posEntry)
         {
 
-            int TTHash = MakeTTHash(Zobrist);
-            if (PrimaryMoveList[TTHash].Zobrist == Zobrist)
+            int ttHash = MakeTTHash(zobrist);
+            if (_primaryMoveList[ttHash].Zobrist == zobrist)
             {
-                PosEntry = PrimaryMoveList[TTHash];
+                posEntry = _primaryMoveList[ttHash];
                 return true;
             }
             else
             {
-                PosEntry = new TTMove();
+                posEntry = new TTMove();
                 return false;
             }
 
@@ -173,9 +173,9 @@ namespace Lisa
 
         public void Clear()
         {
-            PrimaryMoveList = new TTMove[TTSize];
-            ScoreList = new TTScore[ScoreSize];
-            PawnStructList = new TTPawnAnalysis[PassedPawnSize];
+            _primaryMoveList = new TTMove[_ttSize];
+            _scoreList = new TTScore[_scoreSize];
+            _pawnStructList = new TTPawnAnalysis[_passedPawnSize];
             GC.Collect();
         }
 

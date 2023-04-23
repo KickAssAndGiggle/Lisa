@@ -6,39 +6,37 @@ namespace Lisa
         static void Main(string[] args)
         {
 
-            Initialise();
-
-            if (Mode == ProgramMode.Perft)
+            if (RUN_MODE == ProgramMode.Perft)
             {
                 ReconfigureAfterOptions();
-                PerftRunner perfter = new(PerftFen, PerftDepth, OutputFile);
+                PerftRunner perfter = new(PERFT_FEN, PERFT_DEPTH, OUTPUT_FILE);
                 perfter.DoPerft();
             }
-            else if (Mode == ProgramMode.UCI)
+            else if (RUN_MODE == ProgramMode.UCI)
             {
                 UCIInterface uci = new();
                 uci.InitiateUCI();
             }
-            else if (Mode == ProgramMode.MultiFen)
+            else if (RUN_MODE == ProgramMode.MultiFen)
             {
-                if (FensToTest != null)
+                if (FENS_TO_TEST != null)
                 {
                     ReconfigureAfterOptions();
-                    FenTester fenner = new(FensToTest, OutputFile);
+                    FenTester fenner = new(FENS_TO_TEST, OUTPUT_FILE);
                     fenner.Test();
                 }
             }
-            else if (Mode == ProgramMode.FenToZobrist)
+            else if (RUN_MODE == ProgramMode.FenToZobrist)
             {
                 ReconfigureAfterOptions();
                 FenToZobristConverter fenZob = new();
-                fenZob.ConvertFenToZobrist(PerftFen, OutputFile);
+                fenZob.ConvertFenToZobrist(PERFT_FEN, OUTPUT_FILE);
             }
-            else if (Mode == ProgramMode.EPD)
+            else if (RUN_MODE == ProgramMode.EPD)
             {
                 ReconfigureAfterOptions();
-                EPDTester epd = new(EPDInput, EPDOutput);
-                epd.AnalyzePositions(MultiFenDepth);
+                EPDTester epd = new(EPD_INPUT, EPD_OUTPUT);
+                epd.AnalyzePositions(MULTI_FEN_DEPTH);
             }
 
         }

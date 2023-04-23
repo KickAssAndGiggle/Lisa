@@ -29,7 +29,7 @@ namespace Lisa
                 string OurFen = FenBoard.GenerateFen();
 
                 Searcher Search = new();
-                Search.Search(ref FenBoard, Globals.MultiFenDepth);
+                Search.Search(ref FenBoard, MULTI_FEN_DEPTH);
                 Move BestMove = Search.BestMove;
 
                 int EndTicks = System.Environment.TickCount;

@@ -194,7 +194,7 @@ namespace Lisa
             _theBoard.RecalcPSTScores();
 
             //Check the opening book: is this position in it, if yes, we will play one of the responses in the book
-            bool posInBook = Book.LookInBook(_theBoard.CurrentZobrist,
+            bool posInBook = OPENING_BOOK.LookInBook(_theBoard.CurrentZobrist,
                 out byte bookFromSquare, out byte bookToSquare);
 
             //Generate all possible moves, and check if each is legal. If the position was in the book,
@@ -434,7 +434,7 @@ namespace Lisa
                         }
                     }
 
-                    if (_theBoard.WhiteMaterial + _theBoard.BlackMaterial > MaxMaterial / 2)
+                    if (_theBoard.WhiteMaterial + _theBoard.BlackMaterial > MAX_MATERIAL / 2)
                     {
                         if (depth == 6 && legal.Length > 1)
                         {
@@ -698,7 +698,7 @@ namespace Lisa
             _endGame = (pieceCount <= 18);
             _opening = (pieceCount > 28);
 
-            if (Mode == ProgramMode.UCI && UseTablebase && ((pieceCount <= 7 && timeController.MaxTimeToUse >= 15000) || pieceCount <= 6))
+            if (RUN_MODE == ProgramMode.UCI && USE_TABLEBASE && ((pieceCount <= 7 && timeController.MaxTimeToUse >= 15000) || pieceCount <= 6))
             {
                 EndgameTablebase EGT = new();
                 string UCIMove = EGT.FindBestMoveFrom7ManTablebase(_theBoard.GenerateFen());
@@ -1078,7 +1078,7 @@ namespace Lisa
                     {
                         _infoCutOffWithPVMoveOnly += 1;
                         alpha = Score;
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, ttMove, TransTablePosTypeBetaCutoff);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, ttMove, TT_POS_TYPE_BETA_CUT);
                         Sorter.IncreaseKillerScore(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From], 12);
                         return true;
                     }
@@ -1245,7 +1245,7 @@ namespace Lisa
                     {
                         alpha = score;
                         _infoCutOffUsingRefutation += 1;
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.Refutations[_fullDepth - depth], TransTablePosTypeBetaCutoff);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.Refutations[_fullDepth - depth], TT_POS_TYPE_BETA_CUT);
                         return true;
                     }
                     else if (score > alpha)
@@ -1324,7 +1324,7 @@ namespace Lisa
                     {
                         alpha = score;
                         _infoCutOffUsingKillerOne += 1;
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerOnes[_fullDepth - depth], TransTablePosTypeBetaCutoff);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerOnes[_fullDepth - depth], TT_POS_TYPE_BETA_CUT);
                         Sorter.IncreaseKillerScore(_fullDepth, depth, Sorter.KillerOnes[_fullDepth - depth], _theBoard.Piece[Sorter.KillerOnes[_fullDepth - depth].From], 10);
                         Sorter.SetRefutationMove(_fullDepth, depth, Sorter.KillerOnes[_fullDepth - depth], _theBoard.Piece[Sorter.KillerOnes[_fullDepth - depth].From]);
                         return true;
@@ -1404,7 +1404,7 @@ namespace Lisa
                     {
                         alpha = score;
                         _infoCutOffUsingKillerTwo += 1;
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerTwos[_fullDepth - depth], TransTablePosTypeBetaCutoff);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerTwos[_fullDepth - depth], TT_POS_TYPE_BETA_CUT);
                         Sorter.IncreaseKillerScore(_fullDepth, depth, Sorter.KillerTwos[_fullDepth - depth], _theBoard.Piece[Sorter.KillerTwos[_fullDepth - depth].From], 8);
                         Sorter.SetRefutationMove(_fullDepth, depth, Sorter.KillerTwos[_fullDepth - depth], _theBoard.Piece[Sorter.KillerTwos[_fullDepth - depth].To]);
                         return true;
@@ -1925,7 +1925,7 @@ namespace Lisa
             {
                 if (!capsOnlyCut && allOppMoves != null)
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TransTablePosTypeBetaCutoff);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TT_POS_TYPE_BETA_CUT);
                     int MoveKey = allOppMoves[bestIndex].From * 100 + allOppMoves[bestIndex].To;
                     //Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
                     if (lateCutoff)
@@ -1939,14 +1939,14 @@ namespace Lisa
                 }
                 else
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOpCaps[bestIndex], TransTablePosTypeBetaCutoff);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOpCaps[bestIndex], TT_POS_TYPE_BETA_CUT);
                 }
             }
             else if (alphaRaised)
             {
                 if (!capsOnlyAlphaRaised && !alphaRaisedByNonGeneratedMove && allOppMoves != null)
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TransTablePosTypeExact);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOppMoves[bestIndex], TT_POS_TYPE_EXACT);
                     int MoveKey = allOppMoves[bestIndex].From * 100 + allOppMoves[bestIndex].To;
                     //Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
                     if (lateAlphaRaise)
@@ -1960,32 +1960,32 @@ namespace Lisa
                 }
                 else if (!alphaRaisedByNonGeneratedMove)
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOpCaps[bestIndex], TransTablePosTypeExact);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, allOpCaps[bestIndex], TT_POS_TYPE_EXACT);
                 }
                 else
                 {
                     if (alphaRaisedByKillerTwo)
                     {
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerTwos[_fullDepth - depth], TransTablePosTypeExact);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerTwos[_fullDepth - depth], TT_POS_TYPE_EXACT);
                     }
                     else if (alphaRaisedByKillerOne)
                     {
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerOnes[_fullDepth - depth], TransTablePosTypeExact);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerOnes[_fullDepth - depth], TT_POS_TYPE_EXACT);
                     }
                     else if (alphaRaisedByRefutation)
                     {
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.Refutations[_fullDepth - depth], TransTablePosTypeExact);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.Refutations[_fullDepth - depth], TT_POS_TYPE_EXACT);
                     }
                     else
                     {
-                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, ttMove, TransTablePosTypeExact);
+                        _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, ttMove, TT_POS_TYPE_EXACT);
                     }
                 }
             }
             else
             {
 
-                _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, _phantomMove, TransTablePosTypeAlphaNotExceeded);
+                _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, _phantomMove, TT_POS_TYPE_ALPHA_NOT_BEATEN);
 
             }
 
@@ -2018,7 +2018,7 @@ namespace Lisa
             {
                 if (_theBoard.Piece[legalMove.To] != -1)
                 {
-                    materialCaptured = Material[_theBoard.Piece[legalMove.To]];
+                    materialCaptured = MATERIAL[_theBoard.Piece[legalMove.To]];
                 }
                 else
                 {
@@ -2077,19 +2077,19 @@ namespace Lisa
 
             if (StandPat < alpha && !isInCheck)
             {
-                if (StandPat + Material[QUEEN] < alpha)
+                if (StandPat + MATERIAL[QUEEN] < alpha)
                 {
                     _theBoard.UnmakeLastMove();
-                    return StandPat + Material[QUEEN];
+                    return StandPat + MATERIAL[QUEEN];
                 }
                 else
                 {
                     if (_theBoard.WhiteQueenSquare == 255 && _theBoard.BlackQueenSquare == 255)
                     {
-                        if (StandPat + Material[ROOK] < alpha)
+                        if (StandPat + MATERIAL[ROOK] < alpha)
                         {
                             _theBoard.UnmakeLastMove();
-                            return StandPat + Material[ROOK];
+                            return StandPat + MATERIAL[ROOK];
                         }
                     }
                 }
@@ -2099,7 +2099,7 @@ namespace Lisa
             {
                 if (QuiesceDepth == 0)
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, StandPat, 1, _phantomMove, TransTablePosTypeBetaCutoff);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, StandPat, 1, _phantomMove, TT_POS_TYPE_BETA_CUT);
                 }
                 _theBoard.UnmakeLastMove();
                 return StandPat;
@@ -2129,14 +2129,14 @@ namespace Lisa
                 {
                     if (legalMove.IsCapture)
                     {
-                        if (_theBoard.Piece[allOppMoves[nn].To] != -1 && StandPat + Material[_theBoard.Piece[allOppMoves[nn].To]] < alpha - 25)
+                        if (_theBoard.Piece[allOppMoves[nn].To] != -1 && StandPat + MATERIAL[_theBoard.Piece[allOppMoves[nn].To]] < alpha - 25)
                         {
                             continue;
                         }
                     }
                     else
                     {
-                        if (_theBoard.Piece[allOppMoves[nn].To] != -1 && StandPat + Material[_theBoard.Piece[allOppMoves[nn].To]] < alpha)
+                        if (_theBoard.Piece[allOppMoves[nn].To] != -1 && StandPat + MATERIAL[_theBoard.Piece[allOppMoves[nn].To]] < alpha)
                         {
                             continue;
                         }
@@ -2196,15 +2196,15 @@ namespace Lisa
             {
                 if (betaCutoff)
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, 1, _phantomMove, TransTablePosTypeBetaCutoff);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, 1, _phantomMove, TT_POS_TYPE_BETA_CUT);
                 }
                 else if (alphaRaised)
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, 1, _phantomMove, TransTablePosTypeExact);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, 1, _phantomMove, TT_POS_TYPE_EXACT);
                 }
                 else
                 {
-                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, 1, _phantomMove, TransTablePosTypeAlphaNotExceeded);
+                    _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, 1, _phantomMove, TT_POS_TYPE_ALPHA_NOT_BEATEN);
                 }
             }
 

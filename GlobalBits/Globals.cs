@@ -9,7 +9,7 @@ namespace Lisa
     public static class Globals
     {
 
-        #region Default PST
+        #region Default Piece Square Table
 
 
         public static int[] WhiteKnightEarlyPST = new int[64]
@@ -312,13 +312,6 @@ namespace Lisa
 
         #region Search parameters
 
-        //public static int DEPTH2_FUTILITY_MARGIN = 369;
-        //public static int DEPTH3_FUTILITY_MARGIN = 420;
-        //public static int DEPTH4_FUTILITY_MARGIN = 779;
-        //public static int DEPTH2_REVERSE_FUTILITY_MARGIN = 303;
-        //public static int DEPTH3_REVERSE_FUTILITY_MARGIN = 417;
-        //public static int DEPTH4_REVERSE_FUTILITY_MARGIN = 838;
-
         public static int DEPTH2_FUTILITY_MARGIN = 155;
         public static int DEPTH3_FUTILITY_MARGIN = 375;
         public static int DEPTH4_FUTILITY_MARGIN = 605;
@@ -350,18 +343,7 @@ namespace Lisa
 
         #endregion
 
-
-        public static bool UseTablebase;
-
-        public static int[] Material;
-        public static int[] SeeMaterial;
-        public static int MaxMaterial;
-
-        public static OpeningBook Book;
-
-        public const byte TransTablePosTypeExact = 0;
-        public const byte TransTablePosTypeAlphaNotExceeded = 1;
-        public const byte TransTablePosTypeBetaCutoff = 2;
+        #region Public Global Enums And Structs
 
         public struct TTMove
         {
@@ -396,14 +378,6 @@ namespace Lisa
             public long Zobrist;
         }
 
-        public enum NodeTypes
-        {
-            All = 0,
-            Cut = 1,
-            PV = 2
-        };
-
-
         public struct BookMove
         {
             public byte From;
@@ -415,20 +389,6 @@ namespace Lisa
             public long Zobrist;
             public BookMove[] Moves;
         }
-
-        public const byte EMPTY = 0;
-        public const byte WHITE = 1;
-        public const byte BLACK = 2;
-
-        public const byte PAWN = 0;
-        public const byte KNIGHT = 1;
-        public const byte BISHOP = 2;
-        public const byte ROOK = 3;
-        public const byte QUEEN = 4;
-        public const byte KING = 5;
-
-        public const byte DARKSQUARE = 0;
-        public const byte LIGHTSQUARE = 1;
 
         public struct Move : IComparable<Move>
         {
@@ -467,19 +427,54 @@ namespace Lisa
             Heavy = 2
         }
 
-        public static bool Initialised = false;
-        public static ProgramMode Mode = ProgramMode.Unknown;
-        public static string PerftFen = "";
-        public static int PerftDepth = 0;
-        public static byte MultiFenDepth = 0;
-        public static string OutputFile = "";
-        public static string[]? FensToTest;
-        public static string EPDInput = "";
-        public static string EPDOutput = "";
+        public enum NodeTypes
+        {
+            All = 0,
+            Cut = 1,
+            PV = 2
+        };
 
-        public static int TTHashSizeMB = 128;
-        public static int PawnStructureHashSizeMB = 64;
-        public static int PositionScoreHashSizeMB = 64;
+        #endregion
+
+        public static bool USE_TABLEBASE;
+
+        public static int[] MATERIAL;
+        public static int[] SEE_MATERIAL;
+        public static int MAX_MATERIAL;
+
+        public static OpeningBook OPENING_BOOK;
+
+        public const byte TT_POS_TYPE_EXACT = 0;
+        public const byte TT_POS_TYPE_ALPHA_NOT_BEATEN = 1;
+        public const byte TT_POS_TYPE_BETA_CUT = 2;
+
+        public const byte EMPTY = 0;
+        public const byte WHITE = 1;
+        public const byte BLACK = 2;
+
+        public const byte PAWN = 0;
+        public const byte KNIGHT = 1;
+        public const byte BISHOP = 2;
+        public const byte ROOK = 3;
+        public const byte QUEEN = 4;
+        public const byte KING = 5;
+
+        public const byte DARKSQUARE = 0;
+        public const byte LIGHTSQUARE = 1;
+
+        public static ProgramMode RUN_MODE = ProgramMode.Unknown;
+
+        public static string PERFT_FEN = "";
+        public static int PERFT_DEPTH = 0;
+        public static byte MULTI_FEN_DEPTH = 0;
+        public static string OUTPUT_FILE = "";
+        public static string[]? FENS_TO_TEST;
+        public static string EPD_INPUT = "";
+        public static string EPD_OUTPUT = "";
+
+        public static int TT_HASH_SIZE_MB = 128;
+        public static int PAWN_STRUCTURE_HASH_SIZE_MB = 64;
+        public static int POSITION_SCORE_HASH_SIZE_MB = 64;
 
         private static string _bookFile = "";
 
@@ -488,25 +483,20 @@ namespace Lisa
 
             LoadSettings();
 
-            Material = Array.Empty<int>();
-            SeeMaterial = Array.Empty<int>();
+            MATERIAL = Array.Empty<int>();
+            SEE_MATERIAL = Array.Empty<int>();
 
-            Book = new OpeningBook(_bookFile);
+            OPENING_BOOK = new OpeningBook(_bookFile);
 
-        }
-
-        public static void Initialise()
-        {            
-            Initialised = true;
         }
 
 
         public static void ReconfigureAfterOptions()
         {
 
-            Material = new int[6] { 100, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE, 0 };
-            MaxMaterial = (800 + (Material[KNIGHT] * 2) + (Material[BISHOP] * 2) + (Material[ROOK] * 2) + Material[QUEEN]) * 2;
-            SeeMaterial = new int[6] { 100, 300, 300, 500, 900, 0 };
+            MATERIAL = new int[6] { 100, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE, 0 };
+            MAX_MATERIAL = (800 + (MATERIAL[KNIGHT] * 2) + (MATERIAL[BISHOP] * 2) + (MATERIAL[ROOK] * 2) + MATERIAL[QUEEN]) * 2;
+            SEE_MATERIAL = new int[6] { 100, 300, 300, 500, 900, 0 };
 
             MirrorPSTsForBlack();
 
@@ -686,28 +676,28 @@ namespace Lisa
                         {
                             if (L.ToLower().Contains("=uci"))
                             {
-                                Mode = ProgramMode.UCI;
+                                RUN_MODE = ProgramMode.UCI;
                             }
                             else if (L.ToLower().Contains("=perftfen"))
                             {
-                                Mode = ProgramMode.Perft;
+                                RUN_MODE = ProgramMode.Perft;
                             }
                             else if (L.ToLower().Contains("=multifen"))
                             {
-                                Mode = ProgramMode.MultiFen;
+                                RUN_MODE = ProgramMode.MultiFen;
                             }
                             else if (L.ToLower().Contains("=fentozobrist"))
                             {
-                                Mode = ProgramMode.FenToZobrist;
+                                RUN_MODE = ProgramMode.FenToZobrist;
                             }
                             else if (L.ToLower().Contains("=epd"))
                             {
-                                Mode = ProgramMode.EPD;
+                                RUN_MODE = ProgramMode.EPD;
                             }
                         }
                         else if (L.ToLower().StartsWith("usetablebase"))
                         {
-                            UseTablebase = (L.ToLower().Contains("true"));
+                            USE_TABLEBASE = (L.ToLower().Contains("true"));
                         }
                     }
                 }
@@ -715,20 +705,20 @@ namespace Lisa
                 foreach (string Line in Lines)
                 {
                     string L = Line.Trim();
-                    if (Mode == ProgramMode.Perft)
+                    if (RUN_MODE == ProgramMode.Perft)
                     {
                         if (L.ToLower().StartsWith("fen="))
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
-                            PerftFen = Splits[1];
+                            PERFT_FEN = Splits[1];
                         }
                         if (L.ToLower().StartsWith("perftdepth="))
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
-                            PerftDepth = Convert.ToInt32(Splits[1]);
+                            PERFT_DEPTH = Convert.ToInt32(Splits[1]);
                         }
                     }
-                    else if (Mode == ProgramMode.MultiFen)
+                    else if (RUN_MODE == ProgramMode.MultiFen)
                     {
                         if (L.ToLower().StartsWith("multifen_"))
                         {
@@ -738,59 +728,59 @@ namespace Lisa
                         if (L.ToLower().StartsWith("multifendepth="))
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
-                            MultiFenDepth = Convert.ToByte(Splits[1]);
+                            MULTI_FEN_DEPTH = Convert.ToByte(Splits[1]);
                         }
                     }
-                    else if (Mode == ProgramMode.FenToZobrist)
+                    else if (RUN_MODE == ProgramMode.FenToZobrist)
                     {
                         if (L.ToLower().StartsWith("fen="))
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
-                            PerftFen = Splits[1];
+                            PERFT_FEN = Splits[1];
                         }
                     }
-                    else if (Mode == ProgramMode.EPD)
+                    else if (RUN_MODE == ProgramMode.EPD)
                     {
                         if (L.ToLower().StartsWith("epdinputfile="))
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
-                            EPDInput = Splits[1];
+                            EPD_INPUT = Splits[1];
                         }
                         if (L.ToLower().StartsWith("epdoutputfile="))
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
-                            EPDOutput = Splits[1];
+                            EPD_OUTPUT = Splits[1];
                         }
                         if (L.ToLower().StartsWith("multifendepth="))
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
-                            MultiFenDepth = Convert.ToByte(Splits[1]);
+                            MULTI_FEN_DEPTH = Convert.ToByte(Splits[1]);
                         }
                     }
                     if (L.ToLower().Contains("outputfile") && !L.ToLower().Contains("epdoutputfile"))
                     {
                         string[] Splits = L.Split(Convert.ToChar("="));
-                        OutputFile = Splits[1];
+                        OUTPUT_FILE = Splits[1];
                     }
                     if (L.ToLower().Contains("transtablehashsize"))
                     {
                         string[] Splits = L.Split(Convert.ToChar("="));
-                        TTHashSizeMB = Convert.ToInt32(Splits[1]);
+                        TT_HASH_SIZE_MB = Convert.ToInt32(Splits[1]);
                     }
                     if (L.ToLower().Contains("pawnstructurehashsize"))
                     {
                         string[] Splits = L.Split(Convert.ToChar("="));
-                        PawnStructureHashSizeMB = Convert.ToInt32(Splits[1]);
+                        PAWN_STRUCTURE_HASH_SIZE_MB = Convert.ToInt32(Splits[1]);
                     }
                     if (L.ToLower().Contains("positionscorehashsize"))
                     {
                         string[] Splits = L.Split(Convert.ToChar("="));
-                        PositionScoreHashSizeMB = Convert.ToInt32(Splits[1]);
+                        POSITION_SCORE_HASH_SIZE_MB = Convert.ToInt32(Splits[1]);
                     }
                 }
             }
 
-            FensToTest = MultiFenList.ToArray();
+            FENS_TO_TEST = MultiFenList.ToArray();
 
         }
 
