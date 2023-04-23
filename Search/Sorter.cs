@@ -7,6 +7,10 @@ namespace Lisa
         private const int MAX_DEPTH = 30;
 
 #pragma warning disable CA2211 // Non-constant fields should not be visible
+
+        //This is faster than the "correct" practice, and I've tested it enough times
+        //to be certain about it by now
+
         public static int[] History;
         public static int[,] SingleMoveHistory;
         public static int[] CutCount;
@@ -20,11 +24,11 @@ namespace Lisa
 
         public static Move[] Refutations;
         public static int[] RefutationPieces;
+
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
         static Sorter()
         {
-
             History = new int[6363];
             SingleMoveHistory = new int[6363, 6363];
             CutCount = new int[6363];
@@ -39,67 +43,42 @@ namespace Lisa
 
             Refutations = new Move[MAX_DEPTH];
             RefutationPieces = new int[MAX_DEPTH];
-
         }
 
 
-        public static void Reset()
+        public static Move[] GetSortedMoves(ref Board theBoard, int rootMoveKey, bool capturesOnly, bool nonCapturesOnly, bool lowDepth = false)
         {
 
-            History = new int[6363];
-            SingleMoveHistory = new int[6363, 6363];
-            CutCount = new int[6363];
-            CutCountSingleMove = new int[6363, 6363];
-
-            //Create a new array of Killer Move trackers, for each From Square/To Square/Depth
-            KillerScores = new int[64, 64, MAX_DEPTH];
-            KillerOnes = new Move[MAX_DEPTH];
-            KillerTwos = new Move[MAX_DEPTH];
-            FirstKillerPieces = new int[MAX_DEPTH];
-            SecondKillerPieces = new int[MAX_DEPTH];
-
-            Refutations = new Move[MAX_DEPTH];
-            RefutationPieces = new int[MAX_DEPTH];
-
-        }
-
-
-        public static Move[] GetSortedMoves(ref Board theBoard, int RootMoveKey, bool CapturesOnly, bool NonCapturesOnly, bool LowDepth = false)
-        {
-
-            Move[] List;
-            if (CapturesOnly)
+            Move[] list;
+            if (capturesOnly)
             {
-                if (LowDepth)
+                if (lowDepth)
                 {
-                    List = theBoard.GenerateCaptureMovesWithScore(theBoard.OnMove);
-                    return List;
+                    list = theBoard.GenerateCaptureMovesWithScore(theBoard.OnMove);
+                    return list;
                 }
                 else
                 {
-                    List = theBoard.GenerateCaptureMoves(theBoard.OnMove);
+                    list = theBoard.GenerateCaptureMoves(theBoard.OnMove);
                 }
             }
-            else if (NonCapturesOnly)
+            else if (nonCapturesOnly)
             {
-                List = theBoard.GenerateNonCaptureMoves(theBoard.OnMove);
+                list = theBoard.GenerateNonCaptureMoves(theBoard.OnMove);
             }
             else
             {
-                List = theBoard.GenerateAllMoves(theBoard.OnMove);
+                list = theBoard.GenerateAllMoves(theBoard.OnMove);
             }
 
-            int TotalMaterial = (theBoard.WhiteMaterial + theBoard.BlackMaterial);
-            float EarlyRatio = (float)TotalMaterial / (float)MaxMaterial; float LateRatio = 1 - EarlyRatio;
-
-            for (int NN = 0; NN < List.Length; NN++)
+            for (int nn = 0; nn < list.Length; nn++)
             {
-                if (!LowDepth)
+                if (!lowDepth)
                 {
-                    theBoard.MakeMove(List[NN], theBoard.OnMove, false);
+                    theBoard.MakeMove(list[nn], theBoard.OnMove, false);
                     if (theBoard.IsInCheck(theBoard.OnMove))
                     {
-                        List[NN].Score = 4950;
+                        list[nn].Score = 4950;
                         theBoard.UnmakeLastMove();
                         continue;
                     }
@@ -108,112 +87,112 @@ namespace Lisa
                         theBoard.UnmakeLastMove();
                     }
                 }
-                if (List[NN].IsCapture)
+                if (list[nn].IsCapture)
                 {
-                    if (theBoard.Piece[List[NN].To] != -1)
+                    if (theBoard.Piece[list[nn].To] != -1)
                     {
                         //No en-pasant
-                        List[NN].Score = 4000 + theBoard.See(List[NN].To);
-                        if (List[NN].Score == 4000)
+                        list[nn].Score = 4000 + theBoard.See(list[nn].To);
+                        if (list[nn].Score == 4000)
                         {
-                            List[NN].Score += theBoard.Piece[List[NN].To];
+                            list[nn].Score += theBoard.Piece[list[nn].To];
                         }
                     }
                     else
                     {
                         //en-pasant: as a one-off chance, score it highly
-                        List[NN].Score = 4750;
+                        list[nn].Score = 4750;
                     }
                 }
                 else
                 {
 
-                    int MoveKey = List[NN].From * 100 + List[NN].To;
-                    List[NN].Score = History[MoveKey];
-                    List[NN].Score += (SingleMoveHistory[RootMoveKey, MoveKey]);
+                    int moveKey = list[nn].From * 100 + list[nn].To;
+                    list[nn].Score = History[moveKey];
+                    list[nn].Score += (SingleMoveHistory[rootMoveKey, moveKey]);
 
                 }
             }
 
-            Array.Sort(List);
-            return List;
+            Array.Sort(list);
+            return list;
 
         }
 
 
-        public static void UpdateHistoryStandard(int RootMoveKey, int MoveKey, int Depth, bool wasCut)
+        public static void UpdateHistoryStandard(int rootMoveKey, int moveKey, int depth, bool wasCut)
         {
-            History[MoveKey] += (Depth * Depth * Depth);
-            SingleMoveHistory[RootMoveKey, MoveKey] += (Depth * Depth * Depth * Depth);
+            History[moveKey] += (depth * depth * depth);
+            SingleMoveHistory[rootMoveKey, moveKey] += (depth * depth * depth * depth);
             if (wasCut)
             {
-                CutCount[MoveKey] += 1;
-                CutCountSingleMove[RootMoveKey, MoveKey] += 1;
+                CutCount[moveKey] += 1;
+                CutCountSingleMove[rootMoveKey, moveKey] += 1;
             }
         }
 
 
-        public static void UpdateHistoryAggressive(int RootMoveKey, int MoveKey, int Depth, bool wasCut)
+        public static void UpdateHistoryAggressive(int rootMoveKey, int moveKey, int depth, bool wasCut)
         {
-            History[MoveKey] += (Depth * Depth * Depth * Depth);
-            SingleMoveHistory[RootMoveKey, MoveKey] += (Depth * Depth * Depth * Depth * Depth);
+            History[moveKey] += (depth * depth * depth * depth);
+            SingleMoveHistory[rootMoveKey, moveKey] += (depth * depth * depth * depth * depth);
             if (wasCut)
             {
-                CutCount[MoveKey] += 1;
-                CutCountSingleMove[RootMoveKey, MoveKey] += 1;
+                CutCount[moveKey] += 1;
+                CutCountSingleMove[rootMoveKey, moveKey] += 1;
             }
         }
 
-        public static void ReduceHistory(int RootMoveKey, int MoveKey, int Depth)
+        public static void ReduceHistory(int rootMoveKey, int moveKey, int depth)
         {
-            History[MoveKey] -= (Depth * Depth);
-            SingleMoveHistory[RootMoveKey, MoveKey] -= Depth;
+            History[moveKey] -= (depth * depth);
+            SingleMoveHistory[rootMoveKey, moveKey] -= depth;
         }
 
 
-        public static void IncreaseKillerScore(int FullDepth, int Depth, Move M, int Piece, int Score)
+        public static void IncreaseKillerScore(int fullDepth, int depth, Move kMove, int piece, int score)
         {
-            KillerScores[M.From, M.To, FullDepth - Depth] += Score;
-            ReplaceKillerIfAppropriate(M, FullDepth - Depth, Piece);
+            KillerScores[kMove.From, kMove.To, fullDepth - depth] += score;
+            ReplaceKillerIfAppropriate(kMove, fullDepth - depth, piece);
         }
 
 
-        private static void ReplaceKillerIfAppropriate(Move M, int KillerDepth, int KillerPiece)
+        private static void ReplaceKillerIfAppropriate(Move kMove, int killerDepth, int killerPiece)
         {
 
-            if ((M.From == KillerOnes[KillerDepth].From && M.To == KillerOnes[KillerDepth].To) ||
-                (M.From == KillerTwos[KillerDepth].From && M.To == KillerTwos[KillerDepth].To))
+            if ((kMove.From == KillerOnes[killerDepth].From && kMove.To == KillerOnes[killerDepth].To) ||
+                (kMove.From == KillerTwos[killerDepth].From && kMove.To == KillerTwos[killerDepth].To))
             {
                 return;
             }
 
-            if (KillerOnes[KillerDepth].From == 0 && KillerOnes[KillerDepth].To == 0)
+            if (KillerOnes[killerDepth].From == 0 && KillerOnes[killerDepth].To == 0)
             {
-                KillerOnes[KillerDepth] = M;
-                FirstKillerPieces[KillerDepth] = KillerPiece;
+                KillerOnes[killerDepth] = kMove;
+                FirstKillerPieces[killerDepth] = killerPiece;
             }
             else
             {
-                if (KillerScores[M.From, M.To, KillerDepth] > KillerScores[KillerOnes[KillerDepth].From, KillerOnes[KillerDepth].To, KillerDepth])
+                if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerOnes[killerDepth].From, KillerOnes[killerDepth].To, killerDepth])
                 {
-                    KillerTwos[KillerDepth] = KillerOnes[KillerDepth];
-                    SecondKillerPieces[KillerDepth] = FirstKillerPieces[KillerDepth];
-                    KillerOnes[KillerDepth] = M;
-                    FirstKillerPieces[KillerDepth] = KillerPiece;
+                    KillerTwos[killerDepth] = KillerOnes[killerDepth];
+                    SecondKillerPieces[killerDepth] = FirstKillerPieces[killerDepth];
+                    KillerOnes[killerDepth] = kMove;
+                    FirstKillerPieces[killerDepth] = killerPiece;
                 }
                 else
                 {
-                    if (KillerTwos[KillerDepth].From == 0 && KillerTwos[KillerDepth].To == 0)
+                    if (KillerTwos[killerDepth].From == 0 && KillerTwos[killerDepth].To == 0)
                     {
-                        KillerTwos[KillerDepth] = M;
-                        SecondKillerPieces[KillerDepth] = KillerPiece;
+                        KillerTwos[killerDepth] = kMove;
+                        SecondKillerPieces[killerDepth] = killerPiece;
                     }
                     else
                     {
-                        if (KillerScores[M.From, M.To, KillerDepth] > KillerScores[KillerTwos[KillerDepth].From, KillerTwos[KillerDepth].To, KillerDepth])
+                        if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerTwos[killerDepth].From, KillerTwos[killerDepth].To, killerDepth])
                         {
-                            KillerTwos[KillerDepth] = M;
-                            SecondKillerPieces[KillerDepth] = KillerPiece;
+                            KillerTwos[killerDepth] = kMove;
+                            SecondKillerPieces[killerDepth] = killerPiece;
                         }
                     }
                 }
@@ -222,12 +201,28 @@ namespace Lisa
         }
 
 
-        public static void SetRefutationMove(int FullDepth, int RefutationDepth, Move M, int FromSquarePiece)
+        public static void SetRefutationMove(int fullDepth, int refutationDepth, Move rMove, int fromSquarePiece)
         {
-            Refutations[FullDepth - RefutationDepth] = M;
-            RefutationPieces[FullDepth - RefutationDepth] = FromSquarePiece;
+            Refutations[fullDepth - refutationDepth] = rMove;
+            RefutationPieces[fullDepth - refutationDepth] = fromSquarePiece;
         }
 
 
+        public static void Reset()
+        {
+            History = new int[6363];
+            SingleMoveHistory = new int[6363, 6363];
+            CutCount = new int[6363];
+            CutCountSingleMove = new int[6363, 6363];
+            KillerScores = new int[64, 64, MAX_DEPTH];
+            KillerOnes = new Move[MAX_DEPTH];
+            KillerTwos = new Move[MAX_DEPTH];
+            FirstKillerPieces = new int[MAX_DEPTH];
+            SecondKillerPieces = new int[MAX_DEPTH];
+            Refutations = new Move[MAX_DEPTH];
+            RefutationPieces = new int[MAX_DEPTH];
+        }
+
     }
+
 }
