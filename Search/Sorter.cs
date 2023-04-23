@@ -9,6 +9,8 @@ namespace Lisa
 #pragma warning disable CA2211 // Non-constant fields should not be visible
         public static int[] History;
         public static int[,] SingleMoveHistory;
+        public static int[] CutCount;
+        public static int[,] CutCountSingleMove;
 
         public static Move[] KillerOnes;
         public static Move[] KillerTwos;
@@ -25,6 +27,29 @@ namespace Lisa
 
             History = new int[6363];
             SingleMoveHistory = new int[6363, 6363];
+            CutCount = new int[6363];
+            CutCountSingleMove = new int[6363, 6363];
+
+            //Create a new array of Killer Move trackers, for each From Square/To Square/Depth
+            KillerScores = new int[64, 64, MAX_DEPTH];
+            KillerOnes = new Move[MAX_DEPTH];
+            KillerTwos = new Move[MAX_DEPTH];
+            FirstKillerPieces = new int[MAX_DEPTH];
+            SecondKillerPieces = new int[MAX_DEPTH];
+
+            Refutations = new Move[MAX_DEPTH];
+            RefutationPieces = new int[MAX_DEPTH];
+
+        }
+
+
+        public static void Reset()
+        {
+
+            History = new int[6363];
+            SingleMoveHistory = new int[6363, 6363];
+            CutCount = new int[6363];
+            CutCountSingleMove = new int[6363, 6363];
 
             //Create a new array of Killer Move trackers, for each From Square/To Square/Depth
             KillerScores = new int[64, 64, MAX_DEPTH];
@@ -116,17 +141,27 @@ namespace Lisa
         }
 
 
-        public static void UpdateHistoryStandard(int RootMoveKey, int MoveKey, int Depth)
+        public static void UpdateHistoryStandard(int RootMoveKey, int MoveKey, int Depth, bool wasCut)
         {
             History[MoveKey] += (Depth * Depth * Depth);
             SingleMoveHistory[RootMoveKey, MoveKey] += (Depth * Depth * Depth * Depth);
+            if (wasCut)
+            {
+                CutCount[MoveKey] += 1;
+                CutCountSingleMove[RootMoveKey, MoveKey] += 1;
+            }
         }
 
 
-        public static void UpdateHistoryAggressive(int RootMoveKey, int MoveKey, int Depth)
+        public static void UpdateHistoryAggressive(int RootMoveKey, int MoveKey, int Depth, bool wasCut)
         {
             History[MoveKey] += (Depth * Depth * Depth * Depth);
             SingleMoveHistory[RootMoveKey, MoveKey] += (Depth * Depth * Depth * Depth * Depth);
+            if (wasCut)
+            {
+                CutCount[MoveKey] += 1;
+                CutCountSingleMove[RootMoveKey, MoveKey] += 1;
+            }
         }
 
         public static void ReduceHistory(int RootMoveKey, int MoveKey, int Depth)

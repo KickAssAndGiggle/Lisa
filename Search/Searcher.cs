@@ -281,6 +281,8 @@ namespace Lisa
             int windowSize = 0;
             bool nullWindowSearch;
 
+            Sorter.Reset();
+
             for (byte depth = 1; depth <= maxDepth; depth++)
             {
 
@@ -1659,7 +1661,7 @@ namespace Lisa
                 {
                     Sorter.SetRefutationMove(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From]);
                     int MoveKey = ttMove.From * 100 + ttMove.To;
-                    Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                    Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth, true);
                     goto ReturnEarly;
                 }
             }
@@ -1670,7 +1672,7 @@ namespace Lisa
             if (refutationCut)
             {
                 int MoveKey = Sorter.Refutations[_fullDepth - depth].From * 100 + Sorter.Refutations[_fullDepth - depth].To;
-                Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth, true);
                 goto ReturnEarly;
             }
 
@@ -1763,6 +1765,9 @@ namespace Lisa
                     {
                         iidAlpha = allOppMoves[nn].Score;
                     }
+                    int moveKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
+                    allOppMoves[nn].Score += Sorter.CutCount[moveKey];
+                    allOppMoves[nn].Score += Sorter.CutCountSingleMove[rootMoveKey, moveKey];
                 }
                 Array.Sort(allOppMoves);
             }
@@ -1925,11 +1930,11 @@ namespace Lisa
                     //Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
                     if (lateCutoff)
                     {
-                        Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                        Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth, true);
                     }
                     else
                     {
-                        Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
+                        Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth, true);
                     }                                        
                 }
                 else
@@ -1946,11 +1951,11 @@ namespace Lisa
                     //Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
                     if (lateAlphaRaise)
                     {
-                        Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth);
+                        Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth, false);
                     }
                     else
                     {
-                        Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth);
+                        Sorter.UpdateHistoryStandard(rootMoveKey, MoveKey, depth, false);
                     }
                 }
                 else if (!alphaRaisedByNonGeneratedMove)
