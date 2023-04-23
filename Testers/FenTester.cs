@@ -4,108 +4,109 @@ namespace Lisa
     public sealed class FenTester
     {
 
-        private string[] FENs;
-        private string FenOutputFile;
+        private string[] _fens;
+        private string _fenOutputFile;
 
         public FenTester(string[] FENsToTest, string OutputFile)
         {
-            FENs = FENsToTest;
-            FenOutputFile = OutputFile;
+            _fens = FENsToTest;
+            _fenOutputFile = OutputFile;
         }
 
 
         public void Test()
         {
 
-            List<string> LinesForFile = new();
+            List<string> linesForFile = new();
 
-            foreach (string FEN in FENs)
+            foreach (string fen in _fens)
             {
 
-                int StartTicks = System.Environment.TickCount;
+                int startTicks = System.Environment.TickCount;
 
-                Board FenBoard = new();
-                FenBoard.InitialiseFromFEN(FEN);
-                string OurFen = FenBoard.GenerateFen();
+                Board fenBoard = new();
+                fenBoard.InitialiseFromFEN(fen);
 
-                Searcher Search = new();
-                Search.Search(ref FenBoard, MULTI_FEN_DEPTH);
-                Move BestMove = Search.BestMove;
+                Searcher search = new();
+                search.Search(ref fenBoard, MULTI_FEN_DEPTH);
+                Move bestMove = search.BestMove;
 
-                int EndTicks = System.Environment.TickCount;
+                int endTicks = System.Environment.TickCount;
 
-                LinesForFile.Add("FEN: " + FEN);
-                LinesForFile.Add("Move: " + Globals.ConvertMoveToString(BestMove));
-                LinesForFile.Add("Time: " + (EndTicks - StartTicks).ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("TotalNodes: " + Search.InfoNodesLookedAt.ToString());
-                LinesForFile.Add("WithoutQuiesce: " + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("Quiesced: " + Search.InfoNodesQuiesced.ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("PVNodesFromTT: " + Search.InfoPVNodesFoundInTT.ToString());
-                LinesForFile.Add("CutNodesFromTT: " + Search.InfoCutNodesFoundInTT.ToString());
-                LinesForFile.Add("AllNodesFromTT: " + Search.InfoAllNodesFoundInTT.ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("CutOffWithPVFromTT: " + Search.InfoPVTTCutoffs.ToString());
-                LinesForFile.Add("CutOffWithGreaterThanBetaFromTT: " + Search.InfoBetaTTCutoffs.ToString());
-                LinesForFile.Add("CutOffWithLessThanBetaFromTT: " + Search.InfoAlphaTTCutoffs.ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("FutilityCutoffD4: " + Search.InfoFutilityD4.ToString());
-                LinesForFile.Add("FutilityCutoffD3: " + Search.InfoFutilityD3.ToString());
-                LinesForFile.Add("FutilityCutoffD2: " + Search.InfoFutilityD2.ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("ReverseFutilityCutoffD4: " + Search.InfoReverseFutilityD4.ToString());
-                LinesForFile.Add("ReverseFutilityCutoffD3: " + Search.InfoReverseFutilityD3.ToString());
-                LinesForFile.Add("ReverseFutilityCutoffD2: " + Search.InfoReverseFutilityD2.ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("NullMoveCuts/Attempts: " + Search.InfoNullMoveCutOffs.ToString() + "/" + Search.InfoNullMoveAttempts.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("ProbcutCuts/Attempts: " + Search.InfoProbCutCutOffs.ToString() + "/" + Search.InfoProbCutAttempts.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutOffWithPVMoveNoGenNeeded: " + Search.InfoCutOffWithPVMoveOnly.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutOffWithKillerOneMoveNoGenNeeded: " + Search.InfoCutOffUsingKillerOne.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutOffWithKillerTwoMoveNoGenNeeded: " + Search.InfoCutOffUsingKillerTwo.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutOffWithRefutationNoGenNeeded: " + Search.InfoCutOffUsingRefutation.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("CutWithOnlyWinningCaptures: " + Search.InfoCutOffOnlyUsingWinningCaps.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutWithOnlyLosingCaptures: " + Search.InfoCutOffOnlyUsingLosingCaps.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add(" ");
-                LinesForFile.Add("CutOffWithFirstSortedMove: " + Search.InfoNodesCutOffWithFirstSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutOffWithSecondSortedMove: " + Search.InfoNodesCutoffWithSecondSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutOffWithThirdSortedMove: " + Search.InfoNodesCutOffWithThirdSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add("CutOffWithLaterSortedMove: " + Search.InfoNodesCutOffWithLaterSortedMove.ToString() + "/" + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
-                LinesForFile.Add(" ");
+                linesForFile.Add("FEN: " + fen);
+                linesForFile.Add("Move: " + Globals.ConvertMoveToString(bestMove));
+                linesForFile.Add("Time: " + (endTicks - startTicks).ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("TotalNodes: " + search.InfoNodesLookedAt.ToString());
+                linesForFile.Add("WithoutQuiesce: " + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("Quiesced: " + search.InfoNodesQuiesced.ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("PVNodesFromTT: " + search.InfoPVNodesFoundInTT.ToString());
+                linesForFile.Add("CutNodesFromTT: " + search.InfoCutNodesFoundInTT.ToString());
+                linesForFile.Add("AllNodesFromTT: " + search.InfoAllNodesFoundInTT.ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("CutOffWithPVFromTT: " + search.InfoPVTTCutoffs.ToString());
+                linesForFile.Add("CutOffWithGreaterThanBetaFromTT: " + search.InfoBetaTTCutoffs.ToString());
+                linesForFile.Add("CutOffWithLessThanBetaFromTT: " + search.InfoAlphaTTCutoffs.ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("FutilityCutoffD4: " + search.InfoFutilityD4.ToString());
+                linesForFile.Add("FutilityCutoffD3: " + search.InfoFutilityD3.ToString());
+                linesForFile.Add("FutilityCutoffD2: " + search.InfoFutilityD2.ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("ReverseFutilityCutoffD4: " + search.InfoReverseFutilityD4.ToString());
+                linesForFile.Add("ReverseFutilityCutoffD3: " + search.InfoReverseFutilityD3.ToString());
+                linesForFile.Add("ReverseFutilityCutoffD2: " + search.InfoReverseFutilityD2.ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("NullMoveCuts/Attempts: " + search.InfoNullMoveCutOffs.ToString() + "/" + search.InfoNullMoveAttempts.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("ProbcutCuts/Attempts: " + search.InfoProbCutCutOffs.ToString() + "/" + search.InfoProbCutAttempts.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutOffWithPVMoveNoGenNeeded: " + search.InfoCutOffWithPVMoveOnly.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutOffWithKillerOneMoveNoGenNeeded: " + search.InfoCutOffUsingKillerOne.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutOffWithKillerTwoMoveNoGenNeeded: " + search.InfoCutOffUsingKillerTwo.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutOffWithRefutationNoGenNeeded: " + search.InfoCutOffUsingRefutation.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("CutWithOnlyWinningCaptures: " + search.InfoCutOffOnlyUsingWinningCaps.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutWithOnlyLosingCaptures: " + search.InfoCutOffOnlyUsingLosingCaps.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add(" ");
+                linesForFile.Add("CutOffWithFirstSortedMove: " + search.InfoNodesCutOffWithFirstSortedMove.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutOffWithSecondSortedMove: " + search.InfoNodesCutoffWithSecondSortedMove.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutOffWithThirdSortedMove: " + search.InfoNodesCutOffWithThirdSortedMove.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add("CutOffWithLaterSortedMove: " + search.InfoNodesCutOffWithLaterSortedMove.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
+                linesForFile.Add(" ");
 
-                Move[]? PV = Search.BestPV;
-                string PVString = "";
-                if (PV != null)
+                Move[]? pv = search.BestPV;
+                string pvString = "";
+
+                if (pv != null)
                 {                    
-                    for (int NN = PV.Length - 1; NN >= 0; NN--)
+                    for (int nn = pv.Length - 1; nn >= 0; nn--)
                     {
-                        if (!(PV[NN].From == 0 && PV[NN].To == 0))
+                        if (!(pv[nn].From == 0 && pv[nn].To == 0))
                         {
-                            PVString += ConvertMoveToString(PV[NN]) + " ";
+                            pvString += ConvertMoveToString(pv[nn]) + " ";
                         }
                         else
                         {
                             break;
                         }
                     }
-                    PVString = PVString.Trim();
+                    pvString = pvString.Trim();
                 }
-                LinesForFile.Add("PV: " + PVString);
-                LinesForFile.Add(" ");
-                LinesForFile.Add(" ");
-                LinesForFile.Add(" ");
-                LinesForFile.Add(" ");
-                LinesForFile.Add(" ");
+
+                linesForFile.Add("PV: " + pvString);
+                linesForFile.Add(" ");
+                linesForFile.Add(" ");
+                linesForFile.Add(" ");
+                linesForFile.Add(" ");
+                linesForFile.Add(" ");
 
             }
 
-            StreamWriter SW = File.CreateText(FenOutputFile);
-            foreach (string Line in LinesForFile)
+            StreamWriter sw = File.CreateText(_fenOutputFile);
+            foreach (string line in linesForFile)
             {
-                SW.WriteLine(Line);
+                sw.WriteLine(line);
             }
-            SW.Close();
+            sw.Close();
 
 
         }
