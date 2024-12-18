@@ -1753,7 +1753,7 @@ namespace Lisa
                 goto StoreInTransTable;
             }
 
-            if (!hasTTMove && (nodeType != NodeTypes.All || depth >= _fullDepth - 1) && depth >= 6)
+            if (!hasTTMove && allOpCaps.Length == 0 && (nodeType != NodeTypes.All || depth >= _fullDepth - 1) && depth >= 6)
             {
                 int iidAlpha = alpha;
                 int iidBeta = beta;
@@ -1777,14 +1777,14 @@ namespace Lisa
 
             if (allOppMoves == null)
             {
-                if (nodeType != NodeTypes.All)
-                {
+                //if (nodeType != NodeTypes.All)
+                //{
                     allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, (depth >= 5), seenMoves);
-                }
-                else
-                {
-                    allOppMoves = _theBoard.GenerateNonCaptureMoves(_theBoard.OnMove);
-                }
+            //    }
+            //    else
+            //    {
+            //        allOppMoves = _theBoard.GenerateNonCaptureMoves(_theBoard.OnMove);
+            //    }
             }
 
             int quietPlayed = 0;            
@@ -1804,6 +1804,7 @@ namespace Lisa
                     int SearchDepth = (int)depth;
                     byte ByteDepth;
                     bool WasReduced = false;
+                    int score;
                     byte originalDepth = (byte)(SearchDepth - 1);
                     if (isInCheck || quietPlayed == 1 || allOppMoves[nn].Score == 4950 || legalMove.Score == 4950 || (_endGame && _theBoard.Piece[allOppMoves[nn].From] == PAWN))
                     {
@@ -1817,6 +1818,11 @@ namespace Lisa
                         }
                         else
                         {
+                            if (quietPlayed > allOppMoves.Length / 3)
+                            {
+                                score = alpha - 1;
+                                goto LMRPrune;
+                            }
                             if (_fullDepth > 10 && SearchDepth - 5 >= 1 && quietPlayed > 5)
                             {
                                 ByteDepth = (byte)(SearchDepth - 5);
@@ -1837,7 +1843,7 @@ namespace Lisa
 
                 ReducedBeatAlpha:
 
-                    int score;
+
                     bool nullWindowSearch = false;
 
                     if (depth >= _fullDepth - 5 || quietPlayed == 1 || nullWindowSearchFailed)
@@ -1864,6 +1870,8 @@ namespace Lisa
                         _infoLMRReSearches += 1;
                         goto ReducedBeatAlpha;
                     }
+
+                LMRPrune:
 
                     if (score >= beta)
                     {
@@ -1897,11 +1905,8 @@ namespace Lisa
                     }
                     else
                     {
-                        if (quietPlayed < 3)
-                        {
-                            int thisKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
-                            Sorter.ReduceHistory(rootMoveKey, thisKey, SearchDepth);
-                        }
+                        int thisKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
+                        Sorter.ReduceHistory(rootMoveKey, thisKey, SearchDepth);
                     }
                     if (score > alpha)
                     {
@@ -1917,7 +1922,6 @@ namespace Lisa
                         alphaRaisedByNonGeneratedMove = false;
                         lateAlphaRaise = (quietPlayed > 3);
                     }
-
                 }
             }
 

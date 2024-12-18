@@ -148,8 +148,8 @@ namespace Lisa
 
         public static void ReduceHistory(int rootMoveKey, int moveKey, int depth)
         {
-            History[moveKey] -= (depth * depth);
-            SingleMoveHistory[rootMoveKey, moveKey] -= depth;
+            History[moveKey] /= 2;
+            SingleMoveHistory[rootMoveKey, moveKey] /= 2;
         }
 
 
