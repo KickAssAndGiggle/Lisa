@@ -295,6 +295,8 @@ namespace Lisa
                 int aspAlpha = prevIterationAlpha - windowSize;
                 int aspBeta = prevIterationAlpha + windowSize;
 
+                Dictionary<int, int> seenMoves = new();
+
                 for (int nn = 0; nn < legal.Length; nn++)
                 {
 
@@ -322,13 +324,13 @@ namespace Lisa
                             if (nn == 0 || nullWindowFailure)
                             {
                                 nullWindowSearch = false;
-                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv);
+                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv, seenMoves);
 
                             }
                             else
                             {
                                 nullWindowSearch = true;
-                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspAlpha - 1, -aspAlpha, depth, ref pv);
+                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspAlpha - 1, -aspAlpha, depth, ref pv, seenMoves);
                             }
 
                             if (nullWindowSearch && (legal[nn].Score > aspAlpha))
@@ -876,7 +878,7 @@ namespace Lisa
                 }
                 else if (nodeType == NodeTypes.All) // Upper bound, alpha was never raised
                 {
-                    if (TTMoveDepth >= depth && transTableMove.Score <= alpha)
+                    if (TTMoveDepth >= depth && transTableMove.Score < alpha)
                     {
                         alpha = transTableMove.Score;
                         _infoAlphaTTCutoffs += 1;
@@ -1037,7 +1039,7 @@ namespace Lisa
                         if (score >= beta)
                         {
                             _infoNullMoveCutOffs += 1;
-                            alpha = beta;
+                            alpha = staticEval;
                             _theBoard.UnmakeLastMove(); //Unmake the Null Move
                             return true;
                         }
@@ -1588,7 +1590,8 @@ namespace Lisa
                                  int alpha,
                                  int beta,
                                  byte depth,
-                                 ref Move[] pv
+                                 ref Move[] pv,
+                                 Dictionary<int, int> seenMoves = null
                                 )
         {
 
@@ -1776,7 +1779,7 @@ namespace Lisa
             {
                 if (nodeType != NodeTypes.All)
                 {
-                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true);
+                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, (depth >= 5), seenMoves);
                 }
                 else
                 {
@@ -1839,12 +1842,12 @@ namespace Lisa
 
                     if (depth >= _fullDepth - 5 || quietPlayed == 1 || nullWindowSearchFailed)
                     {
-                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -beta, -alpha, ByteDepth, ref localPV);
+                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -beta, -alpha, ByteDepth, ref localPV, seenMoves);
                     }
                     else
                     {
                         nullWindowSearch = true;
-                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -alpha - 1, -alpha, ByteDepth, ref localPV);
+                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -alpha - 1, -alpha, ByteDepth, ref localPV, seenMoves);
                     }
 
                     if (nullWindowSearch && score > alpha && score < beta)
@@ -1920,6 +1923,24 @@ namespace Lisa
 
 
         StoreInTransTable:
+
+            if (seenMoves != null && depth >= _fullDepth - 1)
+            {
+                if (alphaRaised || betaCutoff)
+                {
+                    int legalMoveKey = legalMove.From * 100 + legalMove.To;
+                    if (!seenMoves.ContainsKey(legalMoveKey))
+                    {
+                        seenMoves.Add(legalMoveKey, alpha);
+                    }
+                    else
+                    {
+                        int currentScore = seenMoves[legalMoveKey];
+                        seenMoves.Remove(legalMoveKey);
+                        seenMoves.Add(legalMoveKey, currentScore + alpha);
+                    }
+                }
+            }
 
             if (betaCutoff)
             {
@@ -2045,12 +2066,12 @@ namespace Lisa
                 }
                 if (nodeType == NodeTypes.PV)
                 {
-                    if (transTableMove.Score >= alpha && transTableMove.Score <= beta)
-                    {
+                    //if (transTableMove.Score >= alpha && transTableMove.Score <= beta)
+                    //{
                         _theBoard.UnmakeLastMove();
                         alpha = transTableMove.Score;
                         return alpha;
-                    }
+                   // }
                 }
                 else if (nodeType == NodeTypes.Cut)
                 {
@@ -2063,7 +2084,7 @@ namespace Lisa
                 }
                 else if (nodeType == NodeTypes.All)
                 {
-                    if (transTableMove.Score <= alpha)
+                    if (transTableMove.Score < alpha)
                     {
                         _theBoard.UnmakeLastMove();
                         alpha = transTableMove.Score;

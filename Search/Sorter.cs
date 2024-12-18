@@ -46,7 +46,8 @@ namespace Lisa
         }
 
 
-        public static Move[] GetSortedMoves(ref Board theBoard, int rootMoveKey, bool capturesOnly, bool nonCapturesOnly, bool lowDepth = false)
+        public static Move[] GetSortedMoves(ref Board theBoard, int rootMoveKey, bool capturesOnly, bool nonCapturesOnly, 
+            bool lowDepth = false, Dictionary<int, int> seenMoves = null)
         {
 
             Move[] list;
@@ -73,8 +74,8 @@ namespace Lisa
 
             for (int nn = 0; nn < list.Length; nn++)
             {
-                if (!lowDepth)
-                {
+                //if (!lowDepth)
+                //{
                     theBoard.MakeMove(list[nn], theBoard.OnMove, false);
                     if (theBoard.IsInCheck(theBoard.OnMove))
                     {
@@ -86,7 +87,7 @@ namespace Lisa
                     {
                         theBoard.UnmakeLastMove();
                     }
-                }
+                //}
                 if (list[nn].IsCapture)
                 {
                     if (theBoard.Piece[list[nn].To] != -1)
@@ -106,11 +107,13 @@ namespace Lisa
                 }
                 else
                 {
-
-                    int moveKey = list[nn].From * 100 + list[nn].To;
+                    int moveKey = list[nn].From * 100 + list[nn].To;                      
                     list[nn].Score = History[moveKey];
                     list[nn].Score += (SingleMoveHistory[rootMoveKey, moveKey]);
-
+                    if (seenMoves != null && seenMoves.ContainsKey(moveKey))
+                    {
+                        list[nn].Score += seenMoves[moveKey];
+                    }                    
                 }
             }
 
