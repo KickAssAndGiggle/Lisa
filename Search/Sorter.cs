@@ -93,7 +93,7 @@ namespace Lisa
                     if (theBoard.Piece[list[nn].To] != -1)
                     {
                         //No en-pasant
-                        list[nn].Score = 4000 + theBoard.See(list[nn].To);
+                        list[nn].Score = 4000 + theBoard.See(list[nn].To, list[nn].From);
                         if (list[nn].Score == 4000)
                         {
                             list[nn].Score += theBoard.Piece[list[nn].To];

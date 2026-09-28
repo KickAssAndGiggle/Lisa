@@ -1227,7 +1227,7 @@ namespace Lisa
                     {
                         whiteFilePassed[nn] = true;
                         whitePPScore += PASSED_PAWN_BONUS;
-                        if (pawnSquare < 15)
+                        if (pawnSquare < 16)
                         {
                             whitePPScore += PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS;
                         }

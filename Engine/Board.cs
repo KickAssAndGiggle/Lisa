@@ -94,38 +94,19 @@ namespace Lisa
         private readonly int[] _seeUndoPieces = new int[32];
         private readonly byte[] _seeUndoColors = new byte[32];
         private int _seeUndoCount;
-
-        private readonly byte[] _mailbox = new byte[120]
-        {
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255,  0,  1,  2,  3,  4,  5,  6,  7, 255,
-            255,  8,  9, 10, 11, 12, 13, 14, 15, 255,
-            255, 16, 17, 18, 19, 20, 21, 22, 23, 255,
-            255, 24, 25, 26, 27, 28, 29, 30, 31, 255,
-            255, 32, 33, 34, 35, 36, 37, 38, 39, 255,
-            255, 40, 41, 42, 43, 44, 45, 46, 47, 255,
-            255, 48, 49, 50, 51, 52, 53, 54, 55, 255,
-            255, 56, 57, 58, 59, 60, 61, 62, 63, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255
-        };
-
-        private readonly byte[] _mailbox64 = new byte[64]
-        {
-        21, 22, 23, 24, 25, 26, 27, 28,
-        31, 32, 33, 34, 35, 36, 37, 38,
-        41, 42, 43, 44, 45, 46, 47, 48,
-        51, 52, 53, 54, 55, 56, 57, 58,
-        61, 62, 63, 64, 65, 66, 67, 68,
-        71, 72, 73, 74, 75, 76, 77, 78,
-        81, 82, 83, 84, 85, 86, 87, 88,
-        91, 92, 93, 94, 95, 96, 97, 98
-        };
+        private readonly int[] _seeGain = new int[34];
 
         private readonly bool[] _slide = new bool[6] { false, false, true, true, true, false }; // is piece a slider (RQB = yes, PKN = no)
         private readonly int[] _offsets = new int[6] { 0, 8, 4, 4, 8, 8 }; // directions each piece moves in (pawns = 0, knights = 8)
         private readonly int[][] _offset = new int[6][];
+        private readonly int[][] _x88Offset = new int[6][];
+
+        // Indexed by (from88 - to88 + 119): true if the two squares share a rank, file or diagonal
+        private readonly bool[] _sharesLine = new bool[240];
+
+        private long _checkCacheZobrist;
+        private int _checkCacheSide = -1;
+        private bool _checkCacheResult;
 
         private readonly Move[] _moveList = new Move[150];
         private int _moveListTopIndex = -1;
@@ -140,49 +121,54 @@ namespace Lisa
         private readonly int[][] _earlyBlackPST = new int[6][];
         private readonly int[][] _lateBlackPST = new int[6][];
 
-        private readonly Move[] _undoMoves = new Move[40];
-        private readonly int[] _undoCapPiece = new int[40];
-        private readonly byte[] _undoCapColor = new byte[40];
-        private readonly bool[] _undoCapWasEnPasant = new bool[40];
-        private readonly bool[] _undoWhiteCouldCastleKSide = new bool[40];
-        private readonly bool[] _undoWhiteCouldCastleQSide = new bool[40];
-        private readonly bool[] _undoBlackCouldCastleKSide = new bool[40];
-        private readonly bool[] _undoBlackCouldCastleQSide = new bool[40];
-        private readonly byte[] _undoEnPasantCapSquare = new byte[40];
-        private readonly byte[] _undoBlackKingSquare = new byte[40];
-        private readonly byte[] _undoWhiteKingSquare = new byte[40];
-        private readonly byte[] _undoBlackQueenSquare = new byte[40];
-        private readonly byte[] _undoWhiteQueenSquare = new byte[40];
-        private readonly bool[] _undoLastMoveWasCastle = new bool[40];
-        private readonly bool[] _undoLastMoveWasNull = new bool[40];
-        private readonly bool[] _undoLastMoveWhiteHadLightSquaredBishop = new bool[40];
-        private readonly bool[] _undoLastMoveWhiteHadDarkSquaredBishop = new bool[40];
-        private readonly bool[] _undoLastMoveBlackHadLightSquaredBishop = new bool[40];
-        private readonly bool[] _undoLastMoveBlackHadDarkSquaredBishop = new bool[40];
-        private readonly int[] _undoWhiteEarlyPSTScore = new int[40];
-        private readonly int[] _undoWhiteLatePSTScore = new int[40];
-        private readonly int[] _undoBlackEarlyPSTScore = new int[40];
-        private readonly int[] _undoBlackLatePSTScore = new int[40];
-        private readonly byte[] _undoWhiteLightBishopSquare = new byte[40];
-        private readonly byte[] _undoWhiteDarkBishopSquare = new byte[40];
-        private readonly byte[] _undoBlackLightBishopSquare = new byte[40];
-        private readonly byte[] _undoBlackDarkBishopSquare = new byte[40];
-        private readonly int[] _undoGamePhase = new int[40];
+        private struct UndoState
+        {
+            public Move TheMove;
+            public int CapPiece;
+            public byte CapColor;
+            public bool CapWasEnPasant;
+            public bool WhiteCouldCastleKSide;
+            public bool WhiteCouldCastleQSide;
+            public bool BlackCouldCastleKSide;
+            public bool BlackCouldCastleQSide;
+            public byte EnPasantCapSquare;
+            public byte BlackKingSquare;
+            public byte WhiteKingSquare;
+            public byte BlackQueenSquare;
+            public byte WhiteQueenSquare;
+            public bool LastMoveWasCastle;
+            public bool LastMoveWasNull;
+            public bool LastMoveWhiteHadLightSquaredBishop;
+            public bool LastMoveWhiteHadDarkSquaredBishop;
+            public bool LastMoveBlackHadLightSquaredBishop;
+            public bool LastMoveBlackHadDarkSquaredBishop;
+            public int WhiteEarlyPSTScore;
+            public int WhiteLatePSTScore;
+            public int BlackEarlyPSTScore;
+            public int BlackLatePSTScore;
+            public byte WhiteLightBishopSquare;
+            public byte WhiteDarkBishopSquare;
+            public byte BlackLightBishopSquare;
+            public byte BlackDarkBishopSquare;
+            public int GamePhase;
+            public byte WhiteRookOneSquare;
+            public byte WhiteRookTwoSquare;
+            public byte BlackRookOneSquare;
+            public byte BlackRookTwoSquare;
+            public byte WhiteKnightOneSquare;
+            public byte WhiteKnightTwoSquare;
+            public byte BlackKnightOneSquare;
+            public byte BlackKnightTwoSquare;
+            public int WhitePawnsOnLightSquares;
+            public int WhitePawnsOnDarkSquares;
+            public int BlackPawnsOnLightSquares;
+            public int BlackPawnsOnDarkSquares;
+        }
 
-        private readonly byte[] _undoWhiteRookOneSquare = new byte[40];
-        private readonly byte[] _undoWhiteRookTwoSquare = new byte[40];
-        private readonly byte[] _undoBlackRookOneSquare = new byte[40];
-        private readonly byte[] _undoBlackRookTwoSquare = new byte[40];
+        private readonly UndoState[] _undo = new UndoState[40];
 
-        private readonly byte[] _undoWhiteKnightOneSquare = new byte[40];
-        private readonly byte[] _undoWhiteKnightTwoSquare = new byte[40];
-        private readonly byte[] _undoBlackKnightOneSquare = new byte[40];
-        private readonly byte[] _undoBlackKnightTwoSquare = new byte[40];
 
-        private readonly int[] _undoWhitePawnsOnLightSquares = new int[40];
-        private readonly int[] _undoWhitePawnsOnDarkSquares = new int[40];
-        private readonly int[] _undoBlackPawnsOnLightSquares = new int[40];
-        private readonly int[] _undoBlackPawnsOnDarkSquares = new int[40];
+
 
 
         private int _undoMoveCount = 0;
@@ -213,6 +199,26 @@ namespace Lisa
             _offset[3] = new int[] { -10, -1, 1, 10, 0, 0, 0, 0 };
             _offset[4] = new int[] { -11, -10, -9, -1, 1, 9, 10, 11 };
             _offset[5] = new int[] { -11, -10, -9, -1, 1, 9, 10, 11 };
+
+            // The same directions, in the same order, for 0x88 addressing (16 squares per row)
+            for (int pc = 0; pc < 6; pc++)
+            {
+                _x88Offset[pc] = new int[8];
+                for (int dd = 0; dd < 8; dd++)
+                {
+                    int mailboxOffset = _offset[pc][dd];
+                    int rowStep = (int)Math.Round(mailboxOffset / 10.0);
+                    _x88Offset[pc][dd] = rowStep * 16 + (mailboxOffset - rowStep * 10);
+                }
+            }
+
+            foreach (int lineDir in _x88Offset[QUEEN])
+            {
+                for (int dist = 1; dist <= 7; dist++)
+                {
+                    _sharesLine[119 + lineDir * dist] = true;
+                }
+            }
 
             SquareColor[0] = LIGHTSQUARE; SquareColor[1] = DARKSQUARE; SquareColor[2] = LIGHTSQUARE; SquareColor[3] = DARKSQUARE;
             SquareColor[4] = LIGHTSQUARE; SquareColor[5] = DARKSQUARE; SquareColor[6] = LIGHTSQUARE; SquareColor[7] = DARKSQUARE;
@@ -1367,21 +1373,123 @@ namespace Lisa
         }
 
 
+        // IsInCheck, remembered for the current position so MoveIsLegal can ask once per node
+        private bool SideIsInCheckCached(int side)
+        {
+            if (_checkCacheSide != side || _checkCacheZobrist != CurrentZobrist)
+            {
+                _checkCacheZobrist = CurrentZobrist;
+                _checkCacheSide = side;
+                _checkCacheResult = IsInCheck(side);
+            }
+            return _checkCacheResult;
+        }
+
+
+        // A side whose king has been captured (search can reach such positions) counts as not in
+        // check. The Color test is deliberate: removing it changes search results.
         public bool IsInCheck(int whichSide)
         {
-
             int kingSquare = whichSide == WHITE ? WhiteKingSquare : BlackKingSquare;
-            Move[] oppMoves = GenerateAllMoves(whichSide == WHITE ? BLACK : WHITE, true, kingSquare, false);
-            for (int nn = 0; nn < oppMoves.Length; nn++)
+            return Color[kingSquare] == whichSide && SquareIsAttacked(kingSquare, whichSide == WHITE ? BLACK : WHITE);
+        }
+
+
+        // True if any piece of byColor attacks square. Works backwards from the square (pawn, knight
+        // and king squares, then the eight rays) using 0x88 addressing for the off-board test.
+        // Pawn attacks count on empty squares too, unlike pawn capture generation.
+        public bool SquareIsAttacked(int square, int byColor)
+        {
+            int sq88 = square + (square & 56);
+            int from88;
+            int from;
+
+            // White pawns attack towards square 0, so an attacking white pawn sits one row below
+            int pawnRow = byColor == WHITE ? 16 : -16;
+            from88 = sq88 + pawnRow - 1;
+            if ((from88 & 0x88) == 0)
             {
-                if (oppMoves[nn].To == kingSquare)
+                from = (from88 + (from88 & 7)) >> 1;
+                if (Color[from] == byColor && Piece[from] == PAWN)
+                {
+                    return true;
+                }
+            }
+            from88 = sq88 + pawnRow + 1;
+            if ((from88 & 0x88) == 0)
+            {
+                from = (from88 + (from88 & 7)) >> 1;
+                if (Color[from] == byColor && Piece[from] == PAWN)
                 {
                     return true;
                 }
             }
 
-            return false;
+            int[] knightOffsets = _x88Offset[KNIGHT];
+            for (int nn = 0; nn < 8; nn++)
+            {
+                from88 = sq88 + knightOffsets[nn];
+                if ((from88 & 0x88) == 0)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] == byColor && Piece[from] == KNIGHT)
+                    {
+                        return true;
+                    }
+                }
+            }
 
+            int[] kingOffsets = _x88Offset[KING];
+            for (int nn = 0; nn < 8; nn++)
+            {
+                from88 = sq88 + kingOffsets[nn];
+                if ((from88 & 0x88) == 0)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] == byColor && Piece[from] == KING)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            int[] diagonalOffsets = _x88Offset[BISHOP];
+            for (int nn = 0; nn < 4; nn++)
+            {
+                int dir = diagonalOffsets[nn];
+                for (from88 = sq88 + dir; (from88 & 0x88) == 0; from88 += dir)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] != EMPTY)
+                    {
+                        if (Color[from] == byColor && (Piece[from] == BISHOP || Piece[from] == QUEEN))
+                        {
+                            return true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            int[] straightOffsets = _x88Offset[ROOK];
+            for (int nn = 0; nn < 4; nn++)
+            {
+                int dir = straightOffsets[nn];
+                for (from88 = sq88 + dir; (from88 & 0x88) == 0; from88 += dir)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] != EMPTY)
+                    {
+                        if (Color[from] == byColor && (Piece[from] == ROOK || Piece[from] == QUEEN))
+                        {
+                            return true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            return false;
         }
 
 
@@ -1402,18 +1510,18 @@ namespace Lisa
                     if (P != PAWN) //It's not a pawn
                     {
 
-                        for (int off = 0; off < _offsets[P]; off++)
+                        int[] dirs = _x88Offset[P];
+                        int dirCount = _offsets[P];
+                        bool slides = _slide[P];
+                        int from88 = sq + (sq & 56);
+                        for (int off = 0; off < dirCount; off++)
                         {
 
-                            for (byte nextSq = sq; ;)
+                            int dir = dirs[off];
+                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
 
-                                nextSq = _mailbox[_mailbox64[nextSq] + _offset[P][off]]; // next square along the ray
-
-                                if (nextSq == 255) //off the board
-                                {
-                                    break;
-                                }
+                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
                                 if (localColor[nextSq] != EMPTY)
                                 {
                                     break;
@@ -1421,7 +1529,7 @@ namespace Lisa
 
                                 AddMoveToList(sq, nextSq, false);
 
-                                if (!_slide[P])
+                                if (!slides)
                                 {
                                     break;
                                 }
@@ -1597,18 +1705,18 @@ namespace Lisa
                             }
                         }
 
-                        for (int off = 0; off < _offsets[P]; off++)
+                        int[] dirs = _x88Offset[P];
+                        int dirCount = _offsets[P];
+                        bool slides = _slide[P];
+                        int from88 = sq + (sq & 56);
+                        for (int off = 0; off < dirCount; off++)
                         {
 
-                            for (byte nextSq = sq; ;)
+                            int dir = dirs[off];
+                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
 
-                                nextSq = _mailbox[_mailbox64[nextSq] + _offset[P][off]]; // next square along the ray
-
-                                if (nextSq == 255) //off the board
-                                {
-                                    break;
-                                }
+                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
                                 {
@@ -1622,7 +1730,7 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (!_slide[P])
+                                if (!slides)
                                 {
                                     break;
                                 }
@@ -1762,18 +1870,18 @@ namespace Lisa
                     if (P != PAWN) //It's not a pawn
                     {
 
-                        for (int off = 0; off < _offsets[P]; off++)
+                        int[] dirs = _x88Offset[P];
+                        int dirCount = _offsets[P];
+                        bool slides = _slide[P];
+                        int from88 = sq + (sq & 56);
+                        for (int off = 0; off < dirCount; off++)
                         {
 
-                            for (byte nextSq = sq; ;)
+                            int dir = dirs[off];
+                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
 
-                                nextSq = _mailbox[_mailbox64[nextSq] + _offset[P][off]]; // next square along the ray
-
-                                if (nextSq == 255) //off the board
-                                {
-                                    break;
-                                }
+                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
                                 {
@@ -1787,7 +1895,7 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (!_slide[P])
+                                if (!slides)
                                 {
                                     break;
                                 }
@@ -1927,18 +2035,18 @@ namespace Lisa
                     if (P != PAWN) //It's not a pawn
                     {
 
-                        for (int off = 0; off < _offsets[P]; off++)
+                        int[] dirs = _x88Offset[P];
+                        int dirCount = _offsets[P];
+                        bool slides = _slide[P];
+                        int from88 = sq + (sq & 56);
+                        for (int off = 0; off < dirCount; off++)
                         {
 
-                            for (byte nextSq = sq; ;)
+                            int dir = dirs[off];
+                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
 
-                                nextSq = _mailbox[_mailbox64[nextSq] + _offset[P][off]]; // next square along the ray
-
-                                if (nextSq == 255) //off the board
-                                {
-                                    break;
-                                }
+                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
                                 {
@@ -1952,7 +2060,7 @@ namespace Lisa
                                     break;
                                 }
 
-                                if (!_slide[P])
+                                if (!slides)
                                 {
                                     break;
                                 }
@@ -2094,18 +2202,18 @@ namespace Lisa
                     if (P != PAWN && P != KING) //It's not a pawn or king
                     {
 
-                        for (int off = 0; off < _offsets[P]; off++)
+                        int[] dirs = _x88Offset[P];
+                        int dirCount = _offsets[P];
+                        bool slides = _slide[P];
+                        int from88 = sq + (sq & 56);
+                        for (int off = 0; off < dirCount; off++)
                         {
 
-                            for (byte nextSq = sq; ;)
+                            int dir = dirs[off];
+                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
 
-                                nextSq = _mailbox[_mailbox64[nextSq] + _offset[P][off]]; // next square along the ray
-
-                                if (nextSq == 255) //off the board
-                                {
-                                    break;
-                                }
+                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
                                 {
@@ -2121,7 +2229,7 @@ namespace Lisa
 
                                 AddMoveToList(sq, nextSq, false);
 
-                                if (!_slide[P])
+                                if (!slides)
                                 {
                                     break;
                                 }
@@ -2200,18 +2308,18 @@ namespace Lisa
                             }
                         }
 
-                        for (int off = 0; off < _offsets[P]; off++)
+                        int[] dirs = _x88Offset[P];
+                        int dirCount = _offsets[P];
+                        bool slides = _slide[P];
+                        int from88 = sq + (sq & 56);
+                        for (int off = 0; off < dirCount; off++)
                         {
 
-                            for (byte nextSq = sq; ;)
+                            int dir = dirs[off];
+                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
 
-                                nextSq = _mailbox[_mailbox64[nextSq] + _offset[P][off]]; // next square along the ray
-
-                                if (nextSq == 255) //off the board
-                                {
-                                    break;
-                                }
+                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
                                 {
@@ -2230,7 +2338,7 @@ namespace Lisa
                                     AddMoveToList(sq, nextSq, false); //If checking for legality, only need non-captures to check castling through check
                                 }
 
-                                if (!_slide[P])
+                                if (!slides)
                                 {
                                     break;
                                 }
@@ -2674,6 +2782,19 @@ namespace Lisa
 
             }
 
+            // If we are not in check, a non-king move from a square that shares no line with our king
+            // cannot expose it, so it is legal without making it. En passant is excluded because it
+            // also empties the captured pawn's square.
+            if (Piece[theMove.From] != KING && !(theMove.To == EnPasantCapSquare && Piece[theMove.From] == PAWN))
+            {
+                int ownKing = toMove == WHITE ? WhiteKingSquare : BlackKingSquare;
+                int lineIndex = (theMove.From + (theMove.From & 56)) - (ownKing + (ownKing & 56)) + 119;
+                if (Piece[ownKing] == KING && Color[ownKing] == toMove && !_sharesLine[lineIndex] && !SideIsInCheckCached(toMove))
+                {
+                    return true;
+                }
+            }
+
             MakeMove(theMove, toMove, false);
             int kingSquare = toMove == WHITE ? WhiteKingSquare : BlackKingSquare;
 
@@ -2733,59 +2854,31 @@ namespace Lisa
                 }
             }
 
-            Move[] oppMoves = GenerateAllMoves(toMove == WHITE ? BLACK : WHITE, true, kingSquare, _lastMoveWasCastle);
-            for (int nn = 0; nn < oppMoves.Length; nn++)
+            int opponent = toMove == WHITE ? BLACK : WHITE;
+            bool illegal = Color[kingSquare] == toMove && SquareIsAttacked(kingSquare, opponent);
+            if (!illegal && _lastMoveWasCastle)
             {
-                if (oppMoves[nn].To == kingSquare)
+                // The king may not castle out of or through check
+                if (theMove.To == 6)
                 {
-                    UnmakeLastMove();
-                    return false;
+                    illegal = SquareIsAttacked(4, opponent) || SquareIsAttacked(5, opponent);
                 }
-                if (_lastMoveWasCastle)
+                else if (theMove.To == 2)
                 {
-                    if (theMove.To == 6)
-                    {
-                        //move is black k side castle, check its not through check
-                        if (oppMoves[nn].To == 4 || oppMoves[nn].To == 5 || oppMoves[nn].To == 6)
-                        {
-                            UnmakeLastMove();
-                            return false;
-                        }
-                    }
-                    else if (theMove.To == 2)
-                    {
-                        //move is black q side castle, check its not through check
-                        if (oppMoves[nn].To == 4 || oppMoves[nn].To == 3 || oppMoves[nn].To == 2)
-                        {
-                            UnmakeLastMove();
-                            return false;
-                        }
-                    }
-                    else if (theMove.To == 62)
-                    {
-                        //move is white k side castle, check its not through check
-                        if (oppMoves[nn].To == 60 || oppMoves[nn].To == 61 || oppMoves[nn].To == 62)
-                        {
-                            UnmakeLastMove();
-                            return false;
-                        }
-                    }
-                    else if (theMove.To == 58)
-                    {
-                        //move is white q side castle, check its not through check
-                        if (oppMoves[nn].To == 60 || oppMoves[nn].To == 59 || oppMoves[nn].To == 58)
-                        {
-                            UnmakeLastMove();
-                            return false;
-                        }
-                    }
+                    illegal = SquareIsAttacked(4, opponent) || SquareIsAttacked(3, opponent);
                 }
-
+                else if (theMove.To == 62)
+                {
+                    illegal = SquareIsAttacked(60, opponent) || SquareIsAttacked(61, opponent);
+                }
+                else if (theMove.To == 58)
+                {
+                    illegal = SquareIsAttacked(60, opponent) || SquareIsAttacked(59, opponent);
+                }
             }
 
             UnmakeLastMove();
-            return true;
-
+            return !illegal;
 
         }
 
@@ -2793,47 +2886,49 @@ namespace Lisa
         public void MakeMove(Move theMove, int toMove, bool NullMove)
         {
 
+            ref UndoState undo = ref _undo[_undoMoveCount];
+
             bool MoveWasCastle = false;
 
-            _undoMoves[_undoMoveCount] = theMove;
+            undo.TheMove = theMove;
 
-            _undoBlackCouldCastleKSide[_undoMoveCount] = _blackCanKSideCastle;
-            _undoBlackCouldCastleQSide[_undoMoveCount] = _blackCanQSideCastle;
-            _undoWhiteCouldCastleKSide[_undoMoveCount] = _whiteCanKSideCastle;
-            _undoWhiteCouldCastleQSide[_undoMoveCount] = _whiteCanQSideCastle;
-            _undoEnPasantCapSquare[_undoMoveCount] = EnPasantCapSquare;
-            _undoBlackKingSquare[_undoMoveCount] = BlackKingSquare;
-            _undoWhiteKingSquare[_undoMoveCount] = WhiteKingSquare;
-            _undoBlackQueenSquare[_undoMoveCount] = BlackQueenSquare;
-            _undoWhiteQueenSquare[_undoMoveCount] = WhiteQueenSquare;
-            _undoLastMoveWasCastle[_undoMoveCount] = _lastMoveWasCastle;
-            _undoLastMoveWhiteHadDarkSquaredBishop[_undoMoveCount] = WhiteHasDarkSquaredBishop;
-            _undoLastMoveWhiteHadLightSquaredBishop[_undoMoveCount] = WhiteHasLightSquaredBishop;
-            _undoLastMoveBlackHadDarkSquaredBishop[_undoMoveCount] = BlackHasDarkSquaredBishop;
-            _undoLastMoveBlackHadLightSquaredBishop[_undoMoveCount] = BlackHasLightSquaredBishop;
-            _undoWhiteEarlyPSTScore[_undoMoveCount] = WhiteEarlyPSTScore;
-            _undoWhiteLatePSTScore[_undoMoveCount] = WhiteLatePSTScore;
-            _undoBlackEarlyPSTScore[_undoMoveCount] = BlackEarlyPSTScore;
-            _undoBlackLatePSTScore[_undoMoveCount] = BlackLatePSTScore;
-            _undoWhiteLightBishopSquare[_undoMoveCount] = WhiteLightBishopSquare;
-            _undoWhiteDarkBishopSquare[_undoMoveCount] = WhiteDarkBishopSquare;
-            _undoBlackLightBishopSquare[_undoMoveCount] = BlackLightBishopSquare;
-            _undoBlackDarkBishopSquare[_undoMoveCount] = BlackDarkBishopSquare;
-            _undoWhitePawnsOnDarkSquares[_undoMoveCount] = WhitePawnsOnDarkSquares;
-            _undoWhitePawnsOnLightSquares[_undoMoveCount] = WhitePawnsOnLightSquares;
-            _undoBlackPawnsOnDarkSquares[_undoMoveCount] = BlackPawnsOnDarkSquares;
-            _undoBlackPawnsOnLightSquares[_undoMoveCount] = BlackPawnsOnLightSquares;
-            _undoWhiteKnightOneSquare[_undoMoveCount] = WhiteKnightOneSquare;
-            _undoWhiteKnightTwoSquare[_undoMoveCount] = WhiteKnightTwoSquare;
-            _undoBlackKnightOneSquare[_undoMoveCount] = BlackKnightOneSquare;
-            _undoBlackKnightTwoSquare[_undoMoveCount] = BlackKnightTwoSquare;
-            _undoWhiteRookOneSquare[_undoMoveCount] = WhiteRookOneSquare;
-            _undoWhiteRookTwoSquare[_undoMoveCount] = WhiteRookTwoSquare;
-            _undoBlackRookOneSquare[_undoMoveCount] = BlackRookOneSquare;
-            _undoBlackRookTwoSquare[_undoMoveCount] = BlackRookTwoSquare;
-            _undoGamePhase[_undoMoveCount] = GamePhase;
+            undo.BlackCouldCastleKSide = _blackCanKSideCastle;
+            undo.BlackCouldCastleQSide = _blackCanQSideCastle;
+            undo.WhiteCouldCastleKSide = _whiteCanKSideCastle;
+            undo.WhiteCouldCastleQSide = _whiteCanQSideCastle;
+            undo.EnPasantCapSquare = EnPasantCapSquare;
+            undo.BlackKingSquare = BlackKingSquare;
+            undo.WhiteKingSquare = WhiteKingSquare;
+            undo.BlackQueenSquare = BlackQueenSquare;
+            undo.WhiteQueenSquare = WhiteQueenSquare;
+            undo.LastMoveWasCastle = _lastMoveWasCastle;
+            undo.LastMoveWhiteHadDarkSquaredBishop = WhiteHasDarkSquaredBishop;
+            undo.LastMoveWhiteHadLightSquaredBishop = WhiteHasLightSquaredBishop;
+            undo.LastMoveBlackHadDarkSquaredBishop = BlackHasDarkSquaredBishop;
+            undo.LastMoveBlackHadLightSquaredBishop = BlackHasLightSquaredBishop;
+            undo.WhiteEarlyPSTScore = WhiteEarlyPSTScore;
+            undo.WhiteLatePSTScore = WhiteLatePSTScore;
+            undo.BlackEarlyPSTScore = BlackEarlyPSTScore;
+            undo.BlackLatePSTScore = BlackLatePSTScore;
+            undo.WhiteLightBishopSquare = WhiteLightBishopSquare;
+            undo.WhiteDarkBishopSquare = WhiteDarkBishopSquare;
+            undo.BlackLightBishopSquare = BlackLightBishopSquare;
+            undo.BlackDarkBishopSquare = BlackDarkBishopSquare;
+            undo.WhitePawnsOnDarkSquares = WhitePawnsOnDarkSquares;
+            undo.WhitePawnsOnLightSquares = WhitePawnsOnLightSquares;
+            undo.BlackPawnsOnDarkSquares = BlackPawnsOnDarkSquares;
+            undo.BlackPawnsOnLightSquares = BlackPawnsOnLightSquares;
+            undo.WhiteKnightOneSquare = WhiteKnightOneSquare;
+            undo.WhiteKnightTwoSquare = WhiteKnightTwoSquare;
+            undo.BlackKnightOneSquare = BlackKnightOneSquare;
+            undo.BlackKnightTwoSquare = BlackKnightTwoSquare;
+            undo.WhiteRookOneSquare = WhiteRookOneSquare;
+            undo.WhiteRookTwoSquare = WhiteRookTwoSquare;
+            undo.BlackRookOneSquare = BlackRookOneSquare;
+            undo.BlackRookTwoSquare = BlackRookTwoSquare;
+            undo.GamePhase = GamePhase;
 
-            _undoLastMoveWasNull[_undoMoveCount] = NullMove;
+            undo.LastMoveWasNull = NullMove;
 
             if (!NullMove)
             {
@@ -3094,10 +3189,10 @@ namespace Lisa
                     PieceCount -= 1;
                     if (theMove.To == EnPasantCapSquare)
                     {
-                        _undoCapPiece[_undoMoveCount] = PAWN;
+                        undo.CapPiece = PAWN;
                         if (toMove == WHITE)
                         {
-                            _undoCapColor[_undoMoveCount] = BLACK;
+                            undo.CapColor = BLACK;
                             Color[theMove.To + 8] = EMPTY;
                             Piece[theMove.To + 8] = -1;
                             for (int pp = 0; pp <= 7; pp++)
@@ -3129,7 +3224,7 @@ namespace Lisa
                         }
                         else
                         {
-                            _undoCapColor[_undoMoveCount] = WHITE;
+                            undo.CapColor = WHITE;
                             Color[theMove.To - 8] = EMPTY;
                             Piece[theMove.To - 8] = -1;
                             for (int pp = 0; pp <= 7; pp++)
@@ -3159,7 +3254,7 @@ namespace Lisa
                             BlackEarlyPSTScore += _earlyBlackPST[PAWN][theMove.To];
                             BlackLatePSTScore += _lateBlackPST[PAWN][theMove.To];
                         }
-                        _undoCapWasEnPasant[_undoMoveCount] = true;
+                        undo.CapWasEnPasant = true;
                         ToggleZobristPieceOnSquare(theMove.From, Color[theMove.From], Piece[theMove.From]);
                         Color[theMove.To] = Color[theMove.From];
                         Piece[theMove.To] = Piece[theMove.From];
@@ -3169,9 +3264,9 @@ namespace Lisa
                     }
                     else
                     {
-                        _undoCapWasEnPasant[_undoMoveCount] = false;
-                        _undoCapPiece[_undoMoveCount] = Piece[theMove.To];
-                        _undoCapColor[_undoMoveCount] = Color[theMove.To];
+                        undo.CapWasEnPasant = false;
+                        undo.CapPiece = Piece[theMove.To];
+                        undo.CapColor = Color[theMove.To];
 
                         if (Piece[theMove.To] == ROOK)
                         {
@@ -3660,79 +3755,80 @@ namespace Lisa
         {
 
             _undoMoveCount -= 1;
+            ref UndoState undo = ref _undo[_undoMoveCount];
 
-            if (!_undoLastMoveWasNull[_undoMoveCount])
+            if (!undo.LastMoveWasNull)
             {
-                Move toUndo = _undoMoves[_undoMoveCount];
-                if (_blackCanKSideCastle != _undoBlackCouldCastleKSide[_undoMoveCount])
+                Move toUndo = undo.TheMove;
+                if (_blackCanKSideCastle != undo.BlackCouldCastleKSide)
                 {
                     ToggleZobristBlackCanCastleKSide();
                 }
-                _blackCanKSideCastle = _undoBlackCouldCastleKSide[_undoMoveCount];
-                if (_blackCanQSideCastle != _undoBlackCouldCastleQSide[_undoMoveCount])
+                _blackCanKSideCastle = undo.BlackCouldCastleKSide;
+                if (_blackCanQSideCastle != undo.BlackCouldCastleQSide)
                 {
                     ToggleZobristBlackCanCastleQSide();
                 }
-                _blackCanQSideCastle = _undoBlackCouldCastleQSide[_undoMoveCount];
-                if (_whiteCanKSideCastle != _undoWhiteCouldCastleKSide[_undoMoveCount])
+                _blackCanQSideCastle = undo.BlackCouldCastleQSide;
+                if (_whiteCanKSideCastle != undo.WhiteCouldCastleKSide)
                 {
                     ToggleZobristWhiteCanCastleKSide();
                 }
-                _whiteCanKSideCastle = _undoWhiteCouldCastleKSide[_undoMoveCount];
-                if (_whiteCanQSideCastle != _undoWhiteCouldCastleQSide[_undoMoveCount])
+                _whiteCanKSideCastle = undo.WhiteCouldCastleKSide;
+                if (_whiteCanQSideCastle != undo.WhiteCouldCastleQSide)
                 {
                     ToggleZobristWhiteCanCastleQSide();
                 }
-                _whiteCanQSideCastle = _undoWhiteCouldCastleQSide[_undoMoveCount];
+                _whiteCanQSideCastle = undo.WhiteCouldCastleQSide;
 
                 if (EnPasantCapSquare != 255)
                 {
                     ToggleZobristEnPasantSquare(EnPasantCapSquare);
                 }
-                EnPasantCapSquare = _undoEnPasantCapSquare[_undoMoveCount];
+                EnPasantCapSquare = undo.EnPasantCapSquare;
                 if (EnPasantCapSquare != 255)
                 {
                     ToggleZobristEnPasantSquare(EnPasantCapSquare);
                 }
 
-                _lastMoveWasCastle = _undoLastMoveWasCastle[_undoMoveCount];
+                _lastMoveWasCastle = undo.LastMoveWasCastle;
 
-                WhiteKingSquare = _undoWhiteKingSquare[_undoMoveCount];
-                BlackKingSquare = _undoBlackKingSquare[_undoMoveCount];
-                WhiteQueenSquare = _undoWhiteQueenSquare[_undoMoveCount];
-                BlackQueenSquare = _undoBlackQueenSquare[_undoMoveCount];
+                WhiteKingSquare = undo.WhiteKingSquare;
+                BlackKingSquare = undo.BlackKingSquare;
+                WhiteQueenSquare = undo.WhiteQueenSquare;
+                BlackQueenSquare = undo.BlackQueenSquare;
 
-                WhiteDarkBishopSquare = _undoWhiteDarkBishopSquare[_undoMoveCount];
-                WhiteLightBishopSquare = _undoWhiteLightBishopSquare[_undoMoveCount];
-                BlackDarkBishopSquare = _undoBlackDarkBishopSquare[_undoMoveCount];
-                BlackLightBishopSquare = _undoBlackLightBishopSquare[_undoMoveCount];
+                WhiteDarkBishopSquare = undo.WhiteDarkBishopSquare;
+                WhiteLightBishopSquare = undo.WhiteLightBishopSquare;
+                BlackDarkBishopSquare = undo.BlackDarkBishopSquare;
+                BlackLightBishopSquare = undo.BlackLightBishopSquare;
 
-                WhiteRookOneSquare = _undoWhiteRookOneSquare[_undoMoveCount];
-                BlackRookOneSquare = _undoBlackRookOneSquare[_undoMoveCount];
-                WhiteRookTwoSquare = _undoWhiteRookTwoSquare[_undoMoveCount];
-                BlackRookTwoSquare = _undoBlackRookTwoSquare[_undoMoveCount];
+                WhiteRookOneSquare = undo.WhiteRookOneSquare;
+                BlackRookOneSquare = undo.BlackRookOneSquare;
+                WhiteRookTwoSquare = undo.WhiteRookTwoSquare;
+                BlackRookTwoSquare = undo.BlackRookTwoSquare;
 
-                WhiteKnightOneSquare = _undoWhiteKnightOneSquare[_undoMoveCount];
-                BlackKnightOneSquare = _undoBlackKnightOneSquare[_undoMoveCount];
-                WhiteKnightTwoSquare = _undoWhiteKnightTwoSquare[_undoMoveCount];
-                BlackKnightTwoSquare = _undoBlackKnightTwoSquare[_undoMoveCount];
+                WhiteKnightOneSquare = undo.WhiteKnightOneSquare;
+                BlackKnightOneSquare = undo.BlackKnightOneSquare;
+                WhiteKnightTwoSquare = undo.WhiteKnightTwoSquare;
+                BlackKnightTwoSquare = undo.BlackKnightTwoSquare;
 
-                WhiteHasLightSquaredBishop = _undoLastMoveWhiteHadLightSquaredBishop[_undoMoveCount];
-                WhiteHasDarkSquaredBishop = _undoLastMoveWhiteHadDarkSquaredBishop[_undoMoveCount];
-                BlackHasDarkSquaredBishop = _undoLastMoveBlackHadDarkSquaredBishop[_undoMoveCount];
-                BlackHasLightSquaredBishop = _undoLastMoveBlackHadLightSquaredBishop[_undoMoveCount];
+                WhiteHasLightSquaredBishop = undo.LastMoveWhiteHadLightSquaredBishop;
+                WhiteHasDarkSquaredBishop = undo.LastMoveWhiteHadDarkSquaredBishop;
+                BlackHasDarkSquaredBishop = undo.LastMoveBlackHadDarkSquaredBishop;
+                BlackHasLightSquaredBishop = undo.LastMoveBlackHadLightSquaredBishop;
 
-                WhiteEarlyPSTScore = _undoWhiteEarlyPSTScore[_undoMoveCount];
-                WhiteLatePSTScore = _undoWhiteLatePSTScore[_undoMoveCount];
-                BlackEarlyPSTScore = _undoBlackEarlyPSTScore[_undoMoveCount];
-                BlackLatePSTScore = _undoBlackLatePSTScore[_undoMoveCount];
+                WhiteEarlyPSTScore = undo.WhiteEarlyPSTScore;
+                WhiteLatePSTScore = undo.WhiteLatePSTScore;
+                BlackEarlyPSTScore = undo.BlackEarlyPSTScore;
+                BlackLatePSTScore = undo.BlackLatePSTScore;
 
-                WhitePawnsOnDarkSquares = _undoWhitePawnsOnDarkSquares[_undoMoveCount];
-                WhitePawnsOnLightSquares = _undoWhitePawnsOnLightSquares[_undoMoveCount];
-                BlackPawnsOnDarkSquares = _undoBlackPawnsOnDarkSquares[_undoMoveCount];
-                BlackPawnsOnLightSquares = _undoBlackPawnsOnLightSquares[_undoMoveCount];
+                WhitePawnsOnDarkSquares = undo.WhitePawnsOnDarkSquares;
+                WhitePawnsOnLightSquares = undo.WhitePawnsOnLightSquares;
+                BlackPawnsOnDarkSquares = undo.BlackPawnsOnDarkSquares;
+                BlackPawnsOnLightSquares = undo.BlackPawnsOnLightSquares;
 
-                GamePhase = _undoGamePhase[_undoMoveCount];
+                GamePhase = undo.GamePhase;
 
                 if (toUndo.IsCapture)
                 {
@@ -3768,11 +3864,11 @@ namespace Lisa
                         }
                     }
                     ToggleZobristPieceOnSquare(toUndo.From, Color[toUndo.From], Piece[toUndo.From]);
-                    if (_undoCapWasEnPasant[_undoMoveCount])
+                    if (undo.CapWasEnPasant)
                     {
                         Color[toUndo.To] = EMPTY;
                         Piece[toUndo.To] = -1;
-                        if (_undoCapColor[_undoMoveCount] == WHITE)
+                        if (undo.CapColor == WHITE)
                         {
                             Color[toUndo.To - 8] = WHITE;
                             Piece[toUndo.To - 8] = PAWN;
@@ -3820,8 +3916,8 @@ namespace Lisa
                                 BlackFilePawns[toUndo.To % 8] -= 1;
                             }
                         }
-                        Color[toUndo.To] = _undoCapColor[_undoMoveCount];
-                        Piece[toUndo.To] = _undoCapPiece[_undoMoveCount];
+                        Color[toUndo.To] = undo.CapColor;
+                        Piece[toUndo.To] = undo.CapPiece;
                         if (Piece[toUndo.To] == PAWN)
                         {
                             if (Color[toUndo.To] == WHITE)
@@ -3988,7 +4084,7 @@ namespace Lisa
             }
             else
             {
-                EnPasantCapSquare = _undoEnPasantCapSquare[_undoMoveCount];
+                EnPasantCapSquare = undo.EnPasantCapSquare;
                 if (EnPasantCapSquare != 255)
                 {
                     ToggleZobristEnPasantSquare(EnPasantCapSquare);
@@ -4001,7 +4097,10 @@ namespace Lisa
         }
 
 
-        public int See(int toSquare)
+        // Static exchange evaluation of a capture on toSquare, from the capturing side's point of view.
+        // Pass fromSquare to make that piece the first capturer; otherwise the least valuable one is used.
+        // Returns a signed value (negative = the exchange loses material). En passant returns 1.
+        public int See(int toSquare, int fromSquare = -1)
         {
 
             if (Piece[toSquare] == -1)
@@ -4010,108 +4109,57 @@ namespace Lisa
                 return 1;
             }
 
-            int whiteGains = 0;
-            int blackGains = 0;
-            int whosMove = Color[toSquare] == WHITE ? BLACK : WHITE;
-            int startingSide = whosMove;
-
-            Move[] capsToSquare = GenerateCapsToSquare(whosMove, toSquare);
-            if (capsToSquare.Length == 0)
+            int side = Color[toSquare] == WHITE ? BLACK : WHITE;
+            int attacker = fromSquare >= 0 ? fromSquare : LeastValuableAttacker(toSquare, side);
+            if (attacker < 0)
             {
                 return 0;
             }
 
             _seeUndoCount = 0;
-            _seeUndoColors[0] = Color[toSquare];
-            _seeUndoPieces[0] = Piece[toSquare];
             _seeUndoSquares[0] = toSquare;
+            _seeUndoPieces[0] = Piece[toSquare];
+            _seeUndoColors[0] = Color[toSquare];
 
-            int bestSee = 0;
-            bool canStop = true;
+            int depth = 0;
+            _seeGain[0] = SEE_MATERIAL[Piece[toSquare]];
 
-            while (capsToSquare.Length > 0)
+            while (true)
             {
-
-                int lowestValPieceScore = 5000;
-                int lowestCap = -1;
-
-                for (int nn = 0; nn < capsToSquare.Length; nn++)
-                {
-                    if (MATERIAL[Piece[capsToSquare[nn].From]] < lowestValPieceScore)
-                    {
-                        lowestValPieceScore = MATERIAL[Piece[capsToSquare[nn].From]];
-                        lowestCap = nn;
-                    }
-                }
+                int attackerPiece = Piece[attacker];
 
                 _seeUndoCount += 1;
-                _seeUndoColors[_seeUndoCount] = Color[capsToSquare[lowestCap].From];
-                _seeUndoPieces[_seeUndoCount] = Piece[capsToSquare[lowestCap].From];
-                _seeUndoSquares[_seeUndoCount] = capsToSquare[lowestCap].From;
+                _seeUndoSquares[_seeUndoCount] = attacker;
+                _seeUndoPieces[_seeUndoCount] = attackerPiece;
+                _seeUndoColors[_seeUndoCount] = Color[attacker];
 
-                if (Color[toSquare] == BLACK)
-                {
-                    whiteGains += SEE_MATERIAL[Piece[toSquare]];
-                }
-                else
-                {
-                    blackGains += SEE_MATERIAL[Piece[toSquare]];
-                }
+                Piece[toSquare] = attackerPiece;
+                Color[toSquare] = Color[attacker];
+                Piece[attacker] = -1;
+                Color[attacker] = EMPTY;
 
-                Piece[toSquare] = Piece[capsToSquare[lowestCap].From];
-                Color[toSquare] = Color[capsToSquare[lowestCap].From];
-                Piece[capsToSquare[lowestCap].From] = -1;
-                Color[capsToSquare[lowestCap].From] = EMPTY;
+                depth += 1;
+                _seeGain[depth] = SEE_MATERIAL[attackerPiece] - _seeGain[depth - 1];
 
-                canStop = !canStop;
-                if (canStop)
+                side = side == WHITE ? BLACK : WHITE;
+                attacker = LeastValuableAttacker(toSquare, side);
+
+                // A king may only recapture if the square is no longer defended
+                if (attacker >= 0 && Piece[attacker] == KING && LeastValuableAttacker(toSquare, side == WHITE ? BLACK : WHITE) >= 0)
                 {
-                    if (startingSide == WHITE)
-                    {
-                        if (whiteGains - blackGains > bestSee)
-                        {
-                            bestSee = whiteGains - blackGains;
-                        }
-                    }
-                    else
-                    {
-                        if (blackGains - whiteGains > bestSee)
-                        {
-                            bestSee = blackGains - whiteGains;
-                        }
-                    }
+                    attacker = -1;
                 }
 
-                if (whosMove == WHITE)
+                if (attacker < 0)
                 {
-                    whosMove = BLACK;
+                    break;
                 }
-                else
-                {
-                    whosMove = WHITE;
-                }
+            }
 
-                capsToSquare = GenerateCapsToSquare(whosMove, toSquare);
-
-                if (capsToSquare.Length == 0)
-                {
-                    if (startingSide == WHITE)
-                    {
-                        if (whiteGains - blackGains > bestSee)
-                        {
-                            bestSee = whiteGains - blackGains;
-                        }
-                    }
-                    else
-                    {
-                        if (blackGains - whiteGains > bestSee)
-                        {
-                            bestSee = blackGains - whiteGains;
-                        }
-                    }
-                }
-
-            };
+            while (--depth > 0)
+            {
+                _seeGain[depth - 1] = -Math.Max(-_seeGain[depth - 1], _seeGain[depth]);
+            }
 
             for (int nn = 0; nn <= _seeUndoCount; nn++)
             {
@@ -4119,8 +4167,133 @@ namespace Lisa
                 Color[_seeUndoSquares[nn]] = _seeUndoColors[nn];
             }
 
-            return bestSee;
+            return _seeGain[0];
 
+        }
+
+        // The square of byColor's least valuable piece attacking square (pawn, knight, bishop, rook,
+        // queen, then king), or -1 if none.
+        private int LeastValuableAttacker(int square, int byColor)
+        {
+            int sq88 = square + (square & 56);
+            int from88;
+            int from;
+
+            int pawnRow = byColor == WHITE ? 16 : -16;
+            from88 = sq88 + pawnRow - 1;
+            if ((from88 & 0x88) == 0)
+            {
+                from = (from88 + (from88 & 7)) >> 1;
+                if (Color[from] == byColor && Piece[from] == PAWN)
+                {
+                    return from;
+                }
+            }
+            from88 = sq88 + pawnRow + 1;
+            if ((from88 & 0x88) == 0)
+            {
+                from = (from88 + (from88 & 7)) >> 1;
+                if (Color[from] == byColor && Piece[from] == PAWN)
+                {
+                    return from;
+                }
+            }
+
+            int[] knightOffsets = _x88Offset[KNIGHT];
+            for (int nn = 0; nn < 8; nn++)
+            {
+                from88 = sq88 + knightOffsets[nn];
+                if ((from88 & 0x88) == 0)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] == byColor && Piece[from] == KNIGHT)
+                    {
+                        return from;
+                    }
+                }
+            }
+
+            int bishopSquare = -1;
+            int rookSquare = -1;
+            int queenSquare = -1;
+
+            int[] diagonalOffsets = _x88Offset[BISHOP];
+            for (int nn = 0; nn < 4; nn++)
+            {
+                int dir = diagonalOffsets[nn];
+                for (from88 = sq88 + dir; (from88 & 0x88) == 0; from88 += dir)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] != EMPTY)
+                    {
+                        if (Color[from] == byColor)
+                        {
+                            if (Piece[from] == BISHOP && bishopSquare < 0)
+                            {
+                                bishopSquare = from;
+                            }
+                            else if (Piece[from] == QUEEN && queenSquare < 0)
+                            {
+                                queenSquare = from;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            if (bishopSquare >= 0)
+            {
+                return bishopSquare;
+            }
+
+            int[] straightOffsets = _x88Offset[ROOK];
+            for (int nn = 0; nn < 4; nn++)
+            {
+                int dir = straightOffsets[nn];
+                for (from88 = sq88 + dir; (from88 & 0x88) == 0; from88 += dir)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] != EMPTY)
+                    {
+                        if (Color[from] == byColor)
+                        {
+                            if (Piece[from] == ROOK && rookSquare < 0)
+                            {
+                                rookSquare = from;
+                            }
+                            else if (Piece[from] == QUEEN && queenSquare < 0)
+                            {
+                                queenSquare = from;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            if (rookSquare >= 0)
+            {
+                return rookSquare;
+            }
+            if (queenSquare >= 0)
+            {
+                return queenSquare;
+            }
+
+            int[] kingOffsets = _x88Offset[KING];
+            for (int nn = 0; nn < 8; nn++)
+            {
+                from88 = sq88 + kingOffsets[nn];
+                if ((from88 & 0x88) == 0)
+                {
+                    from = (from88 + (from88 & 7)) >> 1;
+                    if (Color[from] == byColor && Piece[from] == KING)
+                    {
+                        return from;
+                    }
+                }
+            }
+
+            return -1;
         }
 
         public void ResetUndoMoves()

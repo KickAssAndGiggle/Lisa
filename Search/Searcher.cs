@@ -1692,6 +1692,11 @@ namespace Lisa
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOpCaps.Length; nn++)
                 {
+                    if (!_theBoard.MoveIsLegal(allOpCaps[nn], _theBoard.OnMove))
+                    {
+                        allOpCaps[nn].Score = -5000;
+                        continue;
+                    }
                     allOpCaps[nn].Score = -EvaluateMove(allOpCaps[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
                     if (allOpCaps[nn].Score > iidAlpha)
                     {
@@ -1763,6 +1768,11 @@ namespace Lisa
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOppMoves.Length; nn++)
                 {
+                    if (!_theBoard.MoveIsLegal(allOppMoves[nn], _theBoard.OnMove))
+                    {
+                        allOppMoves[nn].Score = -5000;
+                        continue;
+                    }
                     allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
                     if (allOppMoves[nn].Score > iidAlpha)
                     {
@@ -2192,7 +2202,7 @@ namespace Lisa
                         }
                     }
                 }
-                if (!allOppMoves[nn].IsCapture || NoSeeNeeded || _theBoard.See(allOppMoves[nn].To) >= 0)
+                if (!allOppMoves[nn].IsCapture || NoSeeNeeded || _theBoard.See(allOppMoves[nn].To, allOppMoves[nn].From) >= 0)
                 {
                     if (_theBoard.MoveIsLegal(allOppMoves[nn], _theBoard.OnMove))
                     {
