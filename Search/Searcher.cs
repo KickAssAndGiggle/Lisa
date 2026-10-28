@@ -1768,19 +1768,22 @@ namespace Lisa
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOppMoves.Length; nn++)
                 {
-                    if (!_theBoard.MoveIsLegal(allOppMoves[nn], _theBoard.OnMove))
+                    if (allOppMoves[nn].Score != 4950)
                     {
-                        allOppMoves[nn].Score = -5000;
-                        continue;
+                        if (!_theBoard.MoveIsLegal(allOppMoves[nn], _theBoard.OnMove))
+                        {
+                            allOppMoves[nn].Score = -5000;
+                            continue;
+                        }
+                        allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
+                        if (allOppMoves[nn].Score > iidAlpha)
+                        {
+                            iidAlpha = allOppMoves[nn].Score;
+                        }
+                        int moveKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
+                        allOppMoves[nn].Score += Sorter.CutCount[moveKey];
+                        allOppMoves[nn].Score += Sorter.CutCountSingleMove[rootMoveKey, moveKey];
                     }
-                    allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
-                    if (allOppMoves[nn].Score > iidAlpha)
-                    {
-                        iidAlpha = allOppMoves[nn].Score;
-                    }
-                    int moveKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
-                    allOppMoves[nn].Score += Sorter.CutCount[moveKey];
-                    allOppMoves[nn].Score += Sorter.CutCountSingleMove[rootMoveKey, moveKey];
                 }
                 Array.Sort(allOppMoves);
             }
@@ -1793,7 +1796,7 @@ namespace Lisa
                 }
                 else
                 {
-                    allOppMoves = _theBoard.GenerateNonCaptureMoves(_theBoard.OnMove);
+                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, (depth >= 5), seenMoves);
                 }
             }
 
