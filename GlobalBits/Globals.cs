@@ -288,9 +288,11 @@ namespace Lisa
         public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY = 0;
 
         public static int OPENING_MOBILITY_PER_MOVE_BONUS = 3;
+        public static int OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS = 1;
         public static int OPENING_MINOR_PIECE_INFLUENCES_CENTER = 10;
 
         public static int ROOK_REDUNDANCY_PENALTY = 40;
+        public static int EXCHANGE_IMBALANCE_BONUS = 75;
         public static int KNIGHT_REDUNDANCY_PENALTY = 29;
         public static int SEMI_OPEN_FILE_TWO_ROOKS_BONUS = 7;
         public static int SEMI_OPEN_FILE_ONE_ROOK_BONUS = 6;

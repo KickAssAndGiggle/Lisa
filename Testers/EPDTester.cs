@@ -125,6 +125,7 @@ namespace Lisa
                     OutputLines.Add("FEN: " + ConstructedFen);
                     OutputLines.Add("Move: " + AlgebraicMoveString + " (" + Movestring + ")");
                     OutputLines.Add("Time: " + (EndTicks - StartTicks).ToString());
+                    OutputLines.Add("Score: " + Search.BestScore.ToString());
                     OutputLines.Add(" ");
                     OutputLines.Add("TotalNodes: " + Search.InfoNodesLookedAt.ToString());
                     OutputLines.Add("WithoutQuiesce: " + Search.InfoNodesLookedAtWithoutQuiesce.ToString());
@@ -164,25 +165,23 @@ namespace Lisa
                     OutputLines.Add("LMR ReSearches: " + Search.InfoLMRReSearches.ToString());
                     OutputLines.Add(" ");
 
-                    Move[]? PV = Search.BestPV;
-                    string PVString = "";
+                    OutputLines.Add("PV: " + ConvertPVToSAN(Search.BestPV, ConstructedFen));
 
-                    if (PV != null)
+                    OutputLines.Add(" ");
+                    OutputLines.Add("Top moves:");
+                    if (Search.RootMoves != null && Search.RootPVs != null)
                     {
-                        for (int NN = PV.Length - 1; NN >= 0; NN--)
+                        Move[] SortedRootMoves = (Move[])Search.RootMoves.Clone();
+                        Array.Sort(SortedRootMoves);
+                        for (int NN = 0; NN < SortedRootMoves.Length && NN < 5; NN++)
                         {
-                            if (!(PV[NN].From == 0 && PV[NN].To == 0))
-                            {
-                                PVString += ConvertMoveToString(PV[NN]) + " ";
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            int MoveKey = SortedRootMoves[NN].From * 100 + SortedRootMoves[NN].To;
+                            Move[] MovePV = Search.RootPVs.ContainsKey(MoveKey) ? Search.RootPVs[MoveKey] : new Move[] { SortedRootMoves[NN] };
+                            string MovePVString = ConvertPVToSAN(MovePV, ConstructedFen);
+                            string FirstMove = MovePVString.Split(' ')[0];
+                            OutputLines.Add((NN + 1).ToString() + ") " + FirstMove + "  Score: " + SortedRootMoves[NN].Score.ToString() + "  PV: " + MovePVString);
                         }
-                        PVString = PVString.Trim();
                     }
-                    OutputLines.Add("PV: " + PVString);
 
                     OutputLines.Add(" ");
                     OutputLines.Add(" ");
@@ -209,6 +208,137 @@ namespace Lisa
             SW.Close();
 
 
+        }
+
+
+        //Converts a PV (stored root move last) to SAN by replaying it on a board set up from the FEN.
+        //Each move is matched against the legal moves of the replayed position, and the PV stops at the
+        //first one that doesn't match: stored PVs can end with a repeated move.
+        private static string ConvertPVToSAN(Move[]? PV, string Fen)
+        {
+            if (PV == null)
+            {
+                return "";
+            }
+
+            Board PVBoard = new();
+            PVBoard.InitialiseFromFEN(Fen);
+            string PVString = "";
+
+            for (int NN = PV.Length - 1; NN >= 0; NN--)
+            {
+                if (PV[NN].From == 0 && PV[NN].To == 0)
+                {
+                    break;
+                }
+                if (!TryFindLegalMove(PV[NN], ref PVBoard, out Move LegalMove))
+                {
+                    break;
+                }
+                PVString += ConvertMoveToSAN(LegalMove, ref PVBoard) + " ";
+                PVBoard.MakeMove(LegalMove, PVBoard.OnMove, false);
+            }
+
+            return PVString.Trim();
+        }
+
+
+        private static bool TryFindLegalMove(Move Wanted, ref Board TheBoard, out Move Found)
+        {
+            Move[] AllMoves = TheBoard.GenerateAllMoves(TheBoard.OnMove);
+            foreach (Move M in AllMoves)
+            {
+                if (M.From == Wanted.From && M.To == Wanted.To && M.PromotionPiece == Wanted.PromotionPiece && TheBoard.MoveIsLegal(M, TheBoard.OnMove))
+                {
+                    Found = M;
+                    return true;
+                }
+            }
+            Found = new Move();
+            return false;
+        }
+
+
+        //Full SAN for a move in the position before it is played: adds disambiguation (Nbd7, R1e2),
+        //promotion (e8=Q) and check or mate (+, #) to ConvertMoveToAlgebraic's output
+        private static string ConvertMoveToSAN(Move TheMove, ref Board TheBoard)
+        {
+            string San = ConvertMoveToAlgebraic(TheMove, ref TheBoard).Replace("ep", "");
+
+            int MovingPiece = TheBoard.Piece[TheMove.From];
+            if (MovingPiece != PAWN && MovingPiece != KING)
+            {
+                San = San.Substring(0, 1) + Disambiguation(TheMove, ref TheBoard) + San.Substring(1);
+            }
+
+            if (TheMove.PromotionPiece != 0)
+            {
+                San += "=" + "NBRQ"[TheMove.PromotionPiece - 1];
+            }
+
+            TheBoard.MakeMove(TheMove, TheBoard.OnMove, false);
+            if (TheBoard.IsInCheck(TheBoard.OnMove))
+            {
+                San += HasLegalMove(ref TheBoard) ? "+" : "#";
+            }
+            TheBoard.UnmakeLastMove();
+
+            return San;
+        }
+
+
+        //The from-file, from-rank, or both, needed when another piece of the same type can also reach the target square
+        private static string Disambiguation(Move TheMove, ref Board TheBoard)
+        {
+            bool Clash = false; bool SameFile = false; bool SameRank = false;
+
+            Move[] AllMoves = TheBoard.GenerateAllMoves(TheBoard.OnMove);
+            foreach (Move M in AllMoves)
+            {
+                if (M.To == TheMove.To && M.From != TheMove.From && TheBoard.Piece[M.From] == TheBoard.Piece[TheMove.From] && TheBoard.MoveIsLegal(M, TheBoard.OnMove))
+                {
+                    Clash = true;
+                    if (M.From % 8 == TheMove.From % 8)
+                    {
+                        SameFile = true;
+                    }
+                    if (M.From / 8 == TheMove.From / 8)
+                    {
+                        SameRank = true;
+                    }
+                }
+            }
+
+            if (!Clash)
+            {
+                return "";
+            }
+
+            string FromFile = ((char)('a' + TheMove.From % 8)).ToString();
+            string FromRank = (8 - TheMove.From / 8).ToString();
+            if (!SameFile)
+            {
+                return FromFile;
+            }
+            if (!SameRank)
+            {
+                return FromRank;
+            }
+            return FromFile + FromRank;
+        }
+
+
+        private static bool HasLegalMove(ref Board TheBoard)
+        {
+            Move[] AllMoves = TheBoard.GenerateAllMoves(TheBoard.OnMove);
+            foreach (Move M in AllMoves)
+            {
+                if (TheBoard.MoveIsLegal(M, TheBoard.OnMove))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }

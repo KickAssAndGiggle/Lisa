@@ -36,6 +36,7 @@ namespace Lisa
                 linesForFile.Add("FEN: " + fen);
                 linesForFile.Add("Move: " + Globals.ConvertMoveToString(bestMove));
                 linesForFile.Add("Time: " + (endTicks - startTicks).ToString());
+                linesForFile.Add("Score: " + search.BestScore.ToString());
                 linesForFile.Add(" ");
                 linesForFile.Add("TotalNodes: " + search.InfoNodesLookedAt.ToString());
                 linesForFile.Add("WithoutQuiesce: " + search.InfoNodesLookedAtWithoutQuiesce.ToString());

@@ -24,6 +24,10 @@ namespace Lisa
 
         private byte _fullDepth;
 
+        //Ply of the current node, and whether the side to move was in check at each ply
+        private int _ply = 0;
+        private bool[] _inCheckAtPly = new bool[128];
+
         private System.Timers.Timer _secondTimer;
 
         #region Stats trackers
@@ -106,6 +110,8 @@ namespace Lisa
         private Move _bestMove;
         private int _bestScore;
         private Move[]? _bestPV;
+        private Move[]? _rootMoves;
+        private Dictionary<int, Move[]>? _rootPVs;
 
         private bool _cancel = false;
         private bool _hasCancelled = false;
@@ -118,6 +124,8 @@ namespace Lisa
         public Move BestMove => _bestMove;
         public int BestScore => _bestScore;
         public Move[]? BestPV => _bestPV;
+        public Move[]? RootMoves => _rootMoves;
+        public Dictionary<int, Move[]>? RootPVs => _rootPVs;
         public string UCITablebaseHit => _uciTablebaseHit;
 
         #endregion
@@ -283,6 +291,9 @@ namespace Lisa
 
             Sorter.Reset();
 
+            _ply = 0;
+            _inCheckAtPly[0] = _theBoard.IsInCheck(_theBoard.OnMove);
+
             for (byte depth = 1; depth <= maxDepth; depth++)
             {
 
@@ -415,8 +426,8 @@ namespace Lisa
 
                     //Save a copy of of the sorted list, so if we have to give up in the next
                     //iteration due to time constraints, we have a fallback result
-                    prevIterationBest = (Move[])legal.Clone();
                     Array.Sort(legal);
+                    prevIterationBest = (Move[])legal.Clone();
 
                     _bestMove = legal[0];
                     _bestScore = legal[0].Score;
@@ -442,7 +453,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH6_EARLY_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH6_EARLY_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -452,7 +463,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH7_EARLY_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH7_EARLY_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -462,7 +473,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH8_EARLY_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH8_EARLY_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -472,7 +483,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH9_EARLY_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH9_EARLY_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -482,7 +493,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH10_EARLY_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH10_EARLY_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -492,7 +503,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH_OVER_10_EARLY_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH_OVER_10_EARLY_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -505,7 +516,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH6_LATE_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH6_LATE_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -515,7 +526,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH7_LATE_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH7_LATE_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -525,7 +536,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH8_LATE_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH8_LATE_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -535,7 +546,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH9_LATE_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH9_LATE_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -545,7 +556,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH10_LATE_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH10_LATE_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -555,7 +566,7 @@ namespace Lisa
                         {
                             for (int NRed = 1; NRed < legal.Length; NRed++)
                             {
-                                if (legal[NRed].Score < _bestScore - DEPTH_OVER_10_LATE_SELECTIVITY_SCORE_CUTOFF)
+                                if (legal[NRed].Score < _bestScore - DEPTH_OVER_10_LATE_SELECTIVITY_SCORE_CUTOFF && !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                                 {
                                     legal[NRed].Score = -5000;
                                 }
@@ -578,6 +589,8 @@ namespace Lisa
 
             //Set the best move to the legal moves sorted to the highest score
             _bestMove = legal[0];
+            _rootMoves = legal;
+            _rootPVs = pvDict;
 
             //Check for 3-fold repetition possibilities
             if (repetitionZobrist != -1)
@@ -724,12 +737,7 @@ namespace Lisa
                                 )
         {
 
-            int PreQAlpha = alpha;
             alpha = Quiesce(legalMove, alpha, beta, 0, rootMoveKey);
-            if (alpha > PreQAlpha)
-            {
-                pv[0] = legalMove;
-            }
             return alpha;
 
         }
@@ -816,7 +824,8 @@ namespace Lisa
                 {
                     if (TTMoveDepth >= depth)
                     {
-                        if (transTableMove.Score >= alpha && transTableMove.Score <= beta)
+                        //No exact cutoff in open-window searches: the node must be searched so its line is recorded
+                        if (beta - alpha == 1 && transTableMove.Score >= alpha && transTableMove.Score <= beta)
                         {
                             alpha = transTableMove.Score;
                             _infoPVTTCutoffs += 1;
@@ -870,10 +879,6 @@ namespace Lisa
                                 PromotionPiece = transTableMove.MoveAttributeFlag >= 100 ? (byte)(transTableMove.MoveAttributeFlag - 100) : transTableMove.MoveAttributeFlag
                             };
                         }
-                        if (transTableMove.Score > alpha && TTMoveDepth >= depth)
-                        {
-                            alpha = transTableMove.Score;
-                        }
                     }
                 }
                 else if (nodeType == NodeTypes.All) // Upper bound, alpha was never raised
@@ -892,20 +897,23 @@ namespace Lisa
         }
 
 
+        //previousMoveWasCheck: the opponent has just answered our check. Futility is skipped there, as a side
+        //mid-attack (often material down after a sacrifice) is exactly what static eval misjudges
         private bool TryFutilityCut(Move legalMove,
                                     byte depth,
                                     int beta,
                                     bool isInCheck,
+                                    bool previousMoveWasCheck,
                                     int staticEval,
                                     NodeTypes nodeType,
                                     ref int alpha
                                    )
         {
 
-            if (!legalMove.IsCapture && !isInCheck && _fullDepth >= 10 && nodeType != NodeTypes.PV &&
+            if (beta - alpha == 1 && !legalMove.IsCapture && !isInCheck && _fullDepth >= 10 && nodeType != NodeTypes.PV &&
                 alpha != 5000 && beta != 5000 && alpha != -5000 && beta != -5000)
             {
-                if (depth == 6 && staticEval + DEPTH6_FUTILITY_MARGIN < alpha)
+                if (depth == 6 && !previousMoveWasCheck && staticEval + DEPTH6_FUTILITY_MARGIN < alpha)
                 {
                     alpha = staticEval + DEPTH6_FUTILITY_MARGIN;
                     _infoFutilityD4 += 1;
@@ -920,10 +928,10 @@ namespace Lisa
                 }
             }
 
-            if (!legalMove.IsCapture && !isInCheck && _fullDepth >= 9 && nodeType != NodeTypes.PV &&
+            if (beta - alpha == 1 && !legalMove.IsCapture && !isInCheck && _fullDepth >= 9 && nodeType != NodeTypes.PV &&
                 alpha != 5000 && beta != 5000 && alpha != -5000 && beta != -5000)
             {
-                if (depth == 5 && staticEval + DEPTH5_FUTILITY_MARGIN < alpha)
+                if (depth == 5 && !previousMoveWasCheck && staticEval + DEPTH5_FUTILITY_MARGIN < alpha)
                 {
                     alpha = staticEval + DEPTH5_FUTILITY_MARGIN;
                     _infoFutilityD4 += 1;
@@ -938,24 +946,24 @@ namespace Lisa
                 }
             }
 
-            if (!legalMove.IsCapture && !isInCheck && _fullDepth >= 8 && nodeType != NodeTypes.PV &&
+            if (beta - alpha == 1 && !legalMove.IsCapture && !isInCheck && _fullDepth >= 8 && nodeType != NodeTypes.PV &&
                 alpha != 5000 && beta != 5000 && alpha != -5000 && beta != -5000)
             {
                 if (depth <= 4)
                 {
-                    if (depth == 4 && staticEval + DEPTH4_FUTILITY_MARGIN < alpha)
+                    if (depth == 4 && !previousMoveWasCheck && staticEval + DEPTH4_FUTILITY_MARGIN < alpha)
                     {
                         alpha = staticEval + DEPTH4_FUTILITY_MARGIN;
                         _infoFutilityD4 += 1;
                         return true;
                     }
-                    else if (depth == 3 && staticEval + DEPTH3_FUTILITY_MARGIN < alpha)
+                    else if (depth == 3 && !previousMoveWasCheck && staticEval + DEPTH3_FUTILITY_MARGIN < alpha)
                     {
                         alpha = staticEval + DEPTH3_FUTILITY_MARGIN;
                         _infoFutilityD3 += 1;
                         return true;
                     }
-                    else if (depth == 2 && staticEval + DEPTH2_FUTILITY_MARGIN < alpha)
+                    else if (depth == 2 && !previousMoveWasCheck && staticEval + DEPTH2_FUTILITY_MARGIN < alpha)
                     {
                         alpha = staticEval + DEPTH2_FUTILITY_MARGIN;
                         _infoFutilityD2 += 1;
@@ -1000,7 +1008,8 @@ namespace Lisa
                                 )
         {
 
-            if (!_endGame && 
+            if (beta - alpha == 1 &&
+                !_endGame && 
                 !isPawnPush && 
                 staticEval > beta && 
                 beta != -5000 && 
@@ -1021,19 +1030,19 @@ namespace Lisa
                         int score;
                         if (depth >= 10)
                         {
-                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, -beta, 1 - beta, (byte)(depth - 5), ref localPV);
+                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, beta - 1, beta, (byte)(depth - 5), ref localPV);
                         }
                         else if (depth >= 8)
                         {
-                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, -beta, 1 - beta, (byte)(depth - 4), ref localPV);
+                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, beta - 1, beta, (byte)(depth - 4), ref localPV);
                         }
                         else if (depth >= 6)
                         {
-                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, -beta, 1 - beta, (byte)(depth - 3), ref localPV);
+                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, beta - 1, beta, (byte)(depth - 3), ref localPV);
                         }
                         else
                         {
-                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, -beta, 1 - beta, (byte)(depth - 2), ref localPV);
+                            score = EvaluateMove(AllMovesAfterOppNull[nn], rootMoveKey, beta - 1, beta, (byte)(depth - 2), ref localPV);
                         }
 
                         if (score >= beta)
@@ -1042,6 +1051,11 @@ namespace Lisa
                             alpha = staticEval;
                             _theBoard.UnmakeLastMove(); //Unmake the Null Move
                             return true;
+                        }
+                        else if (AllMovesAfterOppNull[nn].Score == 4950)
+                        {
+                            //A checking reply refutes the null move outright: passing has allowed a forcing threat
+                            break;
                         }
                     }
                 }
@@ -1068,7 +1082,7 @@ namespace Lisa
                                         )
         {
 
-            if (hasTTMove && ttMove.PromotionPiece == 0)
+            if (hasTTMove)
             {
                 if (_theBoard.MoveIsLegal(ttMove, _theBoard.OnMove))
                 {
@@ -1130,7 +1144,7 @@ namespace Lisa
             for (int nn = 0; nn < allOppCaps.Length; nn++)
             {
                 if ((isInCheck || (allOppCaps[nn].Score >= 4000 || (sortedUsingIID && allOppCaps[nn].Score >= staticScore))) && _theBoard.MoveIsLegal(allOppCaps[nn], _theBoard.OnMove) &&
-                    (allOppCaps[nn].From != ttMove.From || allOppCaps[nn].To != ttMove.To))
+                    (allOppCaps[nn].From != ttMove.From || allOppCaps[nn].To != ttMove.To || allOppCaps[nn].PromotionPiece != ttMove.PromotionPiece))
                 {
                     if (refutationSeparated && allOppCaps[nn].From == Sorter.Refutations[_fullDepth - depth].From &&
                         allOppCaps[nn].To == Sorter.Refutations[_fullDepth - depth].To)
@@ -1521,7 +1535,7 @@ namespace Lisa
 
             for (int LC = 0; LC < allOpCaps.Length; LC++)
             {
-                if ((allOpCaps[LC].Score < 4000 || (sortedUsingIID && allOpCaps[LC].Score < staticScore)) && _theBoard.MoveIsLegal(allOpCaps[LC], _theBoard.OnMove) && (allOpCaps[LC].From != ttMove.From || allOpCaps[LC].To != ttMove.To))
+                if ((allOpCaps[LC].Score < 4000 || (sortedUsingIID && allOpCaps[LC].Score < staticScore)) && _theBoard.MoveIsLegal(allOpCaps[LC], _theBoard.OnMove) && (allOpCaps[LC].From != ttMove.From || allOpCaps[LC].To != ttMove.To || allOpCaps[LC].PromotionPiece != ttMove.PromotionPiece))
                 {
 
                     if (refutationSeparated && allOpCaps[LC].From == Sorter.Refutations[_fullDepth - depth].From &&
@@ -1585,6 +1599,62 @@ namespace Lisa
         }
 
 
+        //True if, after this move, a pass by the opponent would allow us a mate in one. Used to keep
+        //mating attacks safe from root pruning, as their payoff is often beyond the shallow iterations
+        private bool ThreatensMateInOne(Move move)
+        {
+            bool threatensMate = false;
+            _theBoard.MakeMove(move, _theBoard.OnMove, false);
+            _theBoard.MakeMove(_phantomMove, _theBoard.OnMove, true);
+
+            Move[] ourMoves = _theBoard.GenerateAllMoves(_theBoard.OnMove);
+            for (int nn = 0; nn < ourMoves.Length; nn++)
+            {
+                if (!_theBoard.MoveIsLegal(ourMoves[nn], _theBoard.OnMove))
+                {
+                    continue;
+                }
+                _theBoard.MakeMove(ourMoves[nn], _theBoard.OnMove, false);
+                if (_theBoard.IsInCheck(_theBoard.OnMove) && !HasLegalMove())
+                {
+                    threatensMate = true;
+                }
+                _theBoard.UnmakeLastMove();
+                if (threatensMate)
+                {
+                    break;
+                }
+            }
+
+            _theBoard.UnmakeLastMove();
+            _theBoard.UnmakeLastMove();
+            return threatensMate;
+        }
+
+
+        private bool HasLegalMove()
+        {
+            Move[] moves = _theBoard.GenerateAllMoves(_theBoard.OnMove);
+            for (int nn = 0; nn < moves.Length; nn++)
+            {
+                if (_theBoard.MoveIsLegal(moves[nn], _theBoard.OnMove))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        private bool GivesCheck(Move move)
+        {
+            _theBoard.MakeMove(move, _theBoard.OnMove, false);
+            bool givesCheck = _theBoard.IsInCheck(_theBoard.OnMove);
+            _theBoard.UnmakeLastMove();
+            return givesCheck;
+        }
+
+
         private int EvaluateMove(Move legalMove,
                                  int rootMoveKey,
                                  int alpha,
@@ -1600,6 +1670,9 @@ namespace Lisa
 
             Move[] localPV = new Move[depth];
 
+            //Clear this node's slots in the caller's PV, so an early return can't leave a sibling's line behind
+            Array.Clear(pv, 0, depth);
+
             if (depth == 1)
             {
                 return DepthOneEval(legalMove, alpha, beta, rootMoveKey, ref pv);
@@ -1608,6 +1681,8 @@ namespace Lisa
             _infoNodesLookedAt += 1; _infoNodesLookedAtWithoutQuiesce += 1;
             _theBoard.MakeMove(legalMove, _theBoard.OnMove, false);
             bool isInCheck = _theBoard.IsInCheck(_theBoard.OnMove);
+            _ply += 1;
+            _inCheckAtPly[_ply] = isInCheck;
             bool isPawnPush = false;
 
             //CalculateReductionsAndExtensions(legalMove, isInCheck, reduced, ref depth, ref localPV, ref forcingMoves, ref isPawnPush);
@@ -1629,7 +1704,7 @@ namespace Lisa
             }
 
             int staticEval = 0 - Scorer.ScorePosition(ref _theBoard, ref _transTable, alpha, beta, false, 0);
-            bool futilityCut = TryFutilityCut(legalMove, depth, beta, isInCheck, staticEval, nodeType, ref alpha);
+            bool futilityCut = TryFutilityCut(legalMove, depth, beta, isInCheck, _inCheckAtPly[_ply - 1], staticEval, nodeType, ref alpha);
             if (futilityCut)
             {
                 goto ReturnEarly;
@@ -1803,7 +1878,7 @@ namespace Lisa
             int quietPlayed = 0;            
             for (int nn = 0; nn < allOppMoves.Length; nn++)
             {
-                if ((ttMove.From == allOppMoves[nn].From && ttMove.To == allOppMoves[nn].To) ||
+                if ((ttMove.From == allOppMoves[nn].From && ttMove.To == allOppMoves[nn].To && ttMove.PromotionPiece == allOppMoves[nn].PromotionPiece) ||
                     (killerOneSeparated && allOppMoves[nn].From == Sorter.KillerOnes[_fullDepth - depth].From && allOppMoves[nn].To == Sorter.KillerOnes[_fullDepth - depth].To) ||
                     (killerTwoSeparated && allOppMoves[nn].From == Sorter.KillerTwos[_fullDepth - depth].From && allOppMoves[nn].To == Sorter.KillerTwos[_fullDepth - depth].To) ||
                     (refutationSeparated && allOppMoves[nn].From == Sorter.Refutations[_fullDepth - depth].From && allOppMoves[nn].To == Sorter.Refutations[_fullDepth - depth].To))
@@ -2025,6 +2100,7 @@ namespace Lisa
 
         ReturnEarly:
 
+            _ply -= 1;
             _theBoard.UnmakeLastMove();
             return alpha;
 

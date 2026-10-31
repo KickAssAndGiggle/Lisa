@@ -74,7 +74,7 @@ namespace Lisa
             //Early Game
             RewardBeingCastled(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
             RewardKingSafety(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
-            PenaliseBishopPawnWeaknesses(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
+            //PenaliseBishopPawnWeaknesses(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
             RewardActiveBishop(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
             EncouragePawnsOnOppositeSideToKingToAdvance(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
             RewardPawnBishopSynergy(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
@@ -99,6 +99,8 @@ namespace Lisa
 
                 whiteEndgameScore += pawnLookup.WhitePassedPawnScore;
                 blackEndgameScore += pawnLookup.BlackPassedPawnScore;
+                whiteOpeningScore += pawnLookup.WhitePassedPawnScore / 2;
+                blackOpeningScore += pawnLookup.BlackPassedPawnScore / 2;
                 whiteEndgameScore += pawnLookup.WhiteDoubledPawnScore;
                 blackEndgameScore += pawnLookup.BlackDoubledPawnScore;
                 whiteEndgameScore += pawnLookup.WhiteIsolatedPawnScore;
@@ -122,12 +124,14 @@ namespace Lisa
                 whiteOpeningScore += whiteBWPScore;
                 whiteOpeningScore += whiteChainScore;
                 whiteEndgameScore += whitePPScore;
+                whiteOpeningScore += whitePPScore / 2;
                 whiteEndgameScore += whiteDblPawnScore;
                 whiteEndgameScore += whiteIsoPawnScore;
 
                 blackOpeningScore += blackBWPScore;
                 blackOpeningScore += blackChainScore;
                 blackEndgameScore += blackPPScore;
+                blackOpeningScore += blackPPScore / 2;
                 blackEndgameScore += blackDblPawnScore;
                 blackEndgameScore += blackIsoPawnScore;
 
@@ -143,6 +147,18 @@ namespace Lisa
             if (theBoard.BlackHasDarkSquaredBishop && theBoard.BlackHasLightSquaredBishop)
             {
                 blackScore += BISHOP_PAIR_BONUS_VALUE;
+            }
+
+            //The exchange (one more rook, one fewer minor) is worth more than piece values plus positional terms suggest,
+            //unless the side with the minor has two or more extra pawns for it
+            int exchangeBalance = ExchangeImbalance(ref theBoard);
+            if (exchangeBalance > 0)
+            {
+                whiteScore += EXCHANGE_IMBALANCE_BONUS;
+            }
+            else if (exchangeBalance < 0)
+            {
+                blackScore += EXCHANGE_IMBALANCE_BONUS;
             }
 
             if (theBoard.WhiteRookOneSquare != 255 && theBoard.WhiteRookTwoSquare != 255)
@@ -469,8 +485,29 @@ namespace Lisa
             Move[] WhiteMoves = theBoard.GeneratePieceMovesWithoutKing(WHITE);
             Move[] BlackMoves = theBoard.GeneratePieceMovesWithoutKing(BLACK);
 
-            whiteScore += (WhiteMoves.Length * OPENING_MOBILITY_PER_MOVE_BONUS);
-            blackScore += (BlackMoves.Length * OPENING_MOBILITY_PER_MOVE_BONUS);
+            //Bishops score less per move than other pieces: being long-range, they collect more moves per piece
+            for (int nn = 0; nn < WhiteMoves.Length; nn++)
+            {
+                if (theBoard.Piece[WhiteMoves[nn].From] == BISHOP)
+                {
+                    whiteScore += OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS;
+                }
+                else
+                {
+                    whiteScore += OPENING_MOBILITY_PER_MOVE_BONUS;
+                }
+            }
+            for (int nn = 0; nn < BlackMoves.Length; nn++)
+            {
+                if (theBoard.Piece[BlackMoves[nn].From] == BISHOP)
+                {
+                    blackScore += OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS;
+                }
+                else
+                {
+                    blackScore += OPENING_MOBILITY_PER_MOVE_BONUS;
+                }
+            }
 
             if (theBoard.WhiteKnightOneSquare != 255)
             {
@@ -750,7 +787,7 @@ namespace Lisa
                     if (theBoard.Color[17] == EMPTY || theBoard.Piece[17] != PAWN)
                     {
                         //black a pawn backward
-                        blackBWPScore += FLANK_BACKWARD_PAWN_PENALTY;
+                        blackBWPScore -= FLANK_BACKWARD_PAWN_PENALTY;
                     }
                 }
             }
@@ -1636,38 +1673,38 @@ namespace Lisa
 
             whiteIsoPawnScore = 0; blackIsoPawnScore = 0;
 
-            if (theBoard.WhiteFilePawns[0] == 1 && theBoard.WhiteFilePawns[1] == 0)
+            if (theBoard.WhiteFilePawns[0] > 0 && theBoard.WhiteFilePawns[1] == 0)
             {
-                //white a pawn isolated
-                whiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                //white a pawn(s) isolated
+                whiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY * theBoard.WhiteFilePawns[0];
             }
-            if (theBoard.WhiteFilePawns[7] == 1 && theBoard.WhiteFilePawns[6] == 0)
+            if (theBoard.WhiteFilePawns[7] > 0 && theBoard.WhiteFilePawns[6] == 0)
             {
-                //white h pawn isolated
-                whiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                //white h pawn(s) isolated
+                whiteIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY * theBoard.WhiteFilePawns[7];
             }
-            if (theBoard.BlackFilePawns[0] == 1 && theBoard.BlackFilePawns[1] == 0)
+            if (theBoard.BlackFilePawns[0] > 0 && theBoard.BlackFilePawns[1] == 0)
             {
-                //black a pawn isolated
-                blackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                //black a pawn(s) isolated
+                blackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY * theBoard.BlackFilePawns[0];
             }
-            if (theBoard.BlackFilePawns[7] == 1 && theBoard.BlackFilePawns[6] == 0)
+            if (theBoard.BlackFilePawns[7] > 0 && theBoard.BlackFilePawns[6] == 0)
             {
-                //black h pawn isolated
-                blackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY;
+                //black h pawn(s) isolated
+                blackIsoPawnScore -= EDGE_PAWN_ISOLATED_PENALTY * theBoard.BlackFilePawns[7];
             }
 
             for (int NN = 1; NN <= 6; NN++)
             {
-                if (theBoard.WhiteFilePawns[NN] == 1 && theBoard.WhiteFilePawns[NN - 1] == 0 && theBoard.WhiteFilePawns[NN + 1] == 0)
+                if (theBoard.WhiteFilePawns[NN] > 0 && theBoard.WhiteFilePawns[NN - 1] == 0 && theBoard.WhiteFilePawns[NN + 1] == 0)
                 {
-                    //a more central white pawn is isolated
-                    whiteIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY;
+                    //more central white pawn(s) isolated
+                    whiteIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY * theBoard.WhiteFilePawns[NN];
                 }
-                if (theBoard.BlackFilePawns[NN] == 1 && theBoard.BlackFilePawns[NN - 1] == 0 && theBoard.BlackFilePawns[NN + 1] == 0)
+                if (theBoard.BlackFilePawns[NN] > 0 && theBoard.BlackFilePawns[NN - 1] == 0 && theBoard.BlackFilePawns[NN + 1] == 0)
                 {
-                    //a more central black pawn is isolated
-                    blackIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY;
+                    //more central black pawn(s) isolated
+                    blackIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY * theBoard.BlackFilePawns[NN];
                 }
             }
 
@@ -2470,6 +2507,32 @@ namespace Lisa
             }
 
         }
+
+        //Returns 1 if White is the exchange up (one more rook and one fewer minor piece), -1 if Black is, otherwise 0
+        private static int ExchangeImbalance(ref Board theBoard)
+        {
+            int whiteRooks = (theBoard.WhiteRookOneSquare != 255 ? 1 : 0) + (theBoard.WhiteRookTwoSquare != 255 ? 1 : 0);
+            int blackRooks = (theBoard.BlackRookOneSquare != 255 ? 1 : 0) + (theBoard.BlackRookTwoSquare != 255 ? 1 : 0);
+            int whiteKnights = (theBoard.WhiteKnightOneSquare != 255 ? 1 : 0) + (theBoard.WhiteKnightTwoSquare != 255 ? 1 : 0);
+            int blackKnights = (theBoard.BlackKnightOneSquare != 255 ? 1 : 0) + (theBoard.BlackKnightTwoSquare != 255 ? 1 : 0);
+            int whiteBishops = (theBoard.WhiteHasDarkSquaredBishop ? 1 : 0) + (theBoard.WhiteHasLightSquaredBishop ? 1 : 0);
+            int blackBishops = (theBoard.BlackHasDarkSquaredBishop ? 1 : 0) + (theBoard.BlackHasLightSquaredBishop ? 1 : 0);
+            int whiteMinors = whiteKnights + whiteBishops;
+            int blackMinors = blackKnights + blackBishops;
+            int whitePawns = theBoard.WhitePawnsOnLightSquares + theBoard.WhitePawnsOnDarkSquares;
+            int blackPawns = theBoard.BlackPawnsOnLightSquares + theBoard.BlackPawnsOnDarkSquares;
+
+            if (whiteRooks - blackRooks == 1 && whiteMinors - blackMinors == -1 && blackPawns - whitePawns < 2)
+            {
+                return 1;
+            }
+            if (blackRooks - whiteRooks == 1 && blackMinors - whiteMinors == -1 && whitePawns - blackPawns < 2)
+            {
+                return -1;
+            }
+            return 0;
+        }
+
 
     }
 }
