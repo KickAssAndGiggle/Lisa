@@ -8,7 +8,7 @@ namespace Lisa
 
             if (RUN_MODE == ProgramMode.Perft)
             {
-                ReconfigureAfterOptions();
+                InitialiseScorer();
                 PerftRunner perfter = new(PERFT_FEN, PERFT_DEPTH, OUTPUT_FILE);
                 perfter.DoPerft();
             }
@@ -21,20 +21,20 @@ namespace Lisa
             {
                 if (FENS_TO_TEST != null)
                 {
-                    ReconfigureAfterOptions();
+                    InitialiseScorer();
                     FenTester fenner = new(FENS_TO_TEST, OUTPUT_FILE);
                     fenner.Test();
                 }
             }
             else if (RUN_MODE == ProgramMode.FenToZobrist)
             {
-                ReconfigureAfterOptions();
+                InitialiseScorer();
                 FenToZobristConverter fenZob = new();
                 fenZob.ConvertFenToZobrist(PERFT_FEN, OUTPUT_FILE);
             }
             else if (RUN_MODE == ProgramMode.EPD)
             {
-                ReconfigureAfterOptions();
+                InitialiseScorer();
                 EPDTester epd = new(EPD_INPUT, EPD_OUTPUT);
                 epd.AnalyzePositions(MULTI_FEN_DEPTH);
             }

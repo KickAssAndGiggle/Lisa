@@ -18,6 +18,8 @@ namespace Lisa
         public bool[][] KnightDestinations = new bool[64][];
         public bool[][] SameRank = new bool[64][];
         public bool[][] SameFile = new bool[64][];
+        public bool[][] WhiteKingZone = new bool[64][];
+        public bool[][] BlackKingZone = new bool[64][];
 
         public int[] WhitePawnSquares = new int[8];
         public int[] BlackPawnSquares = new int[8];
@@ -250,6 +252,7 @@ namespace Lisa
             InitSameFileLookup();
             InitSameRankLookup();
             InitPassedPawnLookup();
+            InitKingZoneLookup();
 
             InitPSTs();
 
@@ -576,6 +579,41 @@ namespace Lisa
                         }
                     }
                 }
+
+            }
+
+        }
+
+
+        //The zone around a king on each square, over the king's file and the files either side. A king on its first or
+        //second rank gets the same block, its first three ranks, so stepping between them doesn't move squares in or out.
+        //A king further up gets the squares next to it plus the three squares two ranks in front (towards the enemy).
+        private void InitKingZoneLookup()
+        {
+
+            for (int kingSq = 0; kingSq <= 63; kingSq++)
+            {
+
+                bool[] whiteZone = new bool[64];
+                bool[] blackZone = new bool[64];
+                int kingRow = kingSq / 8;
+                int kingFile = kingSq % 8;
+
+                for (int sq = 0; sq <= 63; sq++)
+                {
+                    int row = sq / 8;
+                    int rowDiff = row - kingRow;
+                    int fileDiff = sq % 8 - kingFile;
+                    if (fileDiff >= -1 && fileDiff <= 1)
+                    {
+                        //White moves towards row 0, Black towards row 7
+                        whiteZone[sq] = kingRow >= 6 ? row >= 5 : (rowDiff >= -2 && rowDiff <= 1);
+                        blackZone[sq] = kingRow <= 1 ? row <= 2 : (rowDiff >= -1 && rowDiff <= 2);
+                    }
+                }
+
+                WhiteKingZone[kingSq] = whiteZone;
+                BlackKingZone[kingSq] = blackZone;
 
             }
 
@@ -2230,6 +2268,61 @@ namespace Lisa
                                 AddMoveToList(sq, nextSq, false);
 
                                 if (!slides)
+                                {
+                                    break;
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
+            return ret.ToArray();
+
+        }
+
+
+        //Every square each knight, bishop, rook and queen of this side bears on: like GeneratePieceMovesWithoutKing, but a
+        //line stops on, and includes, the first piece it meets of either colour, kings too. Used by the eval for mobility
+        //(which filters out its own pieces and the enemy king) and for king attack and defence.
+        public Move[] GeneratePieceAttacksWithoutKing(int toMove)
+        {
+
+            Span<byte> localColor = new(Color, 0, 64);
+            _moveListTopIndex = -1;
+
+            for (byte sq = 0; sq < 64; sq++)
+            {
+
+                if (localColor[sq] == toMove)
+                {
+
+                    int P = Piece[sq];
+
+                    if (P != PAWN && P != KING)
+                    {
+
+                        int[] dirs = _x88Offset[P];
+                        int dirCount = _offsets[P];
+                        bool slides = _slide[P];
+                        int from88 = sq + (sq & 56);
+                        for (int off = 0; off < dirCount; off++)
+                        {
+
+                            int dir = dirs[off];
+                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
+                            {
+
+                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
+                                AddMoveToList(sq, nextSq, localColor[nextSq] != EMPTY && localColor[nextSq] != toMove);
+
+                                if (localColor[nextSq] != EMPTY || !slides)
                                 {
                                     break;
                                 }

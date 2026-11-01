@@ -214,13 +214,13 @@ namespace Lisa
         public static int KSIDE_CASTLE_RIGHTS = 25;
         public static int QSIDE_CASTLE_RIGHTS = 19;
 
-        public static int DOUBLED_PAWN_PENALTY = 40;
-        public static int DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 32;
-        public static int TRIPLED_PAWN_PENALTY = 82;
-        public static int TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 29;
+        public static int DOUBLED_PAWN_PENALTY = 20;
+        public static int DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 16;
+        public static int TRIPLED_PAWN_PENALTY = 41;
+        public static int TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 15;
 
-        public static int EDGE_PAWN_ISOLATED_PENALTY = 26;
-        public static int CENTER_PAWN_ISOLATED_PENALTY = 31;
+        public static int EDGE_PAWN_ISOLATED_PENALTY = 13;
+        public static int CENTER_PAWN_ISOLATED_PENALTY = 16;
 
         public static int ROOK_ON_SEMI_OPEN_FILE_BONUS = 40;
         public static int ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS = 38;
@@ -229,63 +229,54 @@ namespace Lisa
         public static int PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS = 206;
         public static int PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS = 144;
         public static int PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS = 84;
+        public static int PASSED_PAWN_BLOCKADED_KEEP_PERCENT = 25;
 
         public static int PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY = 23;
 
-        public static int BISHOP_ATTACKS_KING_BONUS = 33;
         public static int BISHOP_ATTACKS_QUEEN_BONUS = 31;
         public static int BISHOP_ATTACKS_ROOK_BONUS = 40;
         public static int BISHOP_ATTACKS_KNIGHT_BONUS = 37;
 
-        public static int FIANCETTO_WITHOUT_BISHOP_PENALTY = 31;
-        public static int FIANCETTO_WITHOUT_BISHOP_BUT_OPP_HAS_ADDITIONAL_PENALTY = 36;
-        public static int FIANCETTO_WITHOUT_BISHOP_AND_KING_THAT_SIDE_ADDITIONAL_PENALTY = 43;
-        public static int FIANCETTO_IS_GOOD_BONUS = 22;
-
-        public static int BISHOP_CAN_BE_TRAPPED_ON_SEVENTH_PENALTY = 210;
-        public static int BISHOP_IS_TRAPPED_ON_SEVENTH_PENALTY = 223;
-
         public static int KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY = 149;
         public static int KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY = 120;
-        public static int KING_STEPPED_UP_EARLY_PENALTY = 85;
-        public static int KING_STEPPED_UP_PAWN_SHIELD_MITIGATION = 28;
-        public static int KING_STEPPED_UP_PAWN_SHIELD_ADVANCED_MITIGATION = 22;
-        public static int KING_STEPPED_UP_DIAGONAL_PAWN_SHIELD_MITIGATION = 17;
-        public static int KING_STEPPED_UP_ADJACENT_PAWN_MITIGATION = 23;
+        public static int KING_STEPPED_UP_EARLY_PENALTY = 43;
 
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_BONUS = 19;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_PENALTY = 24;
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY = 0;
+        public static int KING_FILE_SHELTER_PAWN_BONUS = 10;
+        public static int KING_FILE_NO_SHELTER_PAWN_PENALTY = 12;
+        public static int SIDE_FILE_SHELTER_PAWN_BONUS = 13;
+        public static int SIDE_FILE_NO_SHELTER_PAWN_PENALTY = 11;
 
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_BONUS = 25;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_PENALTY = 22;
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_HAS_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_BISHOP_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_ROOK_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_DIAG_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_QUEEN_VERTICALLY_SEMI_OPEN_PENALTY = 0;
-        public static int KING_STAYED_BACK_NO_DIAG_PAWN_SHIELD_ATTACKED_BY_KNIGHT_PENALTY = 0;
+        public static int KING_NEAR_HALF_OPEN_FILE_PENALTY = 10;
+        public static int KING_NEAR_OPEN_FILE_ADDITIONAL_PENALTY = 8;
+
+        public static int KING_ATTACK_KNIGHT_UNITS = 2;
+        public static int KING_ATTACK_BISHOP_UNITS = 2;
+        public static int KING_ATTACK_ROOK_UNITS = 3;
+        public static int KING_ATTACK_QUEEN_UNITS = 5;
+        public static int KING_ATTACK_XRAY_SQUARES = 2;
+
+        public static int FIXED_PAWN_ON_ENEMY_BISHOP_COLOUR_PENALTY = 20;
+        public static int KING_ATTACK_MAX_SQUARES_PER_PIECE = 3;
+
+        public static int KING_DEFENCE_KNIGHT_UNITS = 5;
+        public static int KING_DEFENCE_BISHOP_UNITS = 3;
+        public static int KING_DEFENCE_ROOK_UNITS = 2;
+        public static int KING_DEFENCE_QUEEN_UNITS = 2;
+
+        //Penalty for the defending king by attack units: 10 for the first unit, then 5 more per unit, capped at 250
+        public static int[] KING_ATTACK_PENALTY = new int[100]
+        {
+              0,  10,  15,  20,  25,  30,  35,  40,  45,  50,
+             55,  60,  65,  70,  75,  80,  85,  90,  95, 100,
+            105, 110, 115, 120, 125, 130, 135, 140, 145, 150,
+            155, 160, 165, 170, 175, 180, 185, 190, 195, 200,
+            205, 210, 215, 220, 225, 230, 235, 240, 245, 250,
+            250, 250, 250, 250, 250, 250, 250, 250, 250, 250,
+            250, 250, 250, 250, 250, 250, 250, 250, 250, 250,
+            250, 250, 250, 250, 250, 250, 250, 250, 250, 250,
+            250, 250, 250, 250, 250, 250, 250, 250, 250, 250,
+            250, 250, 250, 250, 250, 250, 250, 250, 250, 250
+        };
 
         public static int OPENING_MOBILITY_PER_MOVE_BONUS = 3;
         public static int OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS = 1;
@@ -443,6 +434,8 @@ namespace Lisa
 
         public static int[] MATERIAL;
         public static int[] SEE_MATERIAL;
+        public static int[] KING_ATTACK_UNITS;
+        public static int[] KING_DEFENCE_UNITS;
         public static int MAX_MATERIAL;
 
         public static OpeningBook OPENING_BOOK;
@@ -488,18 +481,22 @@ namespace Lisa
 
             MATERIAL = Array.Empty<int>();
             SEE_MATERIAL = Array.Empty<int>();
+            KING_ATTACK_UNITS = Array.Empty<int>();
+            KING_DEFENCE_UNITS = Array.Empty<int>();
 
             OPENING_BOOK = new OpeningBook(_bookFile);
 
         }
 
 
-        public static void ReconfigureAfterOptions()
+        public static void InitialiseScorer()
         {
 
             MATERIAL = new int[6] { 100, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE, 0 };
             MAX_MATERIAL = (800 + (MATERIAL[KNIGHT] * 2) + (MATERIAL[BISHOP] * 2) + (MATERIAL[ROOK] * 2) + MATERIAL[QUEEN]) * 2;
             SEE_MATERIAL = new int[6] { 100, 300, 300, 500, 900, 0 };
+            KING_ATTACK_UNITS = new int[6] { 0, KING_ATTACK_KNIGHT_UNITS, KING_ATTACK_BISHOP_UNITS, KING_ATTACK_ROOK_UNITS, KING_ATTACK_QUEEN_UNITS, 0 };
+            KING_DEFENCE_UNITS = new int[6] { 0, KING_DEFENCE_KNIGHT_UNITS, KING_DEFENCE_BISHOP_UNITS, KING_DEFENCE_ROOK_UNITS, KING_DEFENCE_QUEEN_UNITS, 0 };
 
             MirrorPSTsForBlack();
 

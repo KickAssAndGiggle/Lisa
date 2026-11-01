@@ -97,6 +97,8 @@ namespace Lisa
                 linesForFile.Add(" ");
                 linesForFile.AddRange(PVReport.TopMoveLines(search, fen, 5));
                 linesForFile.Add(" ");
+                linesForFile.AddRange(Scorer.EvalBreakdownLines(fen));
+                linesForFile.Add(" ");
                 linesForFile.Add(" ");
                 linesForFile.Add(" ");
                 linesForFile.Add(" ");

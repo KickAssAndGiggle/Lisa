@@ -190,6 +190,8 @@ namespace Lisa
 
                     OutputLines.Add(" ");
                     OutputLines.AddRange(PVReport.TopMoveLines(Search, ConstructedFen, 5));
+                    OutputLines.Add(" ");
+                    OutputLines.AddRange(Scorer.EvalBreakdownLines(ConstructedFen));
 
                     OutputLines.Add(" ");
                     OutputLines.Add(" ");

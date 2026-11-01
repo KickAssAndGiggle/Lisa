@@ -28,6 +28,13 @@ namespace Lisa
         private int _ply = 0;
         private bool[] _inCheckAtPly = new bool[128];
 
+        //Repetition detection: the Zobrist of the position at each ply of the current line, the lowest ply a repetition
+        //can be found at (raised by captures, pawn moves and null moves, which no position before them can recur across),
+        //and every position from the game itself
+        private long[] _pathZobrist = new long[128];
+        private int _repetitionFloor = 0;
+        private HashSet<long> _gameZobrists = new();
+
         private System.Timers.Timer _secondTimer;
 
         #region Stats trackers
@@ -367,6 +374,9 @@ namespace Lisa
 
             _ply = 0;
             _inCheckAtPly[0] = _theBoard.IsInCheck(_theBoard.OnMove);
+            _pathZobrist[0] = _theBoard.CurrentZobrist;
+            _repetitionFloor = 0;
+            _gameZobrists = prevZobrists != null ? new HashSet<long>(prevZobrists) : new HashSet<long>();
 
             for (byte depth = 1; depth <= maxDepth; depth++)
             {
@@ -1096,6 +1106,8 @@ namespace Lisa
             {
                 _infoNullMoveAttempts += 1;
                 _theBoard.MakeMove(_phantomMove, _theBoard.OnMove, true);
+                int savedRepetitionFloor = _repetitionFloor;
+                _repetitionFloor = _ply + 1;
                 Move[] AllMovesAfterOppNull = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, false);
                 for (int nn = 0; nn < AllMovesAfterOppNull.Length; nn++)
                 {
@@ -1123,6 +1135,7 @@ namespace Lisa
                         {
                             _infoNullMoveCutOffs += 1;
                             alpha = staticEval;
+                            _repetitionFloor = savedRepetitionFloor;
                             _theBoard.UnmakeLastMove(); //Unmake the Null Move
                             return true;
                         }
@@ -1134,6 +1147,7 @@ namespace Lisa
                     }
                 }
 
+                _repetitionFloor = savedRepetitionFloor;
                 _theBoard.UnmakeLastMove(); //Unmake the Null move
             }
 
@@ -1813,6 +1827,44 @@ namespace Lisa
         }
 
 
+        //Captures, pawn moves and promotions: no position from before one can ever occur again
+        private bool MoveIsIrreversible(Move move)
+        {
+            return move.IsCapture || move.PromotionPiece != 0 || _theBoard.Piece[move.From] == PAWN;
+        }
+
+
+        //True if the position at this ply already occurred earlier in the line (same side to move, so every second ply,
+        //down to the repetition floor), or, with nothing irreversible in the line, anywhere in the game
+        private bool IsRepetition(int positionPly)
+        {
+            long zobrist = _pathZobrist[positionPly];
+            for (int ply = positionPly - 2; ply >= _repetitionFloor; ply -= 2)
+            {
+                if (_pathZobrist[ply] == zobrist)
+                {
+                    return true;
+                }
+            }
+            return _repetitionFloor == 0 && _gameZobrists.Contains(zobrist);
+        }
+
+
+        //A repetition scores as a draw, held inside the window as the search is fail-hard
+        private static int DrawScoreInWindow(int alpha, int beta)
+        {
+            if (alpha >= 0)
+            {
+                return alpha;
+            }
+            if (beta <= 0)
+            {
+                return beta;
+            }
+            return 0;
+        }
+
+
         private int EvaluateMove(Move legalMove,
                                  int rootMoveKey,
                                  int alpha,
@@ -1837,10 +1889,23 @@ namespace Lisa
             }
 
             _infoNodesLookedAt += 1; _infoNodesLookedAtWithoutQuiesce += 1;
+            bool isIrreversible = MoveIsIrreversible(legalMove);
             _theBoard.MakeMove(legalMove, _theBoard.OnMove, false);
             bool isInCheck = _theBoard.IsInCheck(_theBoard.OnMove);
             _ply += 1;
             _inCheckAtPly[_ply] = isInCheck;
+
+            int savedRepetitionFloor = _repetitionFloor;
+            _pathZobrist[_ply] = _theBoard.CurrentZobrist;
+            if (isIrreversible)
+            {
+                _repetitionFloor = _ply;
+            }
+            else if (IsRepetition(_ply))
+            {
+                alpha = DrawScoreInWindow(alpha, beta);
+                goto ReturnEarly;
+            }
             bool isPawnPush = false;
 
             //CalculateReductionsAndExtensions(legalMove, isInCheck, reduced, ref depth, ref localPV, ref forcingMoves, ref isPawnPush);
@@ -2319,6 +2384,7 @@ namespace Lisa
 
         ReturnEarly:
 
+            _repetitionFloor = savedRepetitionFloor;
             _ply -= 1;
             _theBoard.UnmakeLastMove();
             return alpha;
@@ -2355,7 +2421,19 @@ namespace Lisa
                 }
             }
 
+            bool isIrreversible = MoveIsIrreversible(legalMove);
             _theBoard.MakeMove(legalMove, _theBoard.OnMove, false);
+
+            //Only the first move into quiescence can be quiet, so only it can repeat a position
+            if (QuiesceDepth == 0 && !isIrreversible)
+            {
+                _pathZobrist[_ply + 1] = _theBoard.CurrentZobrist;
+                if (IsRepetition(_ply + 1))
+                {
+                    _theBoard.UnmakeLastMove();
+                    return DrawScoreInWindow(alpha, beta);
+                }
+            }
 
             if (_transTable.LookupPos(_theBoard.CurrentZobrist, out TTMove transTableMove))
             {
