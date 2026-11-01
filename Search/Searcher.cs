@@ -66,6 +66,43 @@ namespace Lisa
         private int _infoBetaTTCutoffs;
         private int _infoAlphaTTCutoffs;
         private int _infoLMRReSearches;
+        private int _infoLMRNotReduced;
+        private int[] _infoLMRReducedBy = new int[6];
+        private int _infoLMRReSearchCut;
+        private int _infoLMRReSearchRaised;
+        private int _infoLMRReSearchFailed;
+        private int _infoLMRReSearchNodes;
+        private int[] _infoLMRReSearchCutBy = new int[6];
+        private int[] _infoLMRReSearchRaisedBy = new int[6];
+        private int[] _infoLMRReSearchFailedBy = new int[6];
+        private int _infoRefutationTried;
+        private int _infoKillerOneTried;
+        private int _infoKillerOneAlphaRaised;
+        private int _infoKillerOneInvalid;
+        private int _infoKillerOneEmptyOrTT;
+        private int _infoKillerOneSameAsRefutation;
+        private int _infoKillerOneCaptureTried;
+        private int _infoKillerOneCaptureCut;
+        private int _infoKillerOneTriedAtAll;
+        private int _infoKillerOneTriedAtUnknown;
+        private int _infoKillerStageSkippedAtAll;
+        private int _infoKillerOneCutAtUnknown;
+        private int _infoKillerTwoTriedAtUnknown;
+        private int _infoKillerTwoCutAtUnknown;
+        private int _infoKillerOneCutAtAll;
+        private int _infoKillerOneNodesCut;
+        private int _infoKillerOneNodesFailed;
+        private int _infoKillerTwoTried;
+        private int _infoKillerTwoAlphaRaised;
+        private int _infoKillerTwoInvalid;
+        private int _infoKillerTwoEmptyOrTT;
+        private int _infoKillerTwoSameAsRefutation;
+        private int _infoKillerTwoCaptureTried;
+        private int _infoKillerTwoCaptureCut;
+        private int _infoKillerTwoTriedAtAll;
+        private int _infoKillerTwoCutAtAll;
+        private int _infoKillerTwoNodesCut;
+        private int _infoKillerTwoNodesFailed;
 
         public int InfoSecondsUsed => _infoSecondsUsed;
         public int InfoNodesLookedAt => _infoNodesLookedAt;
@@ -101,6 +138,43 @@ namespace Lisa
         public int InfoProbCutCutOffs => _infoProbCutCutOffs;
         public int InfoProbCutAttempts => _infoProbCutAttempts;
         public int InfoLMRReSearches => _infoLMRReSearches;
+        public int InfoLMRNotReduced => _infoLMRNotReduced;
+        public int[] InfoLMRReducedBy => _infoLMRReducedBy;
+        public int InfoLMRReSearchCut => _infoLMRReSearchCut;
+        public int InfoLMRReSearchRaised => _infoLMRReSearchRaised;
+        public int InfoLMRReSearchFailed => _infoLMRReSearchFailed;
+        public int InfoLMRReSearchNodes => _infoLMRReSearchNodes;
+        public int[] InfoLMRReSearchCutBy => _infoLMRReSearchCutBy;
+        public int[] InfoLMRReSearchRaisedBy => _infoLMRReSearchRaisedBy;
+        public int[] InfoLMRReSearchFailedBy => _infoLMRReSearchFailedBy;
+        public int InfoRefutationTried => _infoRefutationTried;
+        public int InfoKillerOneTried => _infoKillerOneTried;
+        public int InfoKillerOneAlphaRaised => _infoKillerOneAlphaRaised;
+        public int InfoKillerOneInvalid => _infoKillerOneInvalid;
+        public int InfoKillerOneEmptyOrTT => _infoKillerOneEmptyOrTT;
+        public int InfoKillerOneSameAsRefutation => _infoKillerOneSameAsRefutation;
+        public int InfoKillerOneCaptureTried => _infoKillerOneCaptureTried;
+        public int InfoKillerOneCaptureCut => _infoKillerOneCaptureCut;
+        public int InfoKillerOneTriedAtAll => _infoKillerOneTriedAtAll;
+        public int InfoKillerOneTriedAtUnknown => _infoKillerOneTriedAtUnknown;
+        public int InfoKillerStageSkippedAtAll => _infoKillerStageSkippedAtAll;
+        public int InfoKillerOneCutAtUnknown => _infoKillerOneCutAtUnknown;
+        public int InfoKillerTwoTriedAtUnknown => _infoKillerTwoTriedAtUnknown;
+        public int InfoKillerTwoCutAtUnknown => _infoKillerTwoCutAtUnknown;
+        public int InfoKillerOneCutAtAll => _infoKillerOneCutAtAll;
+        public int InfoKillerOneNodesCut => _infoKillerOneNodesCut;
+        public int InfoKillerOneNodesFailed => _infoKillerOneNodesFailed;
+        public int InfoKillerTwoTried => _infoKillerTwoTried;
+        public int InfoKillerTwoAlphaRaised => _infoKillerTwoAlphaRaised;
+        public int InfoKillerTwoInvalid => _infoKillerTwoInvalid;
+        public int InfoKillerTwoEmptyOrTT => _infoKillerTwoEmptyOrTT;
+        public int InfoKillerTwoSameAsRefutation => _infoKillerTwoSameAsRefutation;
+        public int InfoKillerTwoCaptureTried => _infoKillerTwoCaptureTried;
+        public int InfoKillerTwoCaptureCut => _infoKillerTwoCaptureCut;
+        public int InfoKillerTwoTriedAtAll => _infoKillerTwoTriedAtAll;
+        public int InfoKillerTwoCutAtAll => _infoKillerTwoCutAtAll;
+        public int InfoKillerTwoNodesCut => _infoKillerTwoNodesCut;
+        public int InfoKillerTwoNodesFailed => _infoKillerTwoNodesFailed;
 
         #endregion
 
@@ -797,7 +871,7 @@ namespace Lisa
         {
 
             ttMove = default;
-            nodeType = NodeTypes.All;
+            nodeType = NodeTypes.Unknown;
             if (_transTable.LookupPos(_theBoard.CurrentZobrist, out TTMove transTableMove))
             {
                 byte TTMoveDepth;
@@ -1052,7 +1126,7 @@ namespace Lisa
                             _theBoard.UnmakeLastMove(); //Unmake the Null Move
                             return true;
                         }
-                        else if (AllMovesAfterOppNull[nn].Score == 4950)
+                        else if (GivesCheck(AllMovesAfterOppNull[nn]))
                         {
                             //A checking reply refutes the null move outright: passing has allowed a forcing threat
                             break;
@@ -1233,6 +1307,7 @@ namespace Lisa
 
                     played += 1;
                     refutationSeparated = true;
+                    _infoRefutationTried += 1;
                     bool nullWindowSearchFailed = false;
                     bool nullWindowSearch;
 
@@ -1315,6 +1390,21 @@ namespace Lisa
                     bool nullWindowSearchFailed = false;
                     bool nullWindowSearch;
 
+                    _infoKillerOneTried += 1;
+                    if (Sorter.KillerOnes[_fullDepth - depth].IsCapture)
+                    {
+                        _infoKillerOneCaptureTried += 1;
+                    }
+                    if (nodeType == NodeTypes.All)
+                    {
+                        _infoKillerOneTriedAtAll += 1;
+                    }
+                    else if (nodeType == NodeTypes.Unknown)
+                    {
+                        _infoKillerOneTriedAtUnknown += 1;
+                    }
+                    int nodesBeforeKiller = _infoNodesLookedAt;
+
                 FirstKillerResearchAfterNull:
 
                     int score;
@@ -1336,8 +1426,26 @@ namespace Lisa
                         goto FirstKillerResearchAfterNull;
                     }
 
+                    int killerNodes = _infoNodesLookedAt - nodesBeforeKiller;
+                    if (score < beta)
+                    {
+                        _infoKillerOneNodesFailed += killerNodes;
+                    }
                     if (score >= beta)
                     {
+                        _infoKillerOneNodesCut += killerNodes;
+                        if (Sorter.KillerOnes[_fullDepth - depth].IsCapture)
+                        {
+                            _infoKillerOneCaptureCut += 1;
+                        }
+                        if (nodeType == NodeTypes.All)
+                        {
+                            _infoKillerOneCutAtAll += 1;
+                        }
+                        else if (nodeType == NodeTypes.Unknown)
+                        {
+                            _infoKillerOneCutAtUnknown += 1;
+                        }
                         alpha = score;
                         _infoCutOffUsingKillerOne += 1;
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerOnes[_fullDepth - depth], TT_POS_TYPE_BETA_CUT);
@@ -1347,6 +1455,7 @@ namespace Lisa
                     }
                     else if (score > alpha)
                     {
+                        _infoKillerOneAlphaRaised += 1;
                         alpha = score;
                         alphaRaisedByNonGeneratedMove = true;
                         alphaRaised = true;
@@ -1358,6 +1467,14 @@ namespace Lisa
                         }
                     }
                 }
+                else
+                {
+                    _infoKillerOneInvalid += 1;
+                }
+            }
+            else
+            {
+                _infoKillerOneEmptyOrTT += 1;
             }
 
             return false;
@@ -1395,6 +1512,21 @@ namespace Lisa
                     bool nullWindowSearchFailed = false;
                     bool nullWindowSearch;
 
+                    _infoKillerTwoTried += 1;
+                    if (Sorter.KillerTwos[_fullDepth - depth].IsCapture)
+                    {
+                        _infoKillerTwoCaptureTried += 1;
+                    }
+                    if (nodeType == NodeTypes.All)
+                    {
+                        _infoKillerTwoTriedAtAll += 1;
+                    }
+                    else if (nodeType == NodeTypes.Unknown)
+                    {
+                        _infoKillerTwoTriedAtUnknown += 1;
+                    }
+                    int nodesBeforeKiller = _infoNodesLookedAt;
+
                 SecondKillerResearchAfterNull:
 
                     int score;
@@ -1416,8 +1548,26 @@ namespace Lisa
                         goto SecondKillerResearchAfterNull;
                     }
 
+                    int killerNodes = _infoNodesLookedAt - nodesBeforeKiller;
+                    if (score < beta)
+                    {
+                        _infoKillerTwoNodesFailed += killerNodes;
+                    }
                     if (score >= beta)
                     {
+                        _infoKillerTwoNodesCut += killerNodes;
+                        if (Sorter.KillerTwos[_fullDepth - depth].IsCapture)
+                        {
+                            _infoKillerTwoCaptureCut += 1;
+                        }
+                        if (nodeType == NodeTypes.All)
+                        {
+                            _infoKillerTwoCutAtAll += 1;
+                        }
+                        else if (nodeType == NodeTypes.Unknown)
+                        {
+                            _infoKillerTwoCutAtUnknown += 1;
+                        }
                         alpha = score;
                         _infoCutOffUsingKillerTwo += 1;
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerTwos[_fullDepth - depth], TT_POS_TYPE_BETA_CUT);
@@ -1427,6 +1577,7 @@ namespace Lisa
                     }
                     else if (score > alpha)
                     {
+                        _infoKillerTwoAlphaRaised += 1;
                         alpha = score;
                         alphaRaisedByNonGeneratedMove = true;
                         alphaRaised = true;
@@ -1438,7 +1589,14 @@ namespace Lisa
                         }
                     }
                 }
-
+                else
+                {
+                    _infoKillerTwoInvalid += 1;
+                }
+            }
+            else
+            {
+                _infoKillerTwoEmptyOrTT += 1;
             }
 
             return false;
@@ -1755,7 +1913,7 @@ namespace Lisa
             }
 
             bool iidUsedForCaps = false;
-            if (!hasTTMove && (nodeType != NodeTypes.All || depth >= _fullDepth - 1) && depth >= 6)
+            if (!hasTTMove && ((nodeType != NodeTypes.All && nodeType != NodeTypes.Unknown) || depth >= _fullDepth - 1) && depth >= 6)
             {
 
                 iidUsedForCaps = true;
@@ -1795,28 +1953,44 @@ namespace Lisa
             }
 
 
-            if (!refutationSeparated || (Sorter.KillerOnes[_fullDepth - depth].From != Sorter.Refutations[_fullDepth - depth].From ||
-                Sorter.KillerOnes[_fullDepth - depth].To != Sorter.Refutations[_fullDepth - depth].To))
+            //Killers are not tried at expected All-nodes: nothing cuts there, and the quiet loop searches them reduced
+            if (nodeType != NodeTypes.All)
             {
-                bool killerOneCut = TryKillerOne(ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV, ref pv,
-                    ref killerOneSeparated, ref alphaRaisedByKillerOne, ref alpha);
-
-                if (killerOneCut)
+                if (!refutationSeparated || (Sorter.KillerOnes[_fullDepth - depth].From != Sorter.Refutations[_fullDepth - depth].From ||
+                    Sorter.KillerOnes[_fullDepth - depth].To != Sorter.Refutations[_fullDepth - depth].To))
                 {
-                    goto ReturnEarly;
+                    bool killerOneCut = TryKillerOne(ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised, ref alphaRaisedByNonGeneratedMove, ref localPV, ref pv,
+                        ref killerOneSeparated, ref alphaRaisedByKillerOne, ref alpha);
+
+                    if (killerOneCut)
+                    {
+                        goto ReturnEarly;
+                    }
+                }
+                else
+                {
+                    _infoKillerOneSameAsRefutation += 1;
+                }
+
+                if (!refutationSeparated || (Sorter.KillerTwos[_fullDepth - depth].From != Sorter.Refutations[_fullDepth - depth].From ||
+                    Sorter.KillerTwos[_fullDepth - depth].To != Sorter.Refutations[_fullDepth - depth].To))
+                {
+                    bool killerTwoCut = TryKillerTwo(ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised,
+                        ref alphaRaisedByNonGeneratedMove, ref localPV, ref pv, ref killerTwoSeparated, ref alphaRaisedByKillerTwo, ref alpha);
+
+                    if (killerTwoCut)
+                    {
+                        goto ReturnEarly;
+                    }
+                }
+                else
+                {
+                    _infoKillerTwoSameAsRefutation += 1;
                 }
             }
-
-            if (!refutationSeparated || (Sorter.KillerTwos[_fullDepth - depth].From != Sorter.Refutations[_fullDepth - depth].From ||
-                Sorter.KillerTwos[_fullDepth - depth].To != Sorter.Refutations[_fullDepth - depth].To))
+            else
             {
-                bool killerTwoCut = TryKillerTwo(ttMove, nodeType, depth, beta, isInCheck, rootMoveKey, ref played, ref alphaRaised,
-                    ref alphaRaisedByNonGeneratedMove, ref localPV, ref pv, ref killerTwoSeparated, ref alphaRaisedByKillerTwo, ref alpha);
-
-                if (killerTwoCut)
-                {
-                    goto ReturnEarly;
-                }
+                _infoKillerStageSkippedAtAll += 1;
             }
 
             bool probCutCut = TryProbCut(nodeType, depth, beta, isInCheck, rootMoveKey, ref alphaRaised, ref localPV, ref alpha);
@@ -1833,7 +2007,7 @@ namespace Lisa
                 goto StoreInTransTable;
             }
 
-            if (!hasTTMove && (nodeType != NodeTypes.All || depth >= _fullDepth - 1) && depth >= 6)
+            if (!hasTTMove && ((nodeType != NodeTypes.All && nodeType != NodeTypes.Unknown) || depth >= _fullDepth - 1) && depth >= 6)
             {
                 int iidAlpha = alpha;
                 int iidBeta = beta;
@@ -1843,22 +2017,19 @@ namespace Lisa
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOppMoves.Length; nn++)
                 {
-                    if (allOppMoves[nn].Score != 4950)
+                    if (!_theBoard.MoveIsLegal(allOppMoves[nn], _theBoard.OnMove))
                     {
-                        if (!_theBoard.MoveIsLegal(allOppMoves[nn], _theBoard.OnMove))
-                        {
-                            allOppMoves[nn].Score = -5000;
-                            continue;
-                        }
-                        allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
-                        if (allOppMoves[nn].Score > iidAlpha)
-                        {
-                            iidAlpha = allOppMoves[nn].Score;
-                        }
-                        int moveKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
-                        allOppMoves[nn].Score += Sorter.CutCount[moveKey];
-                        allOppMoves[nn].Score += Sorter.CutCountSingleMove[rootMoveKey, moveKey];
+                        allOppMoves[nn].Score = -5000;
+                        continue;
                     }
+                    allOppMoves[nn].Score = -EvaluateMove(allOppMoves[nn], rootMoveKey, -iidBeta, -iidAlpha, iidReduceDepth, ref localPV);
+                    if (allOppMoves[nn].Score > iidAlpha)
+                    {
+                        iidAlpha = allOppMoves[nn].Score;
+                    }
+                    int moveKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
+                    allOppMoves[nn].Score += Sorter.CutCount[moveKey];
+                    allOppMoves[nn].Score += Sorter.CutCountSingleMove[rootMoveKey, moveKey];
                 }
                 Array.Sort(allOppMoves);
             }
@@ -1893,7 +2064,8 @@ namespace Lisa
                     byte ByteDepth;
                     bool WasReduced = false;
                     byte originalDepth = (byte)(SearchDepth - 1);
-                    if (isInCheck || quietPlayed == 1 || allOppMoves[nn].Score == 4950 || legalMove.Score == 4950 || (_endGame && _theBoard.Piece[allOppMoves[nn].From] == PAWN))
+                    //Checks are never reduced: GivesCheck is last so it only runs for moves that would otherwise be reduced
+                    if (isInCheck || quietPlayed == 1 || (_endGame && _theBoard.Piece[allOppMoves[nn].From] == PAWN) || GivesCheck(allOppMoves[nn]))
                     {
                         ByteDepth = (byte)(SearchDepth - 1);
                     }
@@ -1905,11 +2077,15 @@ namespace Lisa
                         }
                         else
                         {
-                            if (_fullDepth > 10 && SearchDepth - 5 >= 1 && quietPlayed > 5)
+                            if (SearchDepth - 6 >= 1 && quietPlayed > 10)
+                            {
+                                ByteDepth = (byte)(SearchDepth - 6);
+                            }
+                            else if (SearchDepth - 5 >= 1 && quietPlayed > 5)
                             {
                                 ByteDepth = (byte)(SearchDepth - 5);
                             }
-                            else if (_fullDepth > 10 && SearchDepth - 4 >= 1)
+                            else if (SearchDepth - 4 >= 1)
                             {
                                 ByteDepth = (byte)(SearchDepth - 4);
                             }
@@ -1918,8 +2094,21 @@ namespace Lisa
                                 ByteDepth = (byte)(SearchDepth - 3);
                             }
                         }
-                        WasReduced = true;
+                        //At depth 2 the "reduced" depth is the normal depth: not flagging it avoids an identical re-search
+                        WasReduced = ByteDepth < SearchDepth - 1;
                     }
+
+                    int lmrReduction = WasReduced ? (SearchDepth - 1) - ByteDepth : 0;
+                    if (WasReduced)
+                    {
+                        _infoLMRReducedBy[lmrReduction] += 1;
+                    }
+                    else
+                    {
+                        _infoLMRNotReduced += 1;
+                    }
+                    bool lmrReSearched = false;
+                    int nodesBeforeLMRReSearch = 0;
 
                     bool nullWindowSearchFailed = false;
 
@@ -1940,6 +2129,11 @@ namespace Lisa
 
                     if (nullWindowSearch && score > alpha && score < beta)
                     {
+                        if (WasReduced && !lmrReSearched)
+                        {
+                            lmrReSearched = true;
+                            nodesBeforeLMRReSearch = _infoNodesLookedAt;
+                        }
                         nullWindowSearchFailed = true;
                         WasReduced = false;
                         ByteDepth = originalDepth;
@@ -1947,10 +2141,35 @@ namespace Lisa
                     }
                     if (WasReduced && score > alpha)
                     {
+                        if (!lmrReSearched)
+                        {
+                            lmrReSearched = true;
+                            nodesBeforeLMRReSearch = _infoNodesLookedAt;
+                        }
                         WasReduced = false;
                         ByteDepth = originalDepth;
                         _infoLMRReSearches += 1;
                         goto ReducedBeatAlpha;
+                    }
+
+                    if (lmrReSearched)
+                    {
+                        _infoLMRReSearchNodes += _infoNodesLookedAt - nodesBeforeLMRReSearch;
+                        if (score >= beta)
+                        {
+                            _infoLMRReSearchCut += 1;
+                            _infoLMRReSearchCutBy[lmrReduction] += 1;
+                        }
+                        else if (score > alpha)
+                        {
+                            _infoLMRReSearchRaised += 1;
+                            _infoLMRReSearchRaisedBy[lmrReduction] += 1;
+                        }
+                        else
+                        {
+                            _infoLMRReSearchFailed += 1;
+                            _infoLMRReSearchFailedBy[lmrReduction] += 1;
+                        }
                     }
 
                     if (score >= beta)
@@ -1964,15 +2183,15 @@ namespace Lisa
                         bestIndex = nn;
                         Sorter.SetRefutationMove(_fullDepth, depth, allOppMoves[nn], _theBoard.Piece[allOppMoves[nn].From]);
 
-                        if (nn == 0)
+                        if (quietPlayed == 1)
                         {
                             _infoNodesCutOffWithFirstSortedMove += 1;
                         }
-                        else if (nn == 1)
+                        else if (quietPlayed == 2)
                         {
                             _infoNodesCutoffWithSecondSortedMove += 1;
                         }
-                        else if (nn == 2)
+                        else if (quietPlayed == 3)
                         {
                             _infoNodesCutOffWithThirdSortedMove += 1;
                         }

@@ -95,6 +95,8 @@ namespace Lisa
 
                 linesForFile.Add("PV: " + pvString);
                 linesForFile.Add(" ");
+                linesForFile.AddRange(PVReport.TopMoveLines(search, fen, 5));
+                linesForFile.Add(" ");
                 linesForFile.Add(" ");
                 linesForFile.Add(" ");
                 linesForFile.Add(" ");

@@ -74,20 +74,6 @@ namespace Lisa
 
             for (int nn = 0; nn < list.Length; nn++)
             {
-                //if (!lowDepth)
-                //{
-                    theBoard.MakeMove(list[nn], theBoard.OnMove, false);
-                    if (theBoard.IsInCheck(theBoard.OnMove))
-                    {
-                        list[nn].Score = 4950;
-                        theBoard.UnmakeLastMove();
-                        continue;
-                    }
-                    else
-                    {
-                        theBoard.UnmakeLastMove();
-                    }
-                //}
                 if (list[nn].IsCapture)
                 {
                     if (theBoard.Piece[list[nn].To] != -1)

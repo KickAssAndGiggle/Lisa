@@ -12,27 +12,38 @@ namespace Lisa
         private readonly int _scoreSize;
         private readonly int _passedPawnSize;
 
-        public TranspositionTable()
+        //instrumentationOnly gives every table a single entry, for callers outside search that only need
+        //ScorePosition to run. Lookups check the full Zobrist, so a tiny table just means misses, which recalculate.
+        public TranspositionTable(bool instrumentationOnly = false)
         {
 
-            int ttByteSize;
-            int scoreByteSize;
-            int pawnByteSize;
-
-            unsafe
+            if (instrumentationOnly)
             {
-                ttByteSize = sizeof(TTMove);
-                scoreByteSize = sizeof(TTScore);
-                pawnByteSize = sizeof(TTPawnAnalysis);
+                _ttSize = 1;
+                _scoreSize = 1;
+                _passedPawnSize = 1;
             }
+            else
+            {
+                int ttByteSize;
+                int scoreByteSize;
+                int pawnByteSize;
 
-            int totalAllowed_ttSize = TT_HASH_SIZE_MB * 1024 * 1024;
-            int totalAllowed_scoreSize = POSITION_SCORE_HASH_SIZE_MB * 1024 * 1024;
-            int totalAllowed_passedPawnSize = PAWN_STRUCTURE_HASH_SIZE_MB * 1024 * 1024;
+                unsafe
+                {
+                    ttByteSize = sizeof(TTMove);
+                    scoreByteSize = sizeof(TTScore);
+                    pawnByteSize = sizeof(TTPawnAnalysis);
+                }
 
-            _ttSize = totalAllowed_ttSize / ttByteSize;
-            _scoreSize = totalAllowed_scoreSize / scoreByteSize;
-            _passedPawnSize = totalAllowed_passedPawnSize / pawnByteSize;
+                int totalAllowed_ttSize = TT_HASH_SIZE_MB * 1024 * 1024;
+                int totalAllowed_scoreSize = POSITION_SCORE_HASH_SIZE_MB * 1024 * 1024;
+                int totalAllowed_passedPawnSize = PAWN_STRUCTURE_HASH_SIZE_MB * 1024 * 1024;
+
+                _ttSize = totalAllowed_ttSize / ttByteSize;
+                _scoreSize = totalAllowed_scoreSize / scoreByteSize;
+                _passedPawnSize = totalAllowed_passedPawnSize / pawnByteSize;
+            }
 
             _primaryMoveList = new TTMove[_ttSize];
             _scoreList = new TTScore[_scoreSize];

@@ -307,7 +307,7 @@ namespace Lisa
 
         public static int PAWN_CHAIN_BONUS = 25;
         public static int KNIGHT_ON_THE_RIM_IS_DIM_PENALTY = 44;
-        public static int TEMPO_BONUS = 19;
+        public static int TEMPO_BONUS = 5;
         public static int CONNECTED_PASSED_PAWN_BONUS = 71;
 
         #endregion
@@ -433,7 +433,8 @@ namespace Lisa
         {
             All = 0,
             Cut = 1,
-            PV = 2
+            PV = 2,
+            Unknown = 3
         };
 
         #endregion

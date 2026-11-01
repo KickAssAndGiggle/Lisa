@@ -10,13 +10,14 @@ namespace Lisa
             bool InTT = tt.LookupScore(theBoard.CurrentZobrist, out TTScore lookup);
             if (InTT)
             {
+                //The cached scores are stored without tempo, so add it here exactly as the full evaluation does
                 if (theBoard.OnMove == BLACK)
                 {
-                    return (lookup.WhiteScore - lookup.BlackScore);
+                    return (lookup.WhiteScore - (lookup.BlackScore + TEMPO_BONUS));
                 }
                 else
                 {
-                    return (lookup.BlackScore - lookup.WhiteScore);
+                    return (lookup.BlackScore - (lookup.WhiteScore + TEMPO_BONUS));
                 }
             }
 
