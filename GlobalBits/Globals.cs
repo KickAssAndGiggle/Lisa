@@ -14,89 +14,84 @@ namespace Lisa
 
         public static int[] WhiteKnightEarlyPST = new int[64]
         {
-            -60, 0, 0, 0, 0, 0, 0, 0,
-            -34, 24, 54, 74, 60, 122, 2, 29,
-            -22, 18, 60, 64, 124, 143, 55, 6,
-            -14, -4, 25, 33, 10, 33, 14, 43,
-            -14, 0, 2, 3, 19, 12, 33, -7,
-            -38, -16, 0, 14, 8, 3, 3, -42,
-            -56, -31, -28, -1, -7, -20, -42, -11,
-            -99, -30, -66, -64, -29, -19, -61, -81
-
+            -80, -2, 0, 2, 2, 0, 0, -6,
+            -38, 11, 47, 68, 58, 120, 2, 34,
+            -26, 10, 58, 78, 125, 143, 69, 24,
+            -13, -7, 17, 49, 5, 59, 24, 59,
+            -27, 0, 11, 10, 34, 27, 46, 7,
+            -49, -35, -23, 19, 27, -10, -3, -21,
+            -73, -51, -37, -18, -19, -24, -34, -20,
+            -110, -50, -66, -48, -30, -24, -56, -76
         };
         public static int[] BlackKnightEarlyPST = new int[64];
 
 
         public static int[] WhiteKnightLatePST = new int[64]
         {
-            -21, -3, 10, 16, 16, 10, -3, -21,
-            -7, 12, 25, 31, 31, 25, 12, -7,
-            -2, 17, 30, 36, 36, 30, 17, -2,
-            -7, 12, 25, 31, 31, 25, 12, -7,
-            -22, -3, 10, 16, 16, 10, -3, -22,
-            -46, -27, -15, -9, -9, -15, -27, -46,
-            -81, -62, -49, -43, -43, -49, -62, -81,
-            -99, -99, -94, -88, -88, -94, -99, -99
+            -37, -7, 8, 14, 17, 10, -3, -29,
+            -7, 1, 14, 25, 23, 13, 10, -7,
+            -3, 17, 23, 26, 19, 25, 14, 5,
+            -10, 9, 23, 35, 41, 36, 17, -6,
+            -27, -8, 18, 22, 22, 15, -3, -20,
+            -61, -35, -21, -7, -7, -37, -27, -47,
+            -82, -53, -48, -42, -35, -35, -51, -81,
+            -103, -107, -77, -70, -72, -94, -96, -101
         };
         public static int[] BlackKnightLatePST = new int[64];
 
 
         public static int[] WhiteBishopEarlyPST = new int[64]
         {
-            0, 0, 0, 0, 0, 0, 0, 0,
-            -24, -23, 30, 58, 65, 61, 69, 11,
-            7, 27, 20, 56, 91, 108, 53, 44,
-            -1, 16, 29, 27, 37, 27, 17, 4,
-            1, 5, 23, 32, 21, 8, 17, 4,
-            5, 12, 14, 13, 10, -1, 3, 4,
-            15, 5, 13, -10, 1, 2, 0, 15,
-            -7, 12, -8, -37, -31, -8, -45, -67
-
+            0, 2, 2, 2, 2, 0, 0, 0,
+            -23, -17, 15, 52, 55, 60, 61, -8,
+            -2, 31, 18, 58, 95, 130, 77, 51,
+            -6, -11, 35, 57, 37, 51, -15, 6,
+            -4, 8, -2, 33, 26, -14, 4, 0,
+            -14, 12, 7, 3, 0, -4, -2, 6,
+            11, -10, 36, -14, -4, 5, 10, -9,
+            -7, 42, -9, -34, -17, -18, -16, -55
         };
         public static int[] BlackBishopEarlyPST = new int[64];
 
 
         public static int[] WhiteBishopLatePST = new int[64]
         {
-            -2, 4, 8, 10, 10, 8, 4, -2,
-            8, 14, 18, 20, 20, 18, 14, 8,
-            13, 19, 23, 25, 25, 23, 19, 13,
-            14, 20, 24, 26, 26, 24, 20, 14,
-            11, 17, 21, 23, 23, 21, 17, 11,
-            2, 8, 12, 14, 14, 12, 8, 2,
-            -10, -4, 0, 2, 2, 0, -4, -10,
-            -27, -21, -17, -15, -15, -17, -21, -27
-
+            4, 11, 16, 17, 21, 10, 10, 0,
+            10, 24, 19, 15, 13, 19, 9, 6,
+            14, 26, 26, 23, 20, 21, 27, 18,
+            18, 28, 19, 22, 21, 31, 37, 14,
+            15, 11, 30, 17, 13, 15, 15, 4,
+            4, 11, 7, 3, 11, 3, 2, -2,
+            -3, -10, -12, 5, -7, 0, -13, -18,
+            -27, -15, -25, 3, -9, -7, -13, -24
         };
         public static int[] BlackBishopLatePST = new int[64];
 
 
         public static int[] WhiteRookEarlyPST = new int[64]
         {
-            84, 0, 0, 37, 124, 0, 0, 153,
-            46, 33, 64, 62, 91, 89, 70, 104,
-            24, 83, 54, 75, 134, 144, 85, 75,
-            19, 33, 46, 57, 53, 39, 53, 16,
-            -9, -5, 8, 14, 18, -17, 13, -13,
-            -16, 0, 3, -3, 8, -1, 12, 3,
-            -26, -6, 2, -2, 2, -10, -1, -29,
-            -2, -1, 3, 1, 2, 1, 4, -8
-
+            75, 21, 19, 54, 124, 14, 16, 153,
+            39, 36, 66, 69, 98, 98, 70, 112,
+            22, 65, 55, 83, 133, 151, 98, 83,
+            6, 21, 24, 53, 53, 58, 70, 32,
+            -29, -23, -7, 8, 10, -17, 17, -8,
+            -36, -28, -24, -8, 0, -3, 23, -7,
+            -52, -27, -14, -6, -7, -4, 8, -26,
+            -39, -20, -7, -1, 1, -11, 22, -27
         };
         public static int[] BlackRookEarlyPST = new int[64];
 
 
         public static int[] WhiteRookLatePST = new int[64]
         {
-            16, 17, 18, 19, 19, 18, 17, 16,
-            27, 28, 29, 30, 30, 29, 28, 27,
-            25, 27, 28, 28, 28, 28, 27, 25,
-            15, 17, 18, 18, 18, 18, 17, 15,
-            1, 2, 3, 4, 4, 3, 2, 1,
-            -15, -13, -12, -12, -12, -12, -13, -15,
-            -27, -25, -24, -24, -24, -24, -25, -27,
-            -32, -31, -30, -29, -29, -30, -31, -32
-
+            13, 38, 33, 24, 14, 38, 42, 8,
+            27, 30, 22, 17, 23, 25, 30, 17,
+            40, 25, 28, 20, 15, 22, 26, 22,
+            31, 28, 23, 16, 16, 28, 24, 26,
+            15, 13, 15, 2, 3, 28, 11, 7,
+            -12, -7, 1, -13, -14, -7, -15, -18,
+            -16, -21, -21, -32, -26, -36, -27, -26,
+            -13, -23, -21, -35, -33, -27, -39, -27
         };
         public static int[] BlackRookLatePST = new int[64];
 
@@ -104,74 +99,69 @@ namespace Lisa
         public static int[] WhiteKingEarlyPST = new int[64]
         {
             -9, -9, -9, -9, -9, -9, -9, -9,
-            -9, -9, -9, -9, -9, -9, -9, -9,
-            -9, -9, -9, -9, -9, -9, -9, -9,
-            -9, -9, -9, -9, -9, -9, -9, -9,
-            -9, -9, -9, -9, -9, -9, -9, -9,
-            -9, -9, -9, -9, -9, -9, -9, -9,
-            -9, -9, -9, -9, -9, -9, -9, -9,
-            0, 0, 0, -9, 0, -9, 25, 0
-
+            -9, -5, -7, -9, -9, -7, -6, -7,
+            -7, -6, -8, -9, -8, -7, -4, -7,
+            -8, -6, -8, -9, -11, -6, -6, -7,
+            -7, -8, -10, -17, -17, -13, -12, -20,
+            0, 7, -9, -26, -24, -18, 9, 8,
+            -7, -14, 5, -3, -10, -4, 16, -1,
+            -37, -3, -21, -19, 4, -16, 22, 1
         };
         public static int[] BlackKingEarlyPST = new int[64];
 
 
         public static int[] WhiteKingLatePST = new int[64]
         {
-            42, 46, 48, 50, 50, 48, 46, 42,
-            38, 41, 44, 45, 45, 44, 41, 38,
-            31, 34, 37, 38, 38, 37, 34, 31,
-            22, 26, 28, 29, 29, 28, 26, 22,
-            11, 15, 17, 18, 18, 17, 15, 11,
-            -2, 2, 4, 5, 5, 4, 2, -2,
-            -17, -13, -11, -10, -10, -11, -13, -17,
-            -34, -30, -28, -27, -27, -28, -30, -34
-
+            40, 49, 48, 50, 51, 48, 49, 38,
+            38, 51, 53, 47, 44, 49, 52, 42,
+            38, 49, 43, 42, 38, 48, 50, 34,
+            27, 40, 38, 34, 34, 34, 36, 25,
+            13, 19, 20, 19, 14, 14, 9, 2,
+            -4, 4, 0, -1, -3, -4, -13, -22,
+            -26, -17, -2, -3, 0, 1, -22, -32,
+            -53, -40, -30, -16, -36, -18, -50, -82
         };
         public static int[] BlackKingLatePST = new int[64];
 
 
         public static int[] WhiteQueenEarlyPST = new int[64]
         {
-            -13, 6, -42, 0, 29, 0, 0, 102,
-            1, 11, 35, 0, 16, 55, 39, 57,
-            -16, 10, 13, 25, 37, 30, 15, 26,
-            -6, 0, 15, 25, 32, 9, 26, 12,
-            -9, 5, 7, 9, 18, 17, 26, 4,
-            -11, 0, 12, 2, 8, 11, 7, -6,
-            -7, 3, 2, 5, -1, -10, -7, -2,
-            1, -10, -11, 3, -15, -51, -83, -13
-
+            -10, 13, -22, 13, 40, 12, 17, 107,
+            -10, -20, 29, 10, 28, 65, 44, 75,
+            -20, 3, 1, 25, 48, 57, 53, 49,
+            -18, -17, 1, 14, 25, 20, 46, 29,
+            -29, -17, -12, -3, 7, 2, 18, 17,
+            -34, -27, -6, -14, -6, -1, 3, 11,
+            -18, -6, -2, 10, 3, -6, -19, -2,
+            3, -14, -3, 1, 4, -45, -82, -7
         };
         public static int[] BlackQueenEarlyPST = new int[64];
 
 
         public static int[] WhiteQueenLatePST = new int[64]
         {
-            12, 17, 21, 23, 23, 21, 17, 12,
-            21, 26, 30, 31, 31, 30, 26, 21,
-            23, 28, 32, 34, 34, 32, 28, 23,
-            19, 24, 28, 30, 30, 28, 24, 19,
-            9, 14, 17, 19, 19, 17, 14, 9,
-            -8, -3, 1, 3, 3, 1, -3, -8,
-            -31, -26, -22, -21, -21, -22, -26, -31,
-            -61, -55, -52, -50, -50, -52, -55, -61
-
+            17, 22, 40, 34, 34, 32, 32, 17,
+            24, 28, 34, 40, 45, 39, 35, 29,
+            25, 27, 33, 35, 45, 49, 46, 36,
+            20, 27, 33, 27, 30, 43, 40, 35,
+            7, 17, 6, 21, 11, 21, 14, 22,
+            -13, -3, -10, -16, -11, -6, -8, -8,
+            -32, -37, -43, -51, -49, -50, -44, -33,
+            -58, -60, -61, -57, -71, -64, -60, -61
         };
         public static int[] BlackQueenLatePST = new int[64];
 
 
         public static int[] WhitePawnEarlyPST = new int[64]
         {
-             0, 0, 0, 0, 0, 0, 0, 0,
-             118, 121, 173, 168, 107, 82, -16, 22,
-             21, 54, 72, 56, 77, 95, 71, 11,
-             9, 30, 23, 31, 31, 23, 17, 11,
-             1, 14, 8, 4, 5, 4, 10, 7,
-             1, 1, -6, -19, -6, -7, -4, 10,
-             -1, -7, -11, -35, -13, 5, 3, -5,
-             0, 0, 0, 0, 0, 0, 0, 0
-
+            0, 0, 0, 0, 0, 0, 0, 0,
+            132, 131, 184, 181, 126, 96, -8, 24,
+            30, 48, 70, 77, 102, 108, 84, 33,
+            2, 11, 7, 29, 59, 58, 42, 9,
+            -20, -14, -6, -3, 16, 15, 20, -14,
+            -36, -33, -47, -42, -27, -9, -3, -22,
+            -35, -35, -48, -50, -38, -7, 12, -39,
+            0, 0, 0, 0, 0, 0, 0, 0
         };
         public static int[] BlackPawnEarlyPST = new int[64];
 
@@ -179,14 +169,13 @@ namespace Lisa
         public static int[] WhitePawnLatePST = new int[64]
         {
             0, 0, 0, 0, 0, 0, 0, 0,
-            82, 82, 82, 82, 82, 82, 82, 82,
-            55, 55, 55, 55, 55, 55, 55, 55,
-            16, 16, 16, 16, 16, 16, 16, 16,
-            -7, -7, -7, -7, -7, -7, -7, -7,
-            -11, -11, -11, -11, -11, -11, -11, -11,
-            -17, -17, -17, -17, -17, -17, -17, -17,
+            65, 86, 79, 79, 89, 86, 87, 72,
+            43, 48, 45, 38, 37, 49, 48, 45,
+            21, 23, 15, -7, 4, 12, 20, 14,
+            10, 15, 1, -8, 1, 12, 7, 4,
+            1, 3, 11, 10, 13, 15, -1, -5,
+            10, 12, 31, -2, 34, 25, 3, 1,
             0, 0, 0, 0, 0, 0, 0, 0
-
         };
         public static int[] BlackPawnLatePST = new int[64];
 
@@ -195,59 +184,65 @@ namespace Lisa
 
         #region Evaluation parameters
 
-        public static int KNIGHT_VALUE = 349;
-        public static int BISHOP_VALUE = 335;
-        public static int ROOK_VALUE = 573;
-        public static int QUEEN_VALUE = 1082;
+        public static int KNIGHT_VALUE = 428;
+        public static int BISHOP_VALUE = 400;
+        public static int ROOK_VALUE = 630;
+        public static int QUEEN_VALUE = 1190;
 
-        public static int BISHOP_PAIR_BONUS_VALUE = 47;
+        public static int BISHOP_PAIR_BONUS_VALUE = 27;
 
-        public static int FLANK_BACKWARD_PAWN_PENALTY = 18;
-        public static int CENTER_BACKWARD_PAWN_PENALTY = 19;
+        public static int FLANK_BACKWARD_PAWN_PENALTY = 2;
+        public static int CENTER_BACKWARD_PAWN_PENALTY = 8;
 
-        public static int ROOK_ON_SEVENTH_BONUS = 36;
+        public static int ROOK_ON_SEVENTH_BONUS = 8;
 
-        public static int BISHOP_PAWN_COLOR_PENALTY = 9;
+        public static int BISHOP_PAWN_COLOR_PENALTY = 7;
 
-        public static int KSIDE_CASTLE_BONUS = 61;
-        public static int QSIDE_CASTLE_BONUS = 60;
-        public static int KSIDE_CASTLE_RIGHTS = 25;
-        public static int QSIDE_CASTLE_RIGHTS = 19;
+        public static int KSIDE_CASTLE_BONUS = 41;
+        public static int QSIDE_CASTLE_BONUS = 86;
+        public static int KSIDE_CASTLE_RIGHTS = 29;
+        public static int QSIDE_CASTLE_RIGHTS = 22;
 
-        public static int DOUBLED_PAWN_PENALTY = 20;
-        public static int DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 16;
-        public static int TRIPLED_PAWN_PENALTY = 41;
-        public static int TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 15;
+        public static int DOUBLED_PAWN_PENALTY = 24;
+        public static int DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 0;
+        public static int TRIPLED_PAWN_PENALTY = 107;
+        public static int TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 0;
 
-        public static int EDGE_PAWN_ISOLATED_PENALTY = 13;
-        public static int CENTER_PAWN_ISOLATED_PENALTY = 16;
+        public static int EDGE_PAWN_ISOLATED_PENALTY = 14;
+        public static int CENTER_PAWN_ISOLATED_PENALTY = 24;
 
-        public static int ROOK_ON_SEMI_OPEN_FILE_BONUS = 40;
-        public static int ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS = 38;
+        public static int ROOK_ON_SEMI_OPEN_FILE_BONUS = 15;
+        public static int ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS = 18;
 
-        public static int PASSED_PAWN_BONUS = 54;
-        public static int PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS = 206;
-        public static int PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS = 144;
-        public static int PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS = 84;
-        public static int PASSED_PAWN_BLOCKADED_KEEP_PERCENT = 25;
+        public static int PASSED_PAWN_BONUS = 7;
+        public static int PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS = 75;
+        public static int PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS = 69;
+        public static int PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS = 38;
+        public static int PASSED_PAWN_BLOCKADED_KEEP_PERCENT = 49;
+        public static int PASSED_PAWN_OWN_KING_DISTANCE_PENALTY = 4;
+        public static int PASSED_PAWN_ENEMY_KING_DISTANCE_BONUS = 9;
+        public static int PASSED_PAWN_FREE_PATH_BONUS = 11;
+        public static int PASSED_PAWN_SAFE_STEP_BONUS = 8;
+        public static int PASSED_PAWN_ROOK_BEHIND_BONUS = 29;
+        public static int PASSED_PAWN_ENEMY_ROOK_BEHIND_PENALTY = 80;
 
         public static int PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY = 23;
 
-        public static int BISHOP_ATTACKS_QUEEN_BONUS = 31;
-        public static int BISHOP_ATTACKS_ROOK_BONUS = 40;
-        public static int BISHOP_ATTACKS_KNIGHT_BONUS = 37;
+        public static int BISHOP_ATTACKS_QUEEN_BONUS = 15;
+        public static int BISHOP_ATTACKS_ROOK_BONUS = 3;
+        public static int BISHOP_ATTACKS_KNIGHT_BONUS = 16;
 
-        public static int KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY = 149;
-        public static int KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY = 120;
-        public static int KING_STEPPED_UP_EARLY_PENALTY = 43;
+        public static int KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY = 116;
+        public static int KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY = 0;
+        public static int KING_STEPPED_UP_EARLY_PENALTY = 0;
 
-        public static int KING_FILE_SHELTER_PAWN_BONUS = 10;
-        public static int KING_FILE_NO_SHELTER_PAWN_PENALTY = 12;
-        public static int SIDE_FILE_SHELTER_PAWN_BONUS = 13;
-        public static int SIDE_FILE_NO_SHELTER_PAWN_PENALTY = 11;
+        public static int KING_FILE_SHELTER_PAWN_BONUS = 12;
+        public static int KING_FILE_NO_SHELTER_PAWN_PENALTY = 9;
+        public static int SIDE_FILE_SHELTER_PAWN_BONUS = 0;
+        public static int SIDE_FILE_NO_SHELTER_PAWN_PENALTY = 7;
 
-        public static int KING_NEAR_HALF_OPEN_FILE_PENALTY = 10;
-        public static int KING_NEAR_OPEN_FILE_ADDITIONAL_PENALTY = 8;
+        public static int KING_NEAR_HALF_OPEN_FILE_PENALTY = 36;
+        public static int KING_NEAR_OPEN_FILE_ADDITIONAL_PENALTY = 26;
 
         public static int KING_ATTACK_KNIGHT_UNITS = 2;
         public static int KING_ATTACK_BISHOP_UNITS = 2;
@@ -255,7 +250,7 @@ namespace Lisa
         public static int KING_ATTACK_QUEEN_UNITS = 5;
         public static int KING_ATTACK_XRAY_SQUARES = 2;
 
-        public static int FIXED_PAWN_ON_ENEMY_BISHOP_COLOUR_PENALTY = 20;
+        public static int FIXED_PAWN_ON_ENEMY_BISHOP_COLOUR_PENALTY = 0;
         public static int KING_ATTACK_MAX_SQUARES_PER_PIECE = 3;
 
         public static int KING_DEFENCE_KNIGHT_UNITS = 5;
@@ -278,28 +273,34 @@ namespace Lisa
             250, 250, 250, 250, 250, 250, 250, 250, 250, 250
         };
 
-        public static int OPENING_MOBILITY_PER_MOVE_BONUS = 3;
-        public static int OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS = 1;
-        public static int OPENING_MINOR_PIECE_INFLUENCES_CENTER = 10;
+        public static int OPENING_MOBILITY_PER_KNIGHT_MOVE_BONUS = 3;
+        public static int OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS = 6;
+        public static int OPENING_MOBILITY_PER_ROOK_MOVE_BONUS = 5;
+        public static int OPENING_MOBILITY_PER_QUEEN_MOVE_BONUS = 1;
+        public static int ENDGAME_MOBILITY_PER_KNIGHT_MOVE_BONUS = 1;
+        public static int ENDGAME_MOBILITY_PER_BISHOP_MOVE_BONUS = 7;
+        public static int ENDGAME_MOBILITY_PER_ROOK_MOVE_BONUS = 6;
+        public static int ENDGAME_MOBILITY_PER_QUEEN_MOVE_BONUS = 8;
+        public static int OPENING_MINOR_PIECE_INFLUENCES_CENTER = 0;
 
-        public static int ROOK_REDUNDANCY_PENALTY = 40;
-        public static int EXCHANGE_IMBALANCE_BONUS = 75;
-        public static int KNIGHT_REDUNDANCY_PENALTY = 29;
-        public static int SEMI_OPEN_FILE_TWO_ROOKS_BONUS = 7;
-        public static int SEMI_OPEN_FILE_ONE_ROOK_BONUS = 6;
+        public static int ROOK_REDUNDANCY_PENALTY = 128;
+        public static int EXCHANGE_IMBALANCE_BONUS = 59;
+        public static int KNIGHT_REDUNDANCY_PENALTY = 11;
+        public static int SEMI_OPEN_FILE_TWO_ROOKS_BONUS = 14;
+        public static int SEMI_OPEN_FILE_ONE_ROOK_BONUS = 0;
 
-        public static int TRAPPED_ROOK_PENALTY = 36;
-        public static int TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION = 11;
-        public static int TRAPPED_ROOK_PENALTY_C_PAWN_MITIGATION = 14;
+        public static int TRAPPED_ROOK_PENALTY = 88;
+        public static int TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION = 0;
+        public static int TRAPPED_ROOK_PENALTY_C_PAWN_MITIGATION = 0;
 
-        public static int BLOCKADING_PASSED_PAWN_BONUS = 36;
-        public static int KNIGHT_OUTPOST_MINOR_BONUS = 35;
-        public static int KNIGHT_OUTPOST_MAJOR_BONUS = 37;
+        public static int BLOCKADING_PASSED_PAWN_BONUS = 51;
+        public static int KNIGHT_OUTPOST_MINOR_BONUS = 10;
+        public static int KNIGHT_OUTPOST_MAJOR_BONUS = 13;
 
-        public static int PAWN_CHAIN_BONUS = 25;
-        public static int KNIGHT_ON_THE_RIM_IS_DIM_PENALTY = 44;
-        public static int TEMPO_BONUS = 5;
-        public static int CONNECTED_PASSED_PAWN_BONUS = 71;
+        public static int PAWN_CHAIN_BONUS = 10;
+        public static int KNIGHT_ON_THE_RIM_IS_DIM_PENALTY = 12;
+        public static int TEMPO_BONUS = 4;
+        public static int CONNECTED_PASSED_PAWN_BONUS = 25;
 
         #endregion
 
@@ -368,6 +369,8 @@ namespace Lisa
             public int BlackIsolatedPawnScore;
             public int WhiteDoubledPawnScore;
             public int BlackDoubledPawnScore;
+            public ulong WhitePassedPawns;
+            public ulong BlackPassedPawns;
             public long Zobrist;
         }
 
@@ -410,7 +413,10 @@ namespace Lisa
             Perft = 2,
             MultiFen = 3,
             FenToZobrist = 4,
-            EPD = 5
+            EPD = 5,
+            MakeTexelFile = 6,
+            TexelTune = 7,
+            TexelTunePST = 8
         }
 
         public enum UCILogLevels
@@ -436,6 +442,8 @@ namespace Lisa
         public static int[] SEE_MATERIAL;
         public static int[] KING_ATTACK_UNITS;
         public static int[] KING_DEFENCE_UNITS;
+        public static int[] OPENING_MOBILITY_BONUS;
+        public static int[] ENDGAME_MOBILITY_BONUS;
         public static int MAX_MATERIAL;
 
         public static OpeningBook OPENING_BOOK;
@@ -468,6 +476,20 @@ namespace Lisa
         public static string EPD_INPUT = "";
         public static string EPD_OUTPUT = "";
 
+        public static string TEXEL_PGN_INPUT = "";
+        public static string TEXEL_EPD_OUTPUT = "";
+        public static int TEXEL_POSITIONS_PER_GAME = 10;
+        public static int TEXEL_SKIP_PLIES = 16;
+        public static int TEXEL_MAX_GAMES = 100000;
+        public static int TEXEL_GAME_STRIDE = 25;
+
+        public static string TEXEL_TUNE_INPUT = "";
+        public static string TEXEL_TUNE_RESULTS = "";
+        public static int TEXEL_TUNE_MAX_POSITIONS = 0;
+        public static int TEXEL_TUNE_THREADS = 0;
+        public static string TEXEL_PST_RESULTS = "";
+        public static int TEXEL_PST_EPOCHS = 2000;
+
         public static int TT_HASH_SIZE_MB = 128;
         public static int PAWN_STRUCTURE_HASH_SIZE_MB = 64;
         public static int POSITION_SCORE_HASH_SIZE_MB = 64;
@@ -497,6 +519,8 @@ namespace Lisa
             SEE_MATERIAL = new int[6] { 100, 300, 300, 500, 900, 0 };
             KING_ATTACK_UNITS = new int[6] { 0, KING_ATTACK_KNIGHT_UNITS, KING_ATTACK_BISHOP_UNITS, KING_ATTACK_ROOK_UNITS, KING_ATTACK_QUEEN_UNITS, 0 };
             KING_DEFENCE_UNITS = new int[6] { 0, KING_DEFENCE_KNIGHT_UNITS, KING_DEFENCE_BISHOP_UNITS, KING_DEFENCE_ROOK_UNITS, KING_DEFENCE_QUEEN_UNITS, 0 };
+            OPENING_MOBILITY_BONUS = new int[6] { 0, OPENING_MOBILITY_PER_KNIGHT_MOVE_BONUS, OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS, OPENING_MOBILITY_PER_ROOK_MOVE_BONUS, OPENING_MOBILITY_PER_QUEEN_MOVE_BONUS, 0 };
+            ENDGAME_MOBILITY_BONUS = new int[6] { 0, ENDGAME_MOBILITY_PER_KNIGHT_MOVE_BONUS, ENDGAME_MOBILITY_PER_BISHOP_MOVE_BONUS, ENDGAME_MOBILITY_PER_ROOK_MOVE_BONUS, ENDGAME_MOBILITY_PER_QUEEN_MOVE_BONUS, 0 };
 
             MirrorPSTsForBlack();
 
@@ -694,6 +718,18 @@ namespace Lisa
                             {
                                 RUN_MODE = ProgramMode.EPD;
                             }
+                            else if (L.ToLower().Contains("=maketexelfile"))
+                            {
+                                RUN_MODE = ProgramMode.MakeTexelFile;
+                            }
+                            else if (L.ToLower().Contains("=texeltunepst"))
+                            {
+                                RUN_MODE = ProgramMode.TexelTunePST;
+                            }
+                            else if (L.ToLower().Contains("=texeltune"))
+                            {
+                                RUN_MODE = ProgramMode.TexelTune;
+                            }
                         }
                         else if (L.ToLower().StartsWith("usetablebase"))
                         {
@@ -755,6 +791,90 @@ namespace Lisa
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
                             MULTI_FEN_DEPTH = Convert.ToByte(Splits[1]);
+                        }
+                    }
+                    else if (RUN_MODE == ProgramMode.MakeTexelFile)
+                    {
+                        if (L.ToLower().StartsWith("texelpgninput="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_PGN_INPUT = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("texelepdoutput="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_EPD_OUTPUT = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("texelpositionspergame="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_POSITIONS_PER_GAME = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("texelskipplies="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_SKIP_PLIES = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("texelmaxgames="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_MAX_GAMES = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("texelgamestride="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_GAME_STRIDE = Convert.ToInt32(Splits[1]);
+                        }
+                    }
+                    else if (RUN_MODE == ProgramMode.TexelTune)
+                    {
+                        if (L.ToLower().StartsWith("texeltuneinput="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_TUNE_INPUT = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("texeltuneresults="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_TUNE_RESULTS = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("texeltunemaxpositions="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_TUNE_MAX_POSITIONS = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("texeltunethreads="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_TUNE_THREADS = Convert.ToInt32(Splits[1]);
+                        }
+                    }
+                    else if (RUN_MODE == ProgramMode.TexelTunePST)
+                    {
+                        if (L.ToLower().StartsWith("texeltuneinput="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_TUNE_INPUT = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("texeltunemaxpositions="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_TUNE_MAX_POSITIONS = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("texeltunethreads="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_TUNE_THREADS = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("texelpstresults="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_PST_RESULTS = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("texelpstepochs="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            TEXEL_PST_EPOCHS = Convert.ToInt32(Splits[1]);
                         }
                     }
                     if (L.ToLower().Contains("outputfile") && !L.ToLower().Contains("epdoutputfile"))

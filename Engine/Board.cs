@@ -1005,8 +1005,77 @@ namespace Lisa
         }
 
 
+        //Puts back everything InitialiseFromFEN adds to, or only sets for pieces that are present,
+        //so one Board can load many positions in turn
+        private void ForgetPreviousPosition()
+        {
+
+            for (int sq = 0; sq < 64; sq++)
+            {
+                Color[sq] = EMPTY;
+            }
+
+            for (int file = 0; file < 8; file++)
+            {
+                WhiteFilePawns[file] = 0;
+                BlackFilePawns[file] = 0;
+            }
+
+            WhiteMaterial = 0;
+            BlackMaterial = 0;
+
+            WhiteHasLightSquaredBishop = false;
+            WhiteHasDarkSquaredBishop = false;
+            BlackHasLightSquaredBishop = false;
+            BlackHasDarkSquaredBishop = false;
+
+            WhiteRookOneSquare = 255;
+            WhiteRookTwoSquare = 255;
+            BlackRookOneSquare = 255;
+            BlackRookTwoSquare = 255;
+            WhiteLightBishopSquare = 255;
+            WhiteDarkBishopSquare = 255;
+            BlackLightBishopSquare = 255;
+            BlackDarkBishopSquare = 255;
+            WhiteKnightOneSquare = 255;
+            WhiteKnightTwoSquare = 255;
+            BlackKnightOneSquare = 255;
+            BlackKnightTwoSquare = 255;
+            BlackKingSquare = 255;
+            WhiteKingSquare = 255;
+            BlackQueenSquare = 255;
+            WhiteQueenSquare = 255;
+
+            WhitePawnsOnLightSquares = 0;
+            WhitePawnsOnDarkSquares = 0;
+            BlackPawnsOnLightSquares = 0;
+            BlackPawnsOnDarkSquares = 0;
+
+            WhiteEarlyPSTScore = 0;
+            WhiteLatePSTScore = 0;
+            BlackEarlyPSTScore = 0;
+            BlackLatePSTScore = 0;
+
+            CurrentZobrist = 0;
+            PawnOnlyZobrist = 0;
+
+            _halfMoveClock = 0;
+            _fullMoveClock = 0;
+            _checkCacheZobrist = 0;
+            _checkCacheSide = -1;
+            _checkCacheResult = false;
+            _moveListTopIndex = -1;
+            _lastMoveWasCastle = false;
+            _undoMoveCount = 0;
+            _seeUndoCount = 0;
+
+        }
+
+
         public void InitialiseFromFEN(string fen)
         {
+
+            ForgetPreviousPosition();
 
             for (int nn = 0; nn <= 63; nn++)
             {

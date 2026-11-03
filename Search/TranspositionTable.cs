@@ -100,7 +100,7 @@ namespace Lisa
 
         public void AddPawnStructureToTransTable(long pawnOnlyZobrist, int whitePPScore, int blackPPScore, int whiteBWPScore,
             int blackBWPScore, int whiteChainScore, int blackChainPawn, int whiteDblPawnScore, int blackDblPawnScore,
-            int whiteIsoPawnScore, int blackIsoPawnScore)
+            int whiteIsoPawnScore, int blackIsoPawnScore, ulong whitePassedPawns, ulong blackPassedPawns)
         {
 
             int ttPPHash = MakePawnTTHash(pawnOnlyZobrist);
@@ -114,6 +114,8 @@ namespace Lisa
             _pawnStructList[ttPPHash].BlackDoubledPawnScore = blackDblPawnScore;
             _pawnStructList[ttPPHash].WhiteIsolatedPawnScore = whiteIsoPawnScore;
             _pawnStructList[ttPPHash].BlackIsolatedPawnScore = blackIsoPawnScore;
+            _pawnStructList[ttPPHash].WhitePassedPawns = whitePassedPawns;
+            _pawnStructList[ttPPHash].BlackPassedPawns = blackPassedPawns;
 
             _pawnStructList[ttPPHash].Zobrist = pawnOnlyZobrist;
 

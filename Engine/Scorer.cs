@@ -1,4 +1,5 @@
-﻿using static Lisa.Globals;
+﻿using System.Numerics;
+using static Lisa.Globals;
 namespace Lisa
 {
     public static partial class Scorer
@@ -83,7 +84,7 @@ namespace Lisa
             RewardActiveBishop(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
             //EncouragePawnsOnOppositeSideToKingToAdvance(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
             RewardPawnBishopSynergy(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
-            RewardOpeningMobility(ref theBoard, whitePieceAttacks, blackPieceAttacks, ref whiteOpeningScore, ref blackOpeningScore);
+            RewardMobility(ref theBoard, whitePieceAttacks, blackPieceAttacks, ref whiteOpeningScore, ref blackOpeningScore, ref whiteEndgameScore, ref blackEndgameScore);
             RewardKnightOutpost(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
             PenaliseTrappedRook(ref theBoard, ref whiteOpeningScore, ref blackOpeningScore);
 
@@ -93,9 +94,14 @@ namespace Lisa
             RewardBlockadingDangerousPawns(ref theBoard, ref whiteEndgameScore, ref blackEndgameScore);
             PenaliseFixedPawnsOnEnemyBishopColour(ref theBoard, ref whiteEndgameScore, ref blackEndgameScore);
 
+            ulong whitePassedPawns;
+            ulong blackPassedPawns;
             bool pawnsInTT = tt.LookupPPScore(theBoard.PawnOnlyZobrist, out TTPawnAnalysis pawnLookup);
             if (pawnsInTT)
             {
+
+                whitePassedPawns = pawnLookup.WhitePassedPawns;
+                blackPassedPawns = pawnLookup.BlackPassedPawns;
 
                 whiteOpeningScore += pawnLookup.WhiteBackwardsPawnScore;
                 blackOpeningScore += pawnLookup.BlackBackwardPawnScore;
@@ -122,9 +128,11 @@ namespace Lisa
                 PenaliseDoubledAndTripledPawns(ref theBoard, out int whiteDblPawnScore, out int blackDblPawnScore);
                 PenaliseIsolatedPawns(ref theBoard, out int whiteIsoPawnScore, out int blackIsoPawnScore);
 
+                FindPassedPawns(ref theBoard, out whitePassedPawns, out blackPassedPawns);
+
                 tt.AddPawnStructureToTransTable(theBoard.PawnOnlyZobrist, whitePPScore, blackPPScore, whiteBWPScore,
                     blackBWPScore, whiteChainScore, blackChainScore, whiteDblPawnScore, blackDblPawnScore, 
-                    whiteIsoPawnScore, blackIsoPawnScore);
+                    whiteIsoPawnScore, blackIsoPawnScore, whitePassedPawns, blackPassedPawns);
 
                 whiteOpeningScore += whiteBWPScore;
                 whiteOpeningScore += whiteChainScore;
@@ -148,6 +156,12 @@ namespace Lisa
             whiteOpeningScore -= whiteBlockadeReduction / 2;
             blackEndgameScore -= blackBlockadeReduction;
             blackOpeningScore -= blackBlockadeReduction / 2;
+
+            //Likewise depends on kings and pieces, so it is worked out on every evaluation
+            ScorePassedPawnPromotionChances(ref theBoard, whitePieceAttacks, blackPieceAttacks, whitePassedPawns, blackPassedPawns,
+                out int whitePromotionChances, out int blackPromotionChances);
+            whiteEndgameScore += whitePromotionChances;
+            blackEndgameScore += blackPromotionChances;
 
             int whiteScore = ((whiteOpeningScore * (256 - phase)) + (whiteEndgameScore * phase)) / 256;
             int blackScore = ((blackOpeningScore * (256 - phase)) + (blackEndgameScore * phase)) / 256;
@@ -497,39 +511,29 @@ namespace Lisa
         }
 
 
-        public static void RewardOpeningMobility(ref Board theBoard, Move[] WhiteMoves, Move[] BlackMoves, ref int whiteScore, ref int blackScore)
+        public static void RewardMobility(ref Board theBoard, Move[] WhiteMoves, Move[] BlackMoves, ref int whiteOpeningScore, ref int blackOpeningScore,
+            ref int whiteEndgameScore, ref int blackEndgameScore)
         {
 
             //The attack lists include squares holding our own pieces and the enemy king, which aren't moves, so skip those.
-            //Bishops score less per move than other pieces: being long-range, they collect more moves per piece
+            //Each piece type has its own per-move weight in each half: a queen collects far more moves than a knight, and they mean less.
+            //The knight centre and rim terms below count in the opening half only
             for (int nn = 0; nn < WhiteMoves.Length; nn++)
             {
-                if (!IsMobilityMove(ref theBoard, WhiteMoves[nn].To, WHITE))
+                if (IsMobilityMove(ref theBoard, WhiteMoves[nn].To, WHITE))
                 {
-                    continue;
-                }
-                if (theBoard.Piece[WhiteMoves[nn].From] == BISHOP)
-                {
-                    whiteScore += OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS;
-                }
-                else
-                {
-                    whiteScore += OPENING_MOBILITY_PER_MOVE_BONUS;
+                    int piece = theBoard.Piece[WhiteMoves[nn].From];
+                    whiteOpeningScore += OPENING_MOBILITY_BONUS[piece];
+                    whiteEndgameScore += ENDGAME_MOBILITY_BONUS[piece];
                 }
             }
             for (int nn = 0; nn < BlackMoves.Length; nn++)
             {
-                if (!IsMobilityMove(ref theBoard, BlackMoves[nn].To, BLACK))
+                if (IsMobilityMove(ref theBoard, BlackMoves[nn].To, BLACK))
                 {
-                    continue;
-                }
-                if (theBoard.Piece[BlackMoves[nn].From] == BISHOP)
-                {
-                    blackScore += OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS;
-                }
-                else
-                {
-                    blackScore += OPENING_MOBILITY_PER_MOVE_BONUS;
+                    int piece = theBoard.Piece[BlackMoves[nn].From];
+                    blackOpeningScore += OPENING_MOBILITY_BONUS[piece];
+                    blackEndgameScore += ENDGAME_MOBILITY_BONUS[piece];
                 }
             }
 
@@ -537,28 +541,28 @@ namespace Lisa
             {
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][35])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][36])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][27])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightOneSquare][28])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
 
                 if (theBoard.WhiteKnightOneSquare % 8 == 0)
                 {
-                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
                 if (theBoard.WhiteKnightOneSquare % 8 == 7)
                 {
-                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
 
 
@@ -568,28 +572,28 @@ namespace Lisa
             {
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][35])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][36])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][27])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.WhiteKnightTwoSquare][28])
                 {
-                    whiteScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    whiteOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
 
                 if (theBoard.WhiteKnightTwoSquare % 8 == 0)
                 {
-                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
                 if (theBoard.WhiteKnightTwoSquare % 8 == 7)
                 {
-                    whiteScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    whiteOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
 
             }
@@ -598,28 +602,28 @@ namespace Lisa
             {
                 if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][35])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][36])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][27])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.BlackKnightOneSquare][28])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
 
                 if (theBoard.BlackKnightOneSquare % 8 == 0)
                 {
-                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    blackOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
                 if (theBoard.BlackKnightOneSquare % 8 == 7)
                 {
-                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    blackOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
 
             }
@@ -628,28 +632,28 @@ namespace Lisa
             {
                 if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][35])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][36])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][27])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
                 if (theBoard.KnightDestinations[theBoard.BlackKnightTwoSquare][28])
                 {
-                    blackScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
+                    blackOpeningScore += OPENING_MINOR_PIECE_INFLUENCES_CENTER;
                 }
 
                 if (theBoard.BlackKnightTwoSquare % 8 == 0)
                 {
-                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    blackOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
                 if (theBoard.BlackKnightTwoSquare % 8 == 7)
                 {
-                    blackScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
+                    blackOpeningScore -= KNIGHT_ON_THE_RIM_IS_DIM_PENALTY;
                 }
 
             }
@@ -1800,6 +1804,171 @@ namespace Lisa
                     }
                 }
             }
+        }
+
+
+        //Endgame terms for each passed pawn that depend on kings and pieces rather than pawns alone: how close each king is to the
+        //square in front of it, whether its road to promotion is empty and unattacked, and whether a rook stands behind it on its file.
+        //The passers come from the pawn hash (see FindPassedPawns); the attack map is only built when there is one
+        private static void ScorePassedPawnPromotionChances(ref Board theBoard, Move[] whitePieceAttacks, Move[] blackPieceAttacks,
+            ulong whitePassedPawns, ulong blackPassedPawns, out int whiteScore, out int blackScore)
+        {
+            whiteScore = 0;
+            blackScore = 0;
+
+            if (whitePassedPawns == 0 && blackPassedPawns == 0)
+            {
+                return;
+            }
+
+            Span<bool> attackedByWhite = stackalloc bool[64];
+            Span<bool> attackedByBlack = stackalloc bool[64];
+            attackedByWhite.Clear();
+            attackedByBlack.Clear();
+            MarkAttackedSquares(ref theBoard, whitePieceAttacks, WHITE, attackedByWhite);
+            MarkAttackedSquares(ref theBoard, blackPieceAttacks, BLACK, attackedByBlack);
+
+            ulong remaining = whitePassedPawns;
+            while (remaining != 0)
+            {
+                int pawnSquare = BitOperations.TrailingZeroCount(remaining);
+                remaining &= remaining - 1;
+                whiteScore += PromotionChancesForPasser(ref theBoard, pawnSquare, WHITE, attackedByBlack);
+            }
+
+            remaining = blackPassedPawns;
+            while (remaining != 0)
+            {
+                int pawnSquare = BitOperations.TrailingZeroCount(remaining);
+                remaining &= remaining - 1;
+                blackScore += PromotionChancesForPasser(ref theBoard, pawnSquare, BLACK, attackedByWhite);
+            }
+        }
+
+
+        //One bit per square holding a front passed pawn (no own pawn further up its file, no enemy pawn ahead on its own or an
+        //adjacent file). This depends on pawns alone, so ScorePosition works it out on a pawn hash miss and stores it there
+        private static void FindPassedPawns(ref Board theBoard, out ulong whitePassedPawns, out ulong blackPassedPawns)
+        {
+            whitePassedPawns = 0;
+            blackPassedPawns = 0;
+
+            for (int pp = 0; pp <= 7; pp++)
+            {
+                int whitePawn = theBoard.WhitePawnSquares[pp];
+                if (whitePawn >= 8 && IsFrontPassedPawn(ref theBoard, whitePawn, WHITE))
+                {
+                    whitePassedPawns |= 1UL << whitePawn;
+                }
+
+                int blackPawn = theBoard.BlackPawnSquares[pp];
+                if (blackPawn != -1 && blackPawn <= 55 && IsFrontPassedPawn(ref theBoard, blackPawn, BLACK))
+                {
+                    blackPassedPawns |= 1UL << blackPawn;
+                }
+            }
+        }
+
+
+        //King distance and free path scale with the pawn's rank: nothing on its 2nd rank, 1 on its 3rd, up to 5 on its 7th.
+        //The rook terms are flat
+        private static int PromotionChancesForPasser(ref Board theBoard, int pawnSquare, int side, Span<bool> attackedByEnemy)
+        {
+            int step = side == WHITE ? -8 : 8;
+            int relativeRank = side == WHITE ? 8 - pawnSquare / 8 : pawnSquare / 8 + 1;
+            int rankFactor = relativeRank - 2;
+            int front = pawnSquare + step;
+
+            int ownKing = side == WHITE ? theBoard.WhiteKingSquare : theBoard.BlackKingSquare;
+            int enemyKing = side == WHITE ? theBoard.BlackKingSquare : theBoard.WhiteKingSquare;
+            int score = (PASSED_PAWN_ENEMY_KING_DISTANCE_BONUS * KingDistance(enemyKing, front)
+                - PASSED_PAWN_OWN_KING_DISTANCE_PENALTY * KingDistance(ownKing, front)) * rankFactor;
+
+            bool pathIsFree = true;
+            for (int sq = front; sq >= 0 && sq <= 63; sq += step)
+            {
+                if (theBoard.Color[sq] != EMPTY || attackedByEnemy[sq])
+                {
+                    pathIsFree = false;
+                    break;
+                }
+            }
+            if (pathIsFree)
+            {
+                score += PASSED_PAWN_FREE_PATH_BONUS * rankFactor;
+            }
+            else if (theBoard.Color[front] == EMPTY && !attackedByEnemy[front])
+            {
+                score += PASSED_PAWN_SAFE_STEP_BONUS * rankFactor;
+            }
+
+            for (int sq = pawnSquare - step; sq >= 0 && sq <= 63; sq -= step)
+            {
+                if (theBoard.Color[sq] != EMPTY)
+                {
+                    if (theBoard.Piece[sq] == ROOK)
+                    {
+                        score += theBoard.Color[sq] == side ? PASSED_PAWN_ROOK_BEHIND_BONUS : -PASSED_PAWN_ENEMY_ROOK_BEHIND_PENALTY;
+                    }
+                    break;
+                }
+            }
+
+            return score;
+        }
+
+
+        //Squares attacked by one side: its pieces (from the attack list, which stops at the first piece on each line), its pawns and its king
+        private static void MarkAttackedSquares(ref Board theBoard, Move[] pieceAttacks, int side, Span<bool> attacked)
+        {
+            for (int nn = 0; nn < pieceAttacks.Length; nn++)
+            {
+                attacked[pieceAttacks[nn].To] = true;
+            }
+
+            int[] pawnSquares = side == WHITE ? theBoard.WhitePawnSquares : theBoard.BlackPawnSquares;
+            int forward = side == WHITE ? -8 : 8;
+            for (int pp = 0; pp <= 7; pp++)
+            {
+                int pawn = pawnSquares[pp];
+                if (pawn == -1)
+                {
+                    continue;
+                }
+                int ahead = pawn + forward;
+                if (ahead < 0 || ahead > 63)
+                {
+                    continue;
+                }
+                if (pawn % 8 > 0)
+                {
+                    attacked[ahead - 1] = true;
+                }
+                if (pawn % 8 < 7)
+                {
+                    attacked[ahead + 1] = true;
+                }
+            }
+
+            int king = side == WHITE ? theBoard.WhiteKingSquare : theBoard.BlackKingSquare;
+            for (int rankStep = -1; rankStep <= 1; rankStep++)
+            {
+                for (int fileStep = -1; fileStep <= 1; fileStep++)
+                {
+                    int rank = king / 8 + rankStep;
+                    int file = king % 8 + fileStep;
+                    if ((rankStep != 0 || fileStep != 0) && rank >= 0 && rank <= 7 && file >= 0 && file <= 7)
+                    {
+                        attacked[rank * 8 + file] = true;
+                    }
+                }
+            }
+        }
+
+
+        private static int KingDistance(int squareA, int squareB)
+        {
+            return Math.Max(Math.Abs(squareA % 8 - squareB % 8), Math.Abs(squareA / 8 - squareB / 8));
         }
 
 

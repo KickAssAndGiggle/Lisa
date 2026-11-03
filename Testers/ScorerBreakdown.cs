@@ -64,8 +64,11 @@ namespace Lisa
             AddTaperedTerm(lines, "RewardPawnBishopSynergy", "opening", white, black, phase, true, false, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
 
             white = 0; black = 0;
-            RewardOpeningMobility(ref theBoard, whitePieceAttacks, blackPieceAttacks, ref white, ref black);
-            AddTaperedTerm(lines, "RewardOpeningMobility", "opening", white, black, phase, true, false, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
+            int whiteMobilityEndgame = 0;
+            int blackMobilityEndgame = 0;
+            RewardMobility(ref theBoard, whitePieceAttacks, blackPieceAttacks, ref white, ref black, ref whiteMobilityEndgame, ref blackMobilityEndgame);
+            AddTaperedTerm(lines, "RewardMobility", "opening", white, black, phase, true, false, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
+            AddTaperedTerm(lines, "RewardMobility", "endgame", whiteMobilityEndgame, blackMobilityEndgame, phase, false, true, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
 
             white = 0; black = 0;
             RewardKnightOutpost(ref theBoard, ref white, ref black);
@@ -104,6 +107,11 @@ namespace Lisa
             ReduceBlockadedPassedPawns(ref theBoard, out int whiteBlockadeReduction, out int blackBlockadeReduction);
             AddTaperedTerm(lines, "ReduceBlockadedPassedPawns", "endgame", -whiteBlockadeReduction, -blackBlockadeReduction, phase, false, true, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
             AddTaperedTerm(lines, "ReduceBlockadedPassedPawns (half again)", "opening", -(whiteBlockadeReduction / 2), -(blackBlockadeReduction / 2), phase, true, false, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
+
+            FindPassedPawns(ref theBoard, out ulong whitePassedPawns, out ulong blackPassedPawns);
+            ScorePassedPawnPromotionChances(ref theBoard, whitePieceAttacks, blackPieceAttacks, whitePassedPawns, blackPassedPawns,
+                out int whitePromotionChances, out int blackPromotionChances);
+            AddTaperedTerm(lines, "ScorePassedPawnPromotionChances", "endgame", whitePromotionChances, blackPromotionChances, phase, false, true, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
 
             PenaliseDoubledAndTripledPawns(ref theBoard, out int whiteDblPawnScore, out int blackDblPawnScore);
             AddTaperedTerm(lines, "PenaliseDoubledAndTripledPawns", "endgame", whiteDblPawnScore, blackDblPawnScore, phase, false, true, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
