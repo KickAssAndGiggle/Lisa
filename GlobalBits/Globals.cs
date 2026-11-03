@@ -378,12 +378,7 @@ namespace Lisa
         {
             public byte From;
             public byte To;
-        }
-
-        public struct BookPosition
-        {
-            public long Zobrist;
-            public BookMove[] Moves;
+            public int Weight;
         }
 
         public struct Move : IComparable<Move>
@@ -416,7 +411,8 @@ namespace Lisa
             EPD = 5,
             MakeTexelFile = 6,
             TexelTune = 7,
-            TexelTunePST = 8
+            TexelTunePST = 8,
+            MakeBook = 9
         }
 
         public enum UCILogLevels
@@ -489,6 +485,13 @@ namespace Lisa
         public static int TEXEL_TUNE_THREADS = 0;
         public static string TEXEL_PST_RESULTS = "";
         public static int TEXEL_PST_EPOCHS = 2000;
+
+        public static string BOOK_PGN_INPUT = "";
+        public static string BOOK_OUTPUT = "";
+        public static int BOOK_MAX_PLIES = 16;
+        public static int BOOK_MIN_GAMES = 50;
+        public static int BOOK_MIN_SCORE_PERCENT = 40;
+        public static string BOOK_FIRST_MOVES = "e4,d4,c4,Nf3,b3";
 
         public static int TT_HASH_SIZE_MB = 128;
         public static int PAWN_STRUCTURE_HASH_SIZE_MB = 64;
@@ -722,6 +725,10 @@ namespace Lisa
                             {
                                 RUN_MODE = ProgramMode.MakeTexelFile;
                             }
+                            else if (L.ToLower().Contains("=makebook"))
+                            {
+                                RUN_MODE = ProgramMode.MakeBook;
+                            }
                             else if (L.ToLower().Contains("=texeltunepst"))
                             {
                                 RUN_MODE = ProgramMode.TexelTunePST;
@@ -875,6 +882,39 @@ namespace Lisa
                         {
                             string[] Splits = L.Split(Convert.ToChar("="));
                             TEXEL_PST_EPOCHS = Convert.ToInt32(Splits[1]);
+                        }
+                    }
+                    else if (RUN_MODE == ProgramMode.MakeBook)
+                    {
+                        if (L.ToLower().StartsWith("bookpgninput="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            BOOK_PGN_INPUT = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("bookoutput="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            BOOK_OUTPUT = Splits[1];
+                        }
+                        if (L.ToLower().StartsWith("bookmaxplies="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            BOOK_MAX_PLIES = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("bookmingames="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            BOOK_MIN_GAMES = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("bookminscorepercent="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            BOOK_MIN_SCORE_PERCENT = Convert.ToInt32(Splits[1]);
+                        }
+                        if (L.ToLower().StartsWith("bookfirstmoves="))
+                        {
+                            string[] Splits = L.Split(Convert.ToChar("="));
+                            BOOK_FIRST_MOVES = Splits[1];
                         }
                     }
                     if (L.ToLower().Contains("outputfile") && !L.ToLower().Contains("epdoutputfile"))

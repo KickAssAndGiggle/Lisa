@@ -283,7 +283,7 @@ namespace Lisa
             _theBoard.RecalcPSTScores();
 
             //Check the opening book: is this position in it, if yes, we will play one of the responses in the book
-            bool posInBook = OPENING_BOOK.LookInBook(_theBoard.CurrentZobrist,
+            bool posInBook = OPENING_BOOK.LookInBook(_theBoard.GenerateFen(),
                 out byte bookFromSquare, out byte bookToSquare);
 
             //Generate all possible moves, and check if each is legal. If the position was in the book,

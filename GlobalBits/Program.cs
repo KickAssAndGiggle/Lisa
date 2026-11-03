@@ -56,6 +56,12 @@ namespace Lisa
                 TexelPSTTuner pstTuner = new(TEXEL_TUNE_INPUT, TEXEL_PST_RESULTS, TEXEL_TUNE_MAX_POSITIONS, TEXEL_TUNE_THREADS, TEXEL_PST_EPOCHS);
                 pstTuner.Tune();
             }
+            else if (RUN_MODE == ProgramMode.MakeBook)
+            {
+                InitialiseScorer();
+                BookMaker bookMaker = new(BOOK_PGN_INPUT, BOOK_OUTPUT, BOOK_MAX_PLIES, BOOK_MIN_GAMES, BOOK_MIN_SCORE_PERCENT, BOOK_FIRST_MOVES);
+                bookMaker.MakeBook();
+            }
 
         }
     }

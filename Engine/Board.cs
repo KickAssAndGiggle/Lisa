@@ -181,8 +181,6 @@ namespace Lisa
         private readonly long[] _zobristPieceSquares = new long[1200]; // new long[64][];
         private readonly long[] _zobristEPSquares = new long[64];
 
-        // If you change these numbers, the opening book will not work as it
-        // is based on our Zobrist keys
         private readonly long _zobristWhiteCanCastleKSide = 6868868868444599999;
         private readonly long _zobristWhiteCanCastleQSide = 5122222222222333;
         private readonly long _zobristBlackCanCastleKSide = 932939939397979797;

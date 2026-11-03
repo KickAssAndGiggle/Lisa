@@ -9,7 +9,6 @@ namespace Lisa
     public sealed class TexelFileMaker
     {
 
-        private const int PROGRESS_EVERY_GAMES = 10000;
         private const int MAX_REPORTED_FAILURES = 20;
         private const int SAMPLING_SEED = 20261101;
 
@@ -81,7 +80,7 @@ namespace Lisa
                 {
                     if (inMoveText)
                     {
-                        enoughGames = !ProcessGame(headers, moveText.ToString(), writer, timer);
+                        enoughGames = !ProcessGame(headers, moveText.ToString(), writer);
                         headers.Clear();
                         moveText.Clear();
                         inMoveText = false;
@@ -97,7 +96,7 @@ namespace Lisa
 
             if (inMoveText && !enoughGames)
             {
-                ProcessGame(headers, moveText.ToString(), writer, timer);
+                ProcessGame(headers, moveText.ToString(), writer);
             }
 
             writer.Flush();
@@ -109,7 +108,7 @@ namespace Lisa
 
 
         //Returns false once enough games have been used
-        private bool ProcessGame(List<string> headers, string moveText, StreamWriter writer, Stopwatch timer)
+        private bool ProcessGame(List<string> headers, string moveText, StreamWriter writer)
         {
 
             _gamesRead += 1;
@@ -151,11 +150,6 @@ namespace Lisa
 
             _gamesUsed += 1;
             WriteSample(candidates, result, writer);
-
-            if (_gamesUsed % PROGRESS_EVERY_GAMES == 0)
-            {
-                Console.WriteLine("Games read " + _gamesRead + ", used " + _gamesUsed + ", positions " + _positionsWritten + ", " + (timer.ElapsedMilliseconds / 1000) + "s");
-            }
 
             return _gamesUsed < _maxGames;
 
@@ -251,7 +245,7 @@ namespace Lisa
 
 
         //A ; comment runs to the end of its line, unless the ; sits inside a {...} comment on that line
-        private static string WithoutLineComment(string line)
+        internal static string WithoutLineComment(string line)
         {
             int semicolon = line.IndexOf(';');
             if (semicolon < 0)
@@ -268,7 +262,7 @@ namespace Lisa
 
 
         //Strips comments {...}, variations (...), NAGs $n, move numbers and the result token
-        private static List<string> ExtractSANMoves(string moveText)
+        internal static List<string> ExtractSANMoves(string moveText)
         {
 
             List<string> moves = new();
@@ -357,7 +351,7 @@ namespace Lisa
 
 
         //Matches a SAN token against the legal moves; succeeds only when exactly one legal move fits
-        private static bool TryParseSAN(string san, ref Board theBoard, out Move found)
+        internal static bool TryParseSAN(string san, ref Board theBoard, out Move found)
         {
 
             found = new Move();
@@ -494,14 +488,14 @@ namespace Lisa
         }
 
 
-        private static string HeaderTag(string header)
+        internal static string HeaderTag(string header)
         {
             int space = header.IndexOf(' ');
             return space > 1 ? header.Substring(1, space - 1) : "";
         }
 
 
-        private static string HeaderValue(string header)
+        internal static string HeaderValue(string header)
         {
             int first = header.IndexOf('"');
             int last = header.LastIndexOf('"');
@@ -535,11 +529,6 @@ namespace Lisa
                 report.Add("");
                 report.Add("First parse failures:");
                 report.AddRange(_failures);
-            }
-
-            foreach (string reportLine in report)
-            {
-                Console.WriteLine(reportLine);
             }
 
             File.WriteAllLines(_epdFile + ".report.txt", report);
