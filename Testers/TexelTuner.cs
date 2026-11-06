@@ -100,6 +100,7 @@ namespace Lisa
         private const int WEIGHT_MAXIMUM = 5000;
         private const int INITIAL_STEP_DIVISOR = 16;
         private const int CHUNKS_PER_THREAD = 8;
+        private const int DRAW_BAND = 40;                           //centipawns: an eval this close to 0 counts as calling a draw
 
         private sealed class Weight
         {
@@ -126,6 +127,8 @@ namespace Lisa
         private double _k;
         private double _startError;
         private double _bestError;
+        private int _startCorrect;
+        private int _finalCorrect = -1;
         private int _iteration;
         private long _passes;
         private readonly Stopwatch _timer = new();
@@ -161,6 +164,8 @@ namespace Lisa
             _startError = ErrorFromEvals(_k);
             _bestError = _startError;
             Log("K fitted at " + _k.ToString("F4", CultureInfo.InvariantCulture) + ", starting error " + FormatError(_bestError));
+            _startCorrect = CountCalledCorrectly();
+            Log("Called correctly (draw within " + DRAW_BAND + "): " + CalledCorrectlyText(_startCorrect, _fens.Length));
             WriteResults(false);
 
             bool converged = false;
@@ -201,6 +206,11 @@ namespace Lisa
 
                 converged = improvedWeights == 0 && !anyStepAboveOne;
             }
+
+            //The last pass evaluated a rejected trial value, so evaluate again with the tuned weights before counting
+            EvaluateAllPositions();
+            _finalCorrect = CountCalledCorrectly();
+            Log("Called correctly (draw within " + DRAW_BAND + "): " + CalledCorrectlyChangeText(_startCorrect, _finalCorrect, _fens.Length));
 
             WriteResults(true);
             Log("Finished.");
@@ -486,6 +496,9 @@ namespace Lisa
                 finished ? "Texel tuning finished" : "Texel tuning in progress (best so far)",
                 "Positions: " + _fens.Length + ", K: " + _k.ToString("F4", CultureInfo.InvariantCulture),
                 "Error: " + FormatError(_startError) + " -> " + FormatError(_bestError),
+                "Called correctly (draw within " + DRAW_BAND + "): " + (_finalCorrect >= 0
+                    ? CalledCorrectlyChangeText(_startCorrect, _finalCorrect, _fens.Length)
+                    : CalledCorrectlyText(_startCorrect, _fens.Length) + " at the start"),
                 "Iteration: " + _iteration + ", evaluation passes: " + _passes + ", time: " + FormatTime(_timer.Elapsed),
                 ""
             };
@@ -507,6 +520,50 @@ namespace Lisa
 
             File.WriteAllLines(_resultsFile, lines);
 
+        }
+
+
+        //A position is called correctly when its eval points the way the game went: above DRAW_BAND for a White win, below
+        //-DRAW_BAND for a Black win, within DRAW_BAND of 0 for a draw. Only reported, to read alongside the error; never tuned on.
+        //Counts from the evals of the latest EvaluateAllPositions
+        private int CountCalledCorrectly()
+        {
+            int correct = 0;
+            for (int i = 0; i < _whiteEvals.Length; i++)
+            {
+                if (IsCalledCorrectly(_whiteEvals[i], _results[i]))
+                {
+                    correct += 1;
+                }
+            }
+            return correct;
+        }
+
+
+        private static bool IsCalledCorrectly(double whiteEval, double result)
+        {
+            if (result == 1.0)
+            {
+                return whiteEval > DRAW_BAND;
+            }
+            if (result == 0.0)
+            {
+                return whiteEval < -DRAW_BAND;
+            }
+            return Math.Abs(whiteEval) <= DRAW_BAND;
+        }
+
+
+        private static string CalledCorrectlyText(int correct, int considered)
+        {
+            return correct + " of " + considered + " (" + (100.0 * correct / considered).ToString("F3", CultureInfo.InvariantCulture) + "%)";
+        }
+
+
+        private static string CalledCorrectlyChangeText(int before, int after, int considered)
+        {
+            return before + " -> " + after + " of " + considered + " (" + (100.0 * before / considered).ToString("F3", CultureInfo.InvariantCulture)
+                + "% -> " + (100.0 * after / considered).ToString("F3", CultureInfo.InvariantCulture) + "%)";
         }
 
 

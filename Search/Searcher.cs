@@ -82,6 +82,34 @@ namespace Lisa
         private int[] _infoLMRReSearchCutBy = new int[6];
         private int[] _infoLMRReSearchRaisedBy = new int[6];
         private int[] _infoLMRReSearchFailedBy = new int[6];
+        private int _infoLMRFailedLow;
+        private int _infoLMRMissedAlpha;
+        private int _infoLMRVerifyNodes;
+        private int[] _infoLMRMissedAlphaBy = new int[6];
+        private int[] _infoLMRReducedAtQuietIndex = new int[3];
+        private int[] _infoLMRMissedAlphaAtQuietIndex = new int[3];
+        private int[] _infoLMRReducedCountedBy = new int[6];
+        private int[] _infoLMRVerifiedBy = new int[6];
+        private int[] _infoLMRVerifiedAtQuietIndex = new int[3];
+        private int[] _infoLMRReducedAtDepth = new int[4];
+        private int[] _infoLMRVerifiedAtDepthAndIndex = new int[12];
+        private int[] _infoLMRMissedAlphaAtDepthAndIndex = new int[12];
+        private bool _inLMRVerification;
+
+        //LMP shadow mode: node depths 2 to 5, quiet move number 1 to 30 (30 and later share the last slot)
+        private const int LMP_SHADOW_INDEX_SLOTS = 31;
+        private int[] _infoLMPEligible = new int[4 * LMP_SHADOW_INDEX_SLOTS];
+        private int[] _infoLMPBeatAlpha = new int[4 * LMP_SHADOW_INDEX_SLOTS];
+        private int[] _infoLMPPruned = new int[4];
+
+        //LMP shadow, quiet move 10 onwards: counts by node depth (2 to 5) and feature mask (see LateMoveFeatures)
+        private const int LATE_MOVE_FEATURE_FROM = 10;
+        private int[] _infoLMPLateByFeatures = new int[4 * 32];
+        private int[] _infoLMPLateBeatByFeatures = new int[4 * 32];
+
+        //Quiet-loop cutoffs by remaining depth (<=3, 4-6, 7-9, 10+) and which quiet move cut (1st, 2nd, 3rd, 4th or later)
+        private int[] _infoQuietCutAtDepthAndPosition = new int[16];
+        private int _lmrVerifyCountdown;
         private int _infoRefutationTried;
         private int _infoKillerOneTried;
         private int _infoKillerOneAlphaRaised;
@@ -154,6 +182,24 @@ namespace Lisa
         public int[] InfoLMRReSearchCutBy => _infoLMRReSearchCutBy;
         public int[] InfoLMRReSearchRaisedBy => _infoLMRReSearchRaisedBy;
         public int[] InfoLMRReSearchFailedBy => _infoLMRReSearchFailedBy;
+        public int InfoLMRFailedLow => _infoLMRFailedLow;
+        public int InfoLMRMissedAlpha => _infoLMRMissedAlpha;
+        public int InfoLMRVerifyNodes => _infoLMRVerifyNodes;
+        public int[] InfoLMRMissedAlphaBy => _infoLMRMissedAlphaBy;
+        public int[] InfoLMRReducedAtQuietIndex => _infoLMRReducedAtQuietIndex;
+        public int[] InfoLMRMissedAlphaAtQuietIndex => _infoLMRMissedAlphaAtQuietIndex;
+        public int[] InfoLMRReducedCountedBy => _infoLMRReducedCountedBy;
+        public int[] InfoLMRVerifiedBy => _infoLMRVerifiedBy;
+        public int[] InfoLMRVerifiedAtQuietIndex => _infoLMRVerifiedAtQuietIndex;
+        public int[] InfoLMRReducedAtDepth => _infoLMRReducedAtDepth;
+        public int[] InfoLMRVerifiedAtDepthAndIndex => _infoLMRVerifiedAtDepthAndIndex;
+        public int[] InfoLMRMissedAlphaAtDepthAndIndex => _infoLMRMissedAlphaAtDepthAndIndex;
+        public int[] InfoLMPEligible => _infoLMPEligible;
+        public int[] InfoLMPBeatAlpha => _infoLMPBeatAlpha;
+        public int[] InfoLMPPruned => _infoLMPPruned;
+        public int[] InfoLMPLateByFeatures => _infoLMPLateByFeatures;
+        public int[] InfoLMPLateBeatByFeatures => _infoLMPLateBeatByFeatures;
+        public int[] InfoQuietCutAtDepthAndPosition => _infoQuietCutAtDepthAndPosition;
         public int InfoRefutationTried => _infoRefutationTried;
         public int InfoKillerOneTried => _infoKillerOneTried;
         public int InfoKillerOneAlphaRaised => _infoKillerOneAlphaRaised;
@@ -390,8 +436,6 @@ namespace Lisa
                 int aspAlpha = prevIterationAlpha - windowSize;
                 int aspBeta = prevIterationAlpha + windowSize;
 
-                Dictionary<int, int> seenMoves = new();
-
                 for (int nn = 0; nn < legal.Length; nn++)
                 {
 
@@ -419,13 +463,13 @@ namespace Lisa
                             if (nn == 0 || nullWindowFailure)
                             {
                                 nullWindowSearch = false;
-                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv, seenMoves);
+                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv);
 
                             }
                             else
                             {
                                 nullWindowSearch = true;
-                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspAlpha - 1, -aspAlpha, depth, ref pv, seenMoves);
+                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspAlpha - 1, -aspAlpha, depth, ref pv);
                             }
 
                             if (nullWindowSearch && (legal[nn].Score > aspAlpha))
@@ -436,7 +480,12 @@ namespace Lisa
 
                             if (legal[nn].Score <= aspAlpha && aspAlpha != -5000)
                             {
-                                if (!alphaWidened)
+                                if (nn > 0)
+                                {
+                                    //Not the best move, so no exact score is needed: only whether root selectivity will drop it
+                                    legal[nn].Score = ScoreRootMoveBelowBest(legal[nn], MoveKey, depth, bestScoreAtDepth, legal[nn].Score, ref pv);
+                                }
+                                else if (!alphaWidened)
                                 {
                                     aspAlpha -= windowSize;
                                     alphaWidened = true;
@@ -510,7 +559,7 @@ namespace Lisa
 
                     //Save a copy of of the sorted list, so if we have to give up in the next
                     //iteration due to time constraints, we have a fallback result
-                    Array.Sort(legal);
+                    SortRootMoves(legal);
                     prevIterationBest = (Move[])legal.Clone();
 
                     _bestMove = legal[0];
@@ -1464,6 +1513,10 @@ namespace Lisa
                         _infoCutOffUsingKillerOne += 1;
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerOnes[_fullDepth - depth], TT_POS_TYPE_BETA_CUT);
                         Sorter.IncreaseKillerScore(_fullDepth, depth, Sorter.KillerOnes[_fullDepth - depth], _theBoard.Piece[Sorter.KillerOnes[_fullDepth - depth].From], 10);
+                        if (!Sorter.KillerOnes[_fullDepth - depth].IsCapture)
+                        {
+                            Sorter.RewardQuietMove(_theBoard.OnMove, Sorter.KillerOnes[_fullDepth - depth], depth);
+                        }
                         Sorter.SetRefutationMove(_fullDepth, depth, Sorter.KillerOnes[_fullDepth - depth], _theBoard.Piece[Sorter.KillerOnes[_fullDepth - depth].From]);
                         return true;
                     }
@@ -1586,6 +1639,10 @@ namespace Lisa
                         _infoCutOffUsingKillerTwo += 1;
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, alpha, depth, Sorter.KillerTwos[_fullDepth - depth], TT_POS_TYPE_BETA_CUT);
                         Sorter.IncreaseKillerScore(_fullDepth, depth, Sorter.KillerTwos[_fullDepth - depth], _theBoard.Piece[Sorter.KillerTwos[_fullDepth - depth].From], 8);
+                        if (!Sorter.KillerTwos[_fullDepth - depth].IsCapture)
+                        {
+                            Sorter.RewardQuietMove(_theBoard.OnMove, Sorter.KillerTwos[_fullDepth - depth], depth);
+                        }
                         Sorter.SetRefutationMove(_fullDepth, depth, Sorter.KillerTwos[_fullDepth - depth], _theBoard.Piece[Sorter.KillerTwos[_fullDepth - depth].To]);
                         return true;
                     }
@@ -1818,6 +1875,226 @@ namespace Lisa
         }
 
 
+        //Groups a quiet move's position in the move list for the LMR counters: 2nd to 5th, 6th to 10th, 11th onwards
+        private static int QuietIndexBucket(int quietPlayed)
+        {
+            if (quietPlayed <= 5)
+            {
+                return 0;
+            }
+            if (quietPlayed <= 10)
+            {
+                return 1;
+            }
+            return 2;
+        }
+
+
+        //A root move that failed low against the best so far. After the iteration, root selectivity drops moves scoring below the
+        //best minus its cutoff, so a search on that line decides the move's fate; otherwise the fail-low bound stands. The window is
+        //two wide, not one, so the pruning reserved for null windows (null move, futility, LMP), which can hide sacrifices, stays off
+        private int ScoreRootMoveBelowBest(Move move, int moveKey, byte depth, int bestScore, int failLowScore, ref Move[] pv)
+        {
+            int cutoff = RootSelectivityCutoff(depth);
+            if (cutoff == 0)
+            {
+                return failLowScore;
+            }
+            int dropLine = bestScore - cutoff;
+            if (dropLine >= failLowScore || dropLine <= -4999)
+            {
+                return failLowScore;
+            }
+            int score = -EvaluateMove(move, moveKey, -dropLine - 1, -dropLine + 1, depth, ref pv);
+            return score < dropLine ? score : failLowScore;
+        }
+
+
+        //Must match the cutoffs the root selectivity applies after each iteration
+        private int RootSelectivityCutoff(byte depth)
+        {
+            if (depth < 6)
+            {
+                return 0;
+            }
+            bool early = _theBoard.WhiteMaterial + _theBoard.BlackMaterial > MAX_MATERIAL / 2;
+            if (depth == 6)
+            {
+                return early ? DEPTH6_EARLY_SELECTIVITY_SCORE_CUTOFF : DEPTH6_LATE_SELECTIVITY_SCORE_CUTOFF;
+            }
+            if (depth == 7)
+            {
+                return early ? DEPTH7_EARLY_SELECTIVITY_SCORE_CUTOFF : DEPTH7_LATE_SELECTIVITY_SCORE_CUTOFF;
+            }
+            if (depth == 8)
+            {
+                return early ? DEPTH8_EARLY_SELECTIVITY_SCORE_CUTOFF : DEPTH8_LATE_SELECTIVITY_SCORE_CUTOFF;
+            }
+            if (depth == 9)
+            {
+                return early ? DEPTH9_EARLY_SELECTIVITY_SCORE_CUTOFF : DEPTH9_LATE_SELECTIVITY_SCORE_CUTOFF;
+            }
+            if (depth == 10)
+            {
+                return early ? DEPTH10_EARLY_SELECTIVITY_SCORE_CUTOFF : DEPTH10_LATE_SELECTIVITY_SCORE_CUTOFF;
+            }
+            return early ? DEPTH_OVER_10_EARLY_SELECTIVITY_SCORE_CUTOFF : DEPTH_OVER_10_LATE_SELECTIVITY_SCORE_CUTOFF;
+        }
+
+
+        //Insertion sort, highest score first. Stable, so root moves sharing a fail-low bound keep the previous iteration's order
+        private static void SortRootMoves(Move[] moves)
+        {
+            for (int ii = 1; ii < moves.Length; ii++)
+            {
+                Move moving = moves[ii];
+                int jj = ii - 1;
+                while (jj >= 0 && moves[jj].Score < moving.Score)
+                {
+                    moves[jj + 1] = moves[jj];
+                    jj--;
+                }
+                moves[jj + 1] = moving;
+            }
+        }
+
+
+        //A quiet move is skipped when its node is 2 to 5 plies from the leaves (LMP_QUIET_MOVES_D2..D5, 0 = off), at least that many
+        //quiet moves have been reached, the node is a null-window non-PV node, the side to move is not in check or already being mated,
+        //and the move is not an endgame pawn move and does not give check. GivesCheck is last as it is the expensive test
+        private bool IsLateMovePrunable(Move move, int depth, int quietPlayed, int alpha, int beta, NodeTypes nodeType, bool isInCheck)
+        {
+            int threshold = LateMovePruningThreshold(depth);
+            if (threshold == 0 || quietPlayed < threshold)
+            {
+                return false;
+            }
+            if (beta - alpha != 1 || nodeType == NodeTypes.PV || isInCheck || alpha <= -4000)
+            {
+                return false;
+            }
+            if (_endGame && _theBoard.Piece[move.From] == PAWN)
+            {
+                return false;
+            }
+            return !GivesCheck(move);
+        }
+
+
+        //Shadow-mode features of a quiet move, as a bit mask: 1 = after the move, the moved piece attacks an enemy piece worth more
+        //than itself; 2 = pawn to its 6th or 7th rank; 4 = lands within two squares of the enemy king; 8 = king move (castling
+        //included); 16 = positive sort score (its history). The move is made and unmade to see what the piece attacks
+        private int LateMoveFeatures(Move move)
+        {
+            int mask = 0;
+            int side = _theBoard.OnMove;
+            int enemy = side == WHITE ? BLACK : WHITE;
+            int piece = _theBoard.Piece[move.From];
+
+            if (piece == PAWN)
+            {
+                int relativeRank = side == WHITE ? 8 - move.To / 8 : move.To / 8 + 1;
+                if (relativeRank >= 6)
+                {
+                    mask |= 2;
+                }
+            }
+            int enemyKing = side == WHITE ? _theBoard.BlackKingSquare : _theBoard.WhiteKingSquare;
+            if (Math.Max(Math.Abs(move.To % 8 - enemyKing % 8), Math.Abs(move.To / 8 - enemyKing / 8)) <= 2)
+            {
+                mask |= 4;
+            }
+            if (piece == KING)
+            {
+                mask |= 8;
+            }
+            if (move.Score > 0)
+            {
+                mask |= 16;
+            }
+
+            if (piece != KING)
+            {
+                _theBoard.MakeMove(move, side, false);
+                int movedPiece = _theBoard.Piece[move.To];
+                if (movedPiece == PAWN)
+                {
+                    int forward = side == WHITE ? -8 : 8;
+                    int ahead = move.To + forward;
+                    if (ahead >= 0 && ahead <= 63)
+                    {
+                        if (move.To % 8 > 0 && AttacksBiggerPiece(ahead - 1, movedPiece, enemy))
+                        {
+                            mask |= 1;
+                        }
+                        if (move.To % 8 < 7 && AttacksBiggerPiece(ahead + 1, movedPiece, enemy))
+                        {
+                            mask |= 1;
+                        }
+                    }
+                }
+                else
+                {
+                    Move[] attacks = _theBoard.GeneratePieceAttacksWithoutKing(side);
+                    for (int nn = 0; nn < attacks.Length; nn++)
+                    {
+                        if (attacks[nn].From == move.To && AttacksBiggerPiece(attacks[nn].To, movedPiece, enemy))
+                        {
+                            mask |= 1;
+                            break;
+                        }
+                    }
+                }
+                _theBoard.UnmakeLastMove();
+            }
+
+            return mask;
+        }
+
+
+        private bool AttacksBiggerPiece(int square, int attackerPiece, int enemy)
+        {
+            return _theBoard.Color[square] == enemy && _theBoard.Piece[square] != KING && SEE_MATERIAL[_theBoard.Piece[square]] > SEE_MATERIAL[attackerPiece];
+        }
+
+
+        private static int LateMovePruningThreshold(int depth)
+        {
+            switch (depth)
+            {
+                case 2:
+                    return LMP_QUIET_MOVES_D2;
+                case 3:
+                    return LMP_QUIET_MOVES_D3;
+                case 4:
+                    return LMP_QUIET_MOVES_D4;
+                case 5:
+                    return LMP_QUIET_MOVES_D5;
+                default:
+                    return 0;
+            }
+        }
+
+
+        //Groups the remaining depth of a node for the LMR counters: 3 or less, 4 to 6, 7 to 9, 10 and over
+        private static int DepthBucket(int depth)
+        {
+            if (depth <= 3)
+            {
+                return 0;
+            }
+            if (depth <= 6)
+            {
+                return 1;
+            }
+            if (depth <= 9)
+            {
+                return 2;
+            }
+            return 3;
+        }
+
+
         private bool GivesCheck(Move move)
         {
             _theBoard.MakeMove(move, _theBoard.OnMove, false);
@@ -1870,8 +2147,7 @@ namespace Lisa
                                  int alpha,
                                  int beta,
                                  byte depth,
-                                 ref Move[] pv,
-                                 Dictionary<int, int> seenMoves = null
+                                 ref Move[] pv
                                 )
         {
 
@@ -1963,6 +2239,10 @@ namespace Lisa
                     Sorter.SetRefutationMove(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From]);
                     int MoveKey = ttMove.From * 100 + ttMove.To;
                     Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth, true);
+                    if (!ttMove.IsCapture)
+                    {
+                        Sorter.RewardQuietMove(_theBoard.OnMove, ttMove, depth);
+                    }
                     goto ReturnEarly;
                 }
             }
@@ -1974,6 +2254,10 @@ namespace Lisa
             {
                 int MoveKey = Sorter.Refutations[_fullDepth - depth].From * 100 + Sorter.Refutations[_fullDepth - depth].To;
                 Sorter.UpdateHistoryAggressive(rootMoveKey, MoveKey, depth, true);
+                if (!Sorter.Refutations[_fullDepth - depth].IsCapture)
+                {
+                    Sorter.RewardQuietMove(_theBoard.OnMove, Sorter.Refutations[_fullDepth - depth], depth);
+                }
                 goto ReturnEarly;
             }
 
@@ -2103,15 +2387,18 @@ namespace Lisa
             {
                 if (nodeType != NodeTypes.All)
                 {
-                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, (depth >= 5), seenMoves);
+                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, (depth >= 5));
                 }
                 else
                 {
-                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, (depth >= 5), seenMoves);
+                    allOppMoves = Sorter.GetSortedMoves(ref _theBoard, rootMoveKey, false, true, (depth >= 5));
                 }
             }
 
-            int quietPlayed = 0;            
+            int quietPlayed = 0;
+            //Quiet moves searched in this node without causing a cutoff: if a later quiet move cuts, each of these loses history
+            Span<Move> quietsSearched = stackalloc Move[allOppMoves.Length];
+            int quietsSearchedCount = 0;
             for (int nn = 0; nn < allOppMoves.Length; nn++)
             {
                 if ((ttMove.From == allOppMoves[nn].From && ttMove.To == allOppMoves[nn].To && ttMove.PromotionPiece == allOppMoves[nn].PromotionPiece) ||
@@ -2126,6 +2413,14 @@ namespace Lisa
                     played += 1; quietPlayed += 1;
 
                     int SearchDepth = (int)depth;
+
+                    //Late move pruning: near the leaves, quiet moves after the first few are not searched at all
+                    if (IsLateMovePrunable(allOppMoves[nn], SearchDepth, quietPlayed, alpha, beta, nodeType, isInCheck))
+                    {
+                        _infoLMPPruned[SearchDepth - 2] += 1;
+                        continue;
+                    }
+
                     byte ByteDepth;
                     bool WasReduced = false;
                     byte originalDepth = (byte)(SearchDepth - 1);
@@ -2167,6 +2462,12 @@ namespace Lisa
                     if (WasReduced)
                     {
                         _infoLMRReducedBy[lmrReduction] += 1;
+                        if (!_inLMRVerification)
+                        {
+                            _infoLMRReducedCountedBy[lmrReduction] += 1;
+                            _infoLMRReducedAtQuietIndex[QuietIndexBucket(quietPlayed)] += 1;
+                            _infoLMRReducedAtDepth[DepthBucket(SearchDepth)] += 1;
+                        }
                     }
                     else
                     {
@@ -2184,12 +2485,12 @@ namespace Lisa
 
                     if (depth >= _fullDepth - 5 || quietPlayed == 1 || nullWindowSearchFailed)
                     {
-                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -beta, -alpha, ByteDepth, ref localPV, seenMoves);
+                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -beta, -alpha, ByteDepth, ref localPV);
                     }
                     else
                     {
                         nullWindowSearch = true;
-                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -alpha - 1, -alpha, ByteDepth, ref localPV, seenMoves);
+                        score = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -alpha - 1, -alpha, ByteDepth, ref localPV);
                     }
 
                     if (nullWindowSearch && score > alpha && score < beta)
@@ -2237,8 +2538,71 @@ namespace Lisa
                         }
                     }
 
+                    //A reduced move that was never re-searched failed low. With LMR_VERIFY (EPD and MultiFen only), every
+                    //LMR_VERIFY_EVERY-th such move is searched again at full depth with a null window, purely to count whether the
+                    //reduction hid a move that would have raised alpha. Nothing is counted or checked inside a check search itself,
+                    //otherwise the checks nest inside each other at every level
+                    if (lmrReduction > 0 && !lmrReSearched && !_inLMRVerification)
+                    {
+                        _infoLMRFailedLow += 1;
+                        if (LMR_VERIFY)
+                        {
+                            _lmrVerifyCountdown -= 1;
+                            if (_lmrVerifyCountdown <= 0)
+                            {
+                                _lmrVerifyCountdown = LMR_VERIFY_EVERY;
+                                int bucket = QuietIndexBucket(quietPlayed);
+                                int depthAndIndex = DepthBucket(SearchDepth) * 3 + bucket;
+                                _infoLMRVerifiedBy[lmrReduction] += 1;
+                                _infoLMRVerifiedAtQuietIndex[bucket] += 1;
+                                _infoLMRVerifiedAtDepthAndIndex[depthAndIndex] += 1;
+
+                                int nodesBeforeVerify = _infoNodesLookedAt;
+                                _inLMRVerification = true;
+                                int fullDepthScore = 0 - EvaluateMove(allOppMoves[nn], rootMoveKey, -alpha - 1, -alpha, originalDepth, ref localPV);
+                                _inLMRVerification = false;
+                                _infoLMRVerifyNodes += _infoNodesLookedAt - nodesBeforeVerify;
+
+                                if (fullDepthScore > alpha)
+                                {
+                                    _infoLMRMissedAlpha += 1;
+                                    _infoLMRMissedAlphaBy[lmrReduction] += 1;
+                                    _infoLMRMissedAlphaAtQuietIndex[bucket] += 1;
+                                    _infoLMRMissedAlphaAtDepthAndIndex[depthAndIndex] += 1;
+                                }
+                            }
+                        }
+                    }
+
+                    //LMP shadow mode (EPD and MultiFen only): this move passed every late move pruning rule except the move count,
+                    //so record its quiet move number and whether it beat alpha. Nothing is pruned; the counts show where pruning would be safe
+                    if (LMP_SHADOW && !_inLMRVerification && SearchDepth >= 2 && SearchDepth <= 5 && beta - alpha == 1 && nodeType != NodeTypes.PV
+                        && !isInCheck && alpha > -4000 && !(_endGame && _theBoard.Piece[allOppMoves[nn].From] == PAWN) && !GivesCheck(allOppMoves[nn]))
+                    {
+                        int slot = (SearchDepth - 2) * LMP_SHADOW_INDEX_SLOTS + Math.Min(quietPlayed, LMP_SHADOW_INDEX_SLOTS - 1);
+                        _infoLMPEligible[slot] += 1;
+                        if (score > alpha)
+                        {
+                            _infoLMPBeatAlpha[slot] += 1;
+                        }
+                        if (quietPlayed >= LATE_MOVE_FEATURE_FROM)
+                        {
+                            int featureSlot = (SearchDepth - 2) * 32 + LateMoveFeatures(allOppMoves[nn]);
+                            _infoLMPLateByFeatures[featureSlot] += 1;
+                            if (score > alpha)
+                            {
+                                _infoLMPLateBeatByFeatures[featureSlot] += 1;
+                            }
+                        }
+                    }
+
                     if (score >= beta)
                     {
+                        Sorter.RewardQuietMove(_theBoard.OnMove, allOppMoves[nn], SearchDepth);
+                        for (int qq = 0; qq < quietsSearchedCount; qq++)
+                        {
+                            Sorter.PenaliseQuietMove(_theBoard.OnMove, quietsSearched[qq], SearchDepth);
+                        }
                         if (!isInCheck && quietPlayed <= 4)
                         {
                             Sorter.IncreaseKillerScore(_fullDepth, depth, allOppMoves[nn], _theBoard.Piece[allOppMoves[nn].From], 5 - quietPlayed);
@@ -2248,6 +2612,7 @@ namespace Lisa
                         bestIndex = nn;
                         Sorter.SetRefutationMove(_fullDepth, depth, allOppMoves[nn], _theBoard.Piece[allOppMoves[nn].From]);
 
+                        _infoQuietCutAtDepthAndPosition[DepthBucket(SearchDepth) * 4 + Math.Min(quietPlayed, 4) - 1] += 1;
                         if (quietPlayed == 1)
                         {
                             _infoNodesCutOffWithFirstSortedMove += 1;
@@ -2269,6 +2634,8 @@ namespace Lisa
                     }
                     else
                     {
+                        quietsSearched[quietsSearchedCount] = allOppMoves[nn];
+                        quietsSearchedCount += 1;
                         if (quietPlayed < 3)
                         {
                             int thisKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
@@ -2295,24 +2662,6 @@ namespace Lisa
 
 
         StoreInTransTable:
-
-            if (seenMoves != null && depth >= _fullDepth - 1)
-            {
-                if (alphaRaised || betaCutoff)
-                {
-                    int legalMoveKey = legalMove.From * 100 + legalMove.To;
-                    if (!seenMoves.ContainsKey(legalMoveKey))
-                    {
-                        seenMoves.Add(legalMoveKey, alpha);
-                    }
-                    else
-                    {
-                        int currentScore = seenMoves[legalMoveKey];
-                        seenMoves.Remove(legalMoveKey);
-                        seenMoves.Add(legalMoveKey, currentScore + alpha);
-                    }
-                }
-            }
 
             if (betaCutoff)
             {

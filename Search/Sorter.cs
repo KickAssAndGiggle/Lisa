@@ -6,11 +6,17 @@ namespace Lisa
 
         private const int MAX_DEPTH = 30;
 
+        //Quiet move history, by side to move, from square and to square. Every update pulls the value towards +/-QUIET_HISTORY_MAX
+        //in proportion to how far it still has to go, so values stay bounded and recent results can overturn old ones
+        private const int QUIET_HISTORY_MAX = 16384;
+        private const int QUIET_HISTORY_BONUS_CAP = 1200;
+
 #pragma warning disable CA2211 // Non-constant fields should not be visible
 
         //This is faster than the "correct" practice, and I've tested it enough times
         //to be certain about it by now
 
+        public static int[] QuietHistory = new int[2 * 64 * 64];
         public static int[] History;
         public static int[,] SingleMoveHistory;
         public static int[] CutCount;
@@ -47,7 +53,7 @@ namespace Lisa
 
 
         public static Move[] GetSortedMoves(ref Board theBoard, int rootMoveKey, bool capturesOnly, bool nonCapturesOnly, 
-            bool lowDepth = false, Dictionary<int, int> seenMoves = null)
+            bool lowDepth = false)
         {
 
             Move[] list;
@@ -91,21 +97,48 @@ namespace Lisa
                         list[nn].Score = 4750;
                     }
                 }
+                else if (USE_QUIET_HISTORY)
+                {
+                    list[nn].Score = QuietHistory[QuietHistoryIndex(theBoard.OnMove, list[nn])];
+                }
                 else
                 {
-                    int moveKey = list[nn].From * 100 + list[nn].To;                      
+                    //Previous ordering, kept so the two can be compared on the same build (QuietHistory=false in Settings.ini)
+                    int moveKey = list[nn].From * 100 + list[nn].To;
                     list[nn].Score = History[moveKey];
-                    list[nn].Score += (SingleMoveHistory[rootMoveKey, moveKey]);
-                    if (seenMoves != null && seenMoves.ContainsKey(moveKey))
-                    {
-                        list[nn].Score += seenMoves[moveKey];
-                    }                    
+                    list[nn].Score += SingleMoveHistory[rootMoveKey, moveKey];
                 }
             }
 
             Array.Sort(list);
             return list;
 
+        }
+
+
+        //Called with the node's side to move and remaining depth: the quiet move that caused a cutoff gets a bonus, and every
+        //quiet move searched before it in that node gets the same amount taken off
+        public static void RewardQuietMove(int side, Move move, int depth)
+        {
+            UpdateQuietHistory(QuietHistoryIndex(side, move), Math.Min(depth * depth, QUIET_HISTORY_BONUS_CAP));
+        }
+
+
+        public static void PenaliseQuietMove(int side, Move move, int depth)
+        {
+            UpdateQuietHistory(QuietHistoryIndex(side, move), -Math.Min(depth * depth, QUIET_HISTORY_BONUS_CAP));
+        }
+
+
+        private static void UpdateQuietHistory(int index, int bonus)
+        {
+            QuietHistory[index] += bonus - QuietHistory[index] * Math.Abs(bonus) / QUIET_HISTORY_MAX;
+        }
+
+
+        private static int QuietHistoryIndex(int side, Move move)
+        {
+            return (side == WHITE ? 0 : 4096) + move.From * 64 + move.To;
         }
 
 
@@ -199,6 +232,7 @@ namespace Lisa
 
         public static void Reset()
         {
+            Array.Clear(QuietHistory);
             History = new int[6363];
             SingleMoveHistory = new int[6363, 6363];
             CutCount = new int[6363];

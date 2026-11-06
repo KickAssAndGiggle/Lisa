@@ -73,6 +73,9 @@ namespace Lisa
                 linesForFile.Add("CutOffWithThirdSortedMove: " + search.InfoNodesCutOffWithThirdSortedMove.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
                 linesForFile.Add("CutOffWithLaterSortedMove: " + search.InfoNodesCutOffWithLaterSortedMove.ToString() + "/" + search.InfoNodesLookedAtWithoutQuiesce.ToString());
                 linesForFile.Add(" ");
+                linesForFile.AddRange(EPDTester.LMRVerifyLines(search));
+                linesForFile.AddRange(EPDTester.LMPShadowLines(search));
+                linesForFile.Add(" ");
 
                 Move[]? pv = search.BestPV;
                 string pvString = "";
