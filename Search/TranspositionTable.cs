@@ -92,13 +92,15 @@ namespace Lisa
                 _primaryMoveList[ttHash].BestResponseTo = bestResponse.To;
                 _primaryMoveList[ttHash].Score = posScore;
                 _primaryMoveList[ttHash].Zobrist = zobrist;
-                _primaryMoveList[ttHash].MoveAttributeFlag = (byte)((bestResponse.IsCapture ? 100 : 0) + bestResponse.PromotionPiece);
+                _primaryMoveList[ttHash].MoveAttributeFlag = (byte)((bestResponse.IsCapture ? 100 : 0) +
+                    bestResponse.PromotionPiece);
             }
 
         }
 
 
-        public void AddPawnStructureToTransTable(long pawnOnlyZobrist, int whitePPScore, int blackPPScore, int whiteBWPScore,
+        public void AddPawnStructureToTransTable(long pawnOnlyZobrist, int whitePPScore, int blackPPScore,
+            int whiteBWPScore,
             int blackBWPScore, int whiteChainScore, int blackChainPawn, int whiteDblPawnScore, int blackDblPawnScore,
             int whiteIsoPawnScore, int blackIsoPawnScore, ulong whitePassedPawns, ulong blackPassedPawns)
         {

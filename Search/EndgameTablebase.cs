@@ -50,7 +50,8 @@ namespace Lisa
                     resp.Wait();
                     if (resp.IsCompletedSuccessfully && resp.Result != null && resp.Result != "")
                     {
-                        TablebasePosition? TBP = (TablebasePosition?)JsonConvert.DeserializeObject(resp.Result, typeof(TablebasePosition));
+                        TablebasePosition? TBP = (TablebasePosition?)JsonConvert.DeserializeObject(resp.Result,
+                            typeof(TablebasePosition));
                         if (TBP != null)
                         {
                             return TBP.Value.moves[0].uci;

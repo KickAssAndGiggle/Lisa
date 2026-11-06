@@ -60,8 +60,9 @@ namespace Lisa
             "KING_NEAR_HALF_OPEN_FILE_PENALTY",
             "KING_NEAR_OPEN_FILE_ADDITIONAL_PENALTY",
             "FIXED_PAWN_ON_ENEMY_BISHOP_COLOUR_PENALTY",
-            //The attack and defence units pick an entry from KING_ATTACK_PENALTY rather than adding centipawns, and raising
-            //the attack units far enough would index past the end of that table, so they are left to hand tuning
+            //The attack and defence units pick an entry from KING_ATTACK_PENALTY rather than adding centipawns, and
+            //raising the attack units far enough would index past the end of that table, so they are left to hand
+            //tuning
             //"KING_ATTACK_KNIGHT_UNITS",
             //"KING_ATTACK_BISHOP_UNITS",
             //"KING_ATTACK_ROOK_UNITS",
@@ -100,7 +101,8 @@ namespace Lisa
         private const int WEIGHT_MAXIMUM = 5000;
         private const int INITIAL_STEP_DIVISOR = 16;
         private const int CHUNKS_PER_THREAD = 8;
-        private const int DRAW_BAND = 40;                           //centipawns: an eval this close to 0 counts as calling a draw
+        //centipawns: an eval this close to 0 counts as calling a draw
+        private const int DRAW_BAND = 40;
 
         private sealed class Weight
         {
@@ -163,9 +165,11 @@ namespace Lisa
             _k = FitK();
             _startError = ErrorFromEvals(_k);
             _bestError = _startError;
-            Log("K fitted at " + _k.ToString("F4", CultureInfo.InvariantCulture) + ", starting error " + FormatError(_bestError));
+            Log("K fitted at " + _k.ToString("F4", CultureInfo.InvariantCulture) + ", starting error " +
+                FormatError(_bestError));
             _startCorrect = CountCalledCorrectly();
-            Log("Called correctly (draw within " + DRAW_BAND + "): " + CalledCorrectlyText(_startCorrect, _fens.Length));
+            Log("Called correctly (draw within " + DRAW_BAND + "): " +
+                CalledCorrectlyText(_startCorrect, _fens.Length));
             WriteResults(false);
 
             bool converged = false;
@@ -201,7 +205,8 @@ namespace Lisa
                     }
                 }
 
-                Log("Iteration " + _iteration + " done: " + improvedWeights + " weights moved, error " + FormatError(_bestError));
+                Log("Iteration " + _iteration + " done: " + improvedWeights + " weights moved, error " +
+                    FormatError(_bestError));
                 WriteResults(false);
 
                 converged = improvedWeights == 0 && !anyStepAboveOne;
@@ -210,7 +215,8 @@ namespace Lisa
             //The last pass evaluated a rejected trial value, so evaluate again with the tuned weights before counting
             EvaluateAllPositions();
             _finalCorrect = CountCalledCorrectly();
-            Log("Called correctly (draw within " + DRAW_BAND + "): " + CalledCorrectlyChangeText(_startCorrect, _finalCorrect, _fens.Length));
+            Log("Called correctly (draw within " + DRAW_BAND + "): " +
+                CalledCorrectlyChangeText(_startCorrect, _finalCorrect, _fens.Length));
 
             WriteResults(true);
             Log("Finished.");
@@ -218,7 +224,8 @@ namespace Lisa
         }
 
 
-        //Tries the weight one step up, then one step down. Whichever direction helps is followed for as long as it keeps helping.
+        //Tries the weight one step up, then one step down. Whichever direction helps is followed for as long as it
+        //keeps helping.
         //Returns true if the weight moved.
         private bool TuneWeight(Weight weight)
         {
@@ -279,7 +286,8 @@ namespace Lisa
             }
 
             SetValue(weight, bestValue);
-            Log(weight.Name + " " + weight.StartValue + " -> " + bestValue + " (step " + weight.Step + "), error " + FormatError(_bestError));
+            Log(weight.Name + " " + weight.StartValue + " -> " + bestValue + " (step " + weight.Step + "), error " +
+                FormatError(_bestError));
 
         }
 
@@ -438,7 +446,9 @@ namespace Lisa
             _results = results.ToArray();
             _whiteEvals = new int[_fens.Length];
 
-            Log("Loaded " + _fens.Length + " positions from " + _epdFile + (unreadable > 0 ? " (" + unreadable + " unreadable lines skipped)" : "") + ", using " + _threads + " threads");
+            Log("Loaded " + _fens.Length + " positions from " + _epdFile +
+                (unreadable > 0 ? " (" + unreadable + " unreadable lines skipped)" : "") + ", using " + _threads +
+                " threads");
             return _fens.Length > 0;
 
         }
@@ -487,7 +497,7 @@ namespace Lisa
 
 
         //Rewritten after every improvement, so stopping Lisa at any point leaves the best weights found so far.
-        //The lines are in the same form as Globals.cs so they can be pasted straight over the old ones.
+        //The lines are in the same form as EvalWeights.cs so they can be pasted straight over the old ones.
         private void WriteResults(bool finished)
         {
 
@@ -499,7 +509,8 @@ namespace Lisa
                 "Called correctly (draw within " + DRAW_BAND + "): " + (_finalCorrect >= 0
                     ? CalledCorrectlyChangeText(_startCorrect, _finalCorrect, _fens.Length)
                     : CalledCorrectlyText(_startCorrect, _fens.Length) + " at the start"),
-                "Iteration: " + _iteration + ", evaluation passes: " + _passes + ", time: " + FormatTime(_timer.Elapsed),
+                "Iteration: " + _iteration + ", evaluation passes: " + _passes + ", time: " +
+                    FormatTime(_timer.Elapsed),
                 ""
             };
 
@@ -523,8 +534,9 @@ namespace Lisa
         }
 
 
-        //A position is called correctly when its eval points the way the game went: above DRAW_BAND for a White win, below
-        //-DRAW_BAND for a Black win, within DRAW_BAND of 0 for a draw. Only reported, to read alongside the error; never tuned on.
+        //A position is called correctly when its eval points the way the game went: above DRAW_BAND for a White win,
+        //below -DRAW_BAND for a Black win, within DRAW_BAND of 0 for a draw. Only reported, to read alongside the
+        //error; never tuned on.
         //Counts from the evals of the latest EvaluateAllPositions
         private int CountCalledCorrectly()
         {
@@ -556,13 +568,15 @@ namespace Lisa
 
         private static string CalledCorrectlyText(int correct, int considered)
         {
-            return correct + " of " + considered + " (" + (100.0 * correct / considered).ToString("F3", CultureInfo.InvariantCulture) + "%)";
+            return correct + " of " + considered + " (" + (100.0 * correct / considered).ToString("F3",
+                CultureInfo.InvariantCulture) + "%)";
         }
 
 
         private static string CalledCorrectlyChangeText(int before, int after, int considered)
         {
-            return before + " -> " + after + " of " + considered + " (" + (100.0 * before / considered).ToString("F3", CultureInfo.InvariantCulture)
+            return before + " -> " + after + " of " + considered + " (" +
+                (100.0 * before / considered).ToString("F3", CultureInfo.InvariantCulture)
                 + "% -> " + (100.0 * after / considered).ToString("F3", CultureInfo.InvariantCulture) + "%)";
         }
 
@@ -581,7 +595,8 @@ namespace Lisa
 
         private static string FormatTime(TimeSpan elapsed)
         {
-            return ((int)elapsed.TotalHours).ToString("00") + ":" + elapsed.Minutes.ToString("00") + ":" + elapsed.Seconds.ToString("00");
+            return ((int)elapsed.TotalHours).ToString("00") + ":" + elapsed.Minutes.ToString("00") + ":" +
+                elapsed.Seconds.ToString("00");
         }
 
     }

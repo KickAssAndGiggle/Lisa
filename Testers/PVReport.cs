@@ -31,11 +31,13 @@ namespace Lisa
             for (int nn = 0; nn < sortedRootMoves.Length && nn < maxMoves; nn++)
             {
                 int moveKey = sortedRootMoves[nn].From * 100 + sortedRootMoves[nn].To;
-                Move[] movePV = search.RootPVs.ContainsKey(moveKey) ? search.RootPVs[moveKey] : new Move[] { sortedRootMoves[nn] };
+                Move[] movePV = search.RootPVs.ContainsKey(moveKey) ? search.RootPVs[moveKey]
+                    : new Move[] { sortedRootMoves[nn] };
                 string plainPV = ConvertPVToSAN(movePV, fen, null);
                 string evalPV = ConvertPVToSAN(movePV, fen, evalTable);
                 string firstMove = plainPV.Split(' ')[0];
-                lines.Add((nn + 1).ToString() + ") " + firstMove + "  Score: " + sortedRootMoves[nn].Score.ToString() + "  PV: " + evalPV);
+                lines.Add((nn + 1).ToString() + ") " + firstMove + "  Score: " + sortedRootMoves[nn].Score.ToString() +
+                    "  PV: " + evalPV);
             }
 
             return lines;
@@ -103,7 +105,8 @@ namespace Lisa
             Move[] allMoves = theBoard.GenerateAllMoves(theBoard.OnMove);
             foreach (Move m in allMoves)
             {
-                if (m.From == wanted.From && m.To == wanted.To && m.PromotionPiece == wanted.PromotionPiece && theBoard.MoveIsLegal(m, theBoard.OnMove))
+                if (m.From == wanted.From && m.To == wanted.To && m.PromotionPiece == wanted.PromotionPiece &&
+                    theBoard.MoveIsLegal(m, theBoard.OnMove))
                 {
                     found = m;
                     return true;
@@ -150,7 +153,8 @@ namespace Lisa
             Move[] allMoves = theBoard.GenerateAllMoves(theBoard.OnMove);
             foreach (Move m in allMoves)
             {
-                if (m.To == theMove.To && m.From != theMove.From && theBoard.Piece[m.From] == theBoard.Piece[theMove.From] && theBoard.MoveIsLegal(m, theBoard.OnMove))
+                if (m.To == theMove.To && m.From != theMove.From &&
+                    theBoard.Piece[m.From] == theBoard.Piece[theMove.From] && theBoard.MoveIsLegal(m, theBoard.OnMove))
                 {
                     clash = true;
                     if (m.From % 8 == theMove.From % 8)

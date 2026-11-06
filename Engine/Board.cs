@@ -34,10 +34,10 @@ namespace Lisa
 
         #region Public visible fields
 
-        // I tried using private _backingVariable with a property get for these, but it was significantly
-        // slower than public fields. I'm talking 4 seconds slower to analyse 40 million nodes. In most applications,
-        // the nano-second difference per access would not justify this approach, but you can't leave performance on the table in
-        // a chess engine.
+        // I tried using private _backingVariable with a property get for these, but it was significantly slower than
+        // public fields. I'm talking 4 seconds slower to analyse 40 million nodes. In most applications, the
+        // nano-second difference per access would not justify this approach, but you can't leave performance on the
+        // table in a chess engine.
 
         public int OnMove;
 
@@ -98,8 +98,10 @@ namespace Lisa
         private int _seeUndoCount;
         private readonly int[] _seeGain = new int[34];
 
-        private readonly bool[] _slide = new bool[6] { false, false, true, true, true, false }; // is piece a slider (RQB = yes, PKN = no)
-        private readonly int[] _offsets = new int[6] { 0, 8, 4, 4, 8, 8 }; // directions each piece moves in (pawns = 0, knights = 8)
+        // is piece a slider (RQB = yes, PKN = no)
+        private readonly bool[] _slide = new bool[6] { false, false, true, true, true, false };
+        // directions each piece moves in (pawns = 0, knights = 8)
+        private readonly int[] _offsets = new int[6] { 0, 8, 4, 4, 8, 8 };
         private readonly int[][] _offset = new int[6][];
         private readonly int[][] _x88Offset = new int[6][];
 
@@ -220,29 +222,45 @@ namespace Lisa
                 }
             }
 
-            SquareColor[0] = LIGHTSQUARE; SquareColor[1] = DARKSQUARE; SquareColor[2] = LIGHTSQUARE; SquareColor[3] = DARKSQUARE;
-            SquareColor[4] = LIGHTSQUARE; SquareColor[5] = DARKSQUARE; SquareColor[6] = LIGHTSQUARE; SquareColor[7] = DARKSQUARE;
+            SquareColor[0] = LIGHTSQUARE; SquareColor[1] = DARKSQUARE; SquareColor[2] = LIGHTSQUARE; SquareColor[3] =
+                DARKSQUARE;
+            SquareColor[4] = LIGHTSQUARE; SquareColor[5] = DARKSQUARE; SquareColor[6] = LIGHTSQUARE; SquareColor[7] =
+                DARKSQUARE;
 
-            SquareColor[8] = DARKSQUARE; SquareColor[9] = LIGHTSQUARE; SquareColor[10] = DARKSQUARE; SquareColor[11] = LIGHTSQUARE;
-            SquareColor[12] = DARKSQUARE; SquareColor[13] = LIGHTSQUARE; SquareColor[14] = DARKSQUARE; SquareColor[15] = LIGHTSQUARE;
+            SquareColor[8] = DARKSQUARE; SquareColor[9] = LIGHTSQUARE; SquareColor[10] = DARKSQUARE; SquareColor[11] =
+                LIGHTSQUARE;
+            SquareColor[12] = DARKSQUARE; SquareColor[13] = LIGHTSQUARE; SquareColor[14] = DARKSQUARE; SquareColor[15] =
+                LIGHTSQUARE;
 
-            SquareColor[16] = LIGHTSQUARE; SquareColor[17] = DARKSQUARE; SquareColor[18] = LIGHTSQUARE; SquareColor[19] = DARKSQUARE;
-            SquareColor[20] = LIGHTSQUARE; SquareColor[21] = DARKSQUARE; SquareColor[22] = LIGHTSQUARE; SquareColor[23] = DARKSQUARE;
+            SquareColor[16] = LIGHTSQUARE; SquareColor[17] = DARKSQUARE; SquareColor[18] =
+                LIGHTSQUARE; SquareColor[19] = DARKSQUARE;
+            SquareColor[20] = LIGHTSQUARE; SquareColor[21] = DARKSQUARE; SquareColor[22] =
+                LIGHTSQUARE; SquareColor[23] = DARKSQUARE;
 
-            SquareColor[24] = DARKSQUARE; SquareColor[25] = LIGHTSQUARE; SquareColor[26] = DARKSQUARE; SquareColor[27] = LIGHTSQUARE;
-            SquareColor[28] = DARKSQUARE; SquareColor[29] = LIGHTSQUARE; SquareColor[30] = DARKSQUARE; SquareColor[31] = LIGHTSQUARE;
+            SquareColor[24] = DARKSQUARE; SquareColor[25] = LIGHTSQUARE; SquareColor[26] = DARKSQUARE; SquareColor[27] =
+                LIGHTSQUARE;
+            SquareColor[28] = DARKSQUARE; SquareColor[29] = LIGHTSQUARE; SquareColor[30] = DARKSQUARE; SquareColor[31] =
+                LIGHTSQUARE;
 
-            SquareColor[32] = LIGHTSQUARE; SquareColor[33] = DARKSQUARE; SquareColor[34] = LIGHTSQUARE; SquareColor[35] = DARKSQUARE;
-            SquareColor[36] = LIGHTSQUARE; SquareColor[37] = DARKSQUARE; SquareColor[38] = LIGHTSQUARE; SquareColor[39] = DARKSQUARE;
+            SquareColor[32] = LIGHTSQUARE; SquareColor[33] = DARKSQUARE; SquareColor[34] =
+                LIGHTSQUARE; SquareColor[35] = DARKSQUARE;
+            SquareColor[36] = LIGHTSQUARE; SquareColor[37] = DARKSQUARE; SquareColor[38] =
+                LIGHTSQUARE; SquareColor[39] = DARKSQUARE;
 
-            SquareColor[40] = DARKSQUARE; SquareColor[41] = LIGHTSQUARE; SquareColor[42] = DARKSQUARE; SquareColor[43] = LIGHTSQUARE;
-            SquareColor[44] = DARKSQUARE; SquareColor[45] = LIGHTSQUARE; SquareColor[46] = DARKSQUARE; SquareColor[47] = LIGHTSQUARE;
+            SquareColor[40] = DARKSQUARE; SquareColor[41] = LIGHTSQUARE; SquareColor[42] = DARKSQUARE; SquareColor[43] =
+                LIGHTSQUARE;
+            SquareColor[44] = DARKSQUARE; SquareColor[45] = LIGHTSQUARE; SquareColor[46] = DARKSQUARE; SquareColor[47] =
+                LIGHTSQUARE;
 
-            SquareColor[48] = LIGHTSQUARE; SquareColor[49] = DARKSQUARE; SquareColor[50] = LIGHTSQUARE; SquareColor[51] = DARKSQUARE;
-            SquareColor[52] = LIGHTSQUARE; SquareColor[53] = DARKSQUARE; SquareColor[54] = LIGHTSQUARE; SquareColor[55] = DARKSQUARE;
+            SquareColor[48] = LIGHTSQUARE; SquareColor[49] = DARKSQUARE; SquareColor[50] =
+                LIGHTSQUARE; SquareColor[51] = DARKSQUARE;
+            SquareColor[52] = LIGHTSQUARE; SquareColor[53] = DARKSQUARE; SquareColor[54] =
+                LIGHTSQUARE; SquareColor[55] = DARKSQUARE;
 
-            SquareColor[56] = DARKSQUARE; SquareColor[57] = LIGHTSQUARE; SquareColor[58] = DARKSQUARE; SquareColor[59] = LIGHTSQUARE;
-            SquareColor[60] = DARKSQUARE; SquareColor[61] = LIGHTSQUARE; SquareColor[62] = DARKSQUARE; SquareColor[63] = LIGHTSQUARE;
+            SquareColor[56] = DARKSQUARE; SquareColor[57] = LIGHTSQUARE; SquareColor[58] = DARKSQUARE; SquareColor[59] =
+                LIGHTSQUARE;
+            SquareColor[60] = DARKSQUARE; SquareColor[61] = LIGHTSQUARE; SquareColor[62] = DARKSQUARE; SquareColor[63] =
+                LIGHTSQUARE;
 
             InitZobristKeys();
             InitSameDiagonalLookup();
@@ -584,7 +602,8 @@ namespace Lisa
 
 
         //The zone around a king on each square, over the king's file and the files either side. A king on its first or
-        //second rank gets the same block, its first three ranks, so stepping between them doesn't move squares in or out.
+        //second rank gets the same block, its first three ranks, so stepping between them doesn't move squares in or
+        //out.
         //A king further up gets the squares next to it plus the three squares two ranks in front (towards the enemy).
         private void InitKingZoneLookup()
         {
@@ -1789,7 +1808,8 @@ namespace Lisa
                         {
                             if (sq % 8 != ToSquare % 8 && sq / 8 != ToSquare / 8 && !SameDiagonal[sq][ToSquare])
                             {
-                                //Legality check and queen not on same rank/file as enemy king and also not on same diagonal
+                                //Legality check and queen not on same rank/file as enemy king and also not on same
+                                //diagonal
                                 continue;
                             }
                         }
@@ -2324,7 +2344,8 @@ namespace Lisa
                                 {
                                     if (localColor[nextSq] != toMove)
                                     {
-                                        if (Piece[nextSq] != KING) //If we are not doing a check test, capturing the king is not actually a move...
+                                        //If we are not doing a check test, capturing the king is not actually a move...
+                                        if (Piece[nextSq] != KING)
                                         {
                                             AddMoveToList(sq, nextSq, true);
                                         }
@@ -2355,9 +2376,9 @@ namespace Lisa
         }
 
 
-        //Every square each knight, bishop, rook and queen of this side bears on: like GeneratePieceMovesWithoutKing, but a
-        //line stops on, and includes, the first piece it meets of either colour, kings too. Used by the eval for mobility
-        //(which filters out its own pieces and the enemy king) and for king attack and defence.
+        //Every square each knight, bishop, rook and queen of this side bears on: like GeneratePieceMovesWithoutKing,
+        //but a line stops on, and includes, the first piece it meets of either colour, kings too. Used by the eval for
+        //mobility (which filters out its own pieces and the enemy king) and for king attack and defence.
         public Move[] GeneratePieceAttacksWithoutKing(int toMove)
         {
 
@@ -2410,7 +2431,8 @@ namespace Lisa
         }
 
 
-        public Move[] GenerateAllMoves(int toMove, bool isLegalityCheck = false, int legalityCheckKingSquare = -1, bool legalityCheckLastMoveWasCastle = false)
+        public Move[] GenerateAllMoves(int toMove, bool isLegalityCheck = false, int legalityCheckKingSquare = -1,
+            bool legalityCheckLastMoveWasCastle = false)
         {
 
             Span<byte> localColor = new(Color, 0, 64);
@@ -2429,7 +2451,8 @@ namespace Lisa
 
                         if (P == ROOK && !legalityCheckLastMoveWasCastle)
                         {
-                            if (isLegalityCheck && sq % 8 != legalityCheckKingSquare % 8 && sq / 8 != legalityCheckKingSquare / 8)
+                            if (isLegalityCheck && sq % 8 != legalityCheckKingSquare % 8 &&
+                                sq / 8 != legalityCheckKingSquare / 8)
                             {
                                 //Legality check and rook not on same rank/file as enemy king
                                 continue;
@@ -2445,9 +2468,11 @@ namespace Lisa
                         }
                         else if (P == QUEEN && !legalityCheckLastMoveWasCastle)
                         {
-                            if (isLegalityCheck && sq % 8 != legalityCheckKingSquare % 8 && sq / 8 != legalityCheckKingSquare / 8 && !SameDiagonal[sq][legalityCheckKingSquare])
+                            if (isLegalityCheck && sq % 8 != legalityCheckKingSquare % 8 &&
+                                sq / 8 != legalityCheckKingSquare / 8 && !SameDiagonal[sq][legalityCheckKingSquare])
                             {
-                                //Legality check and queen not on same rank/file as enemy king and also not on same diagonal
+                                //Legality check and queen not on same rank/file as enemy king and also not on same
+                                //diagonal
                                 continue;
                             }
                         }
@@ -2461,8 +2486,11 @@ namespace Lisa
                         }
                         else if (P == KING)
                         {
-                            if (isLegalityCheck && sq != legalityCheckKingSquare - 1 && sq != legalityCheckKingSquare + 1 && sq != legalityCheckKingSquare + 8 && sq != legalityCheckKingSquare - 8 &&
-                                sq != legalityCheckKingSquare - 7 && sq != legalityCheckKingSquare - 9 && sq != legalityCheckKingSquare + 7 && sq != legalityCheckKingSquare + 9)
+                            if (isLegalityCheck && sq != legalityCheckKingSquare - 1 &&
+                                sq != legalityCheckKingSquare + 1 && sq != legalityCheckKingSquare + 8 &&
+                                sq != legalityCheckKingSquare - 8 &&
+                                sq != legalityCheckKingSquare - 7 && sq != legalityCheckKingSquare - 9 &&
+                                    sq != legalityCheckKingSquare + 7 && sq != legalityCheckKingSquare + 9)
                             {
                                 continue;
                             }
@@ -2485,7 +2513,8 @@ namespace Lisa
                                 {
                                     if (localColor[nextSq] != toMove)
                                     {
-                                        if (Piece[nextSq] != KING || isLegalityCheck) //If we are not doing a check test, capturing the king is not actually a move...
+                                        //If we are not doing a check test, capturing the king is not actually a move...
+                                        if (Piece[nextSq] != KING || isLegalityCheck)
                                         {
                                             AddMoveToList(sq, nextSq, true);
                                         }
@@ -2495,7 +2524,8 @@ namespace Lisa
 
                                 if (!isLegalityCheck || legalityCheckLastMoveWasCastle)
                                 {
-                                    AddMoveToList(sq, nextSq, false); //If checking for legality, only need non-captures to check castling through check
+                                    //If checking for legality, only need non-captures to check castling through check
+                                    AddMoveToList(sq, nextSq, false);
                                 }
 
                                 if (!slides)
@@ -2728,7 +2758,8 @@ namespace Lisa
                         }
                         else
                         {
-                            if (!(Piece[theMove.To + 8] == PAWN && Color[theMove.To + 8] == BLACK && theMove.To == EnPasantCapSquare))
+                            if (!(Piece[theMove.To + 8] == PAWN && Color[theMove.To + 8] == BLACK &&
+                                theMove.To == EnPasantCapSquare))
                             {
                                 return false;
                             }
@@ -2749,7 +2780,8 @@ namespace Lisa
                         }
                         else
                         {
-                            if (!(Piece[theMove.To - 8] == PAWN && Color[theMove.To - 8] == WHITE && theMove.To == EnPasantCapSquare))
+                            if (!(Piece[theMove.To - 8] == PAWN && Color[theMove.To - 8] == WHITE &&
+                                theMove.To == EnPasantCapSquare))
                             {
                                 return false;
                             }
@@ -2865,7 +2897,8 @@ namespace Lisa
                     }
                 }
 
-                if ((Piece[theMove.From] == BISHOP || Piece[theMove.From] == QUEEN) && SameDiagonal[theMove.From][theMove.To])
+                if ((Piece[theMove.From] == BISHOP || Piece[theMove.From] == QUEEN) &&
+                    SameDiagonal[theMove.From][theMove.To])
                 {
                     for (int nn = 0; nn < _squaresBetweenDiagonal[theMove.From][theMove.To].Length; nn++)
                     {
@@ -2875,7 +2908,8 @@ namespace Lisa
                         }
                     }
                 }
-                else if ((Piece[theMove.From] == ROOK || Piece[theMove.From] == QUEEN) && theMove.From % 8 == theMove.To % 8)
+                else if ((Piece[theMove.From] == ROOK || Piece[theMove.From] == QUEEN) &&
+                    theMove.From % 8 == theMove.To % 8)
                 {
                     for (int nn = 0; nn < _squaresBetweenVertical[theMove.From][theMove.To].Length; nn++)
                     {
@@ -2885,7 +2919,8 @@ namespace Lisa
                         }
                     }
                 }
-                else if ((Piece[theMove.From] == ROOK || Piece[theMove.From] == QUEEN) && theMove.From / 8 == theMove.To / 8)
+                else if ((Piece[theMove.From] == ROOK || Piece[theMove.From] == QUEEN) &&
+                    theMove.From / 8 == theMove.To / 8)
                 {
                     for (int nn = 0; nn < _squaresBetweenHorizontal[theMove.From][theMove.To].Length; nn++)
                     {
@@ -2923,7 +2958,8 @@ namespace Lisa
                     {
                         return false;
                     }
-                    if (theMove.To != theMove.From - 8 && theMove.To != theMove.From - 7 && theMove.To != theMove.From - 9)
+                    if (theMove.To != theMove.From - 8 && theMove.To != theMove.From - 7 &&
+                        theMove.To != theMove.From - 9)
                     {
                         return false;
                     }
@@ -2934,7 +2970,8 @@ namespace Lisa
                     {
                         return false;
                     }
-                    if (theMove.To != theMove.From + 8 && theMove.To != theMove.From + 7 && theMove.To != theMove.From + 9)
+                    if (theMove.To != theMove.From + 8 && theMove.To != theMove.From + 7 &&
+                        theMove.To != theMove.From + 9)
                     {
                         return false;
                     }
@@ -2949,7 +2986,8 @@ namespace Lisa
             {
                 int ownKing = toMove == WHITE ? WhiteKingSquare : BlackKingSquare;
                 int lineIndex = (theMove.From + (theMove.From & 56)) - (ownKing + (ownKing & 56)) + 119;
-                if (Piece[ownKing] == KING && Color[ownKing] == toMove && !_sharesLine[lineIndex] && !SideIsInCheckCached(toMove))
+                if (Piece[ownKing] == KING && Color[ownKing] == toMove && !_sharesLine[lineIndex] &&
+                    !SideIsInCheckCached(toMove))
                 {
                     return true;
                 }
@@ -4305,7 +4343,8 @@ namespace Lisa
                 attacker = LeastValuableAttacker(toSquare, side);
 
                 // A king may only recapture if the square is no longer defended
-                if (attacker >= 0 && Piece[attacker] == KING && LeastValuableAttacker(toSquare, side == WHITE ? BLACK : WHITE) >= 0)
+                if (attacker >= 0 && Piece[attacker] == KING &&
+                    LeastValuableAttacker(toSquare, side == WHITE ? BLACK : WHITE) >= 0)
                 {
                     attacker = -1;
                 }

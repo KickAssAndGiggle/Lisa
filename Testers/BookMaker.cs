@@ -4,12 +4,14 @@ using System.Text;
 using static Lisa.Globals;
 namespace Lisa
 {
-    //Builds Lisa's opening book from a PGN file. Each position in the first BookMaxPlies plies is keyed by Lisa's own GenerateFen,
-    //and a move is kept when it was played there in at least BookMinGames games and scored at least BookMinScorePercent for the
-    //side that played it. Its weight is the square root of the points it scored: popular, successful moves are still picked most
-    //often, but rarer sound moves get a real share rather than vanishing next to the main lines.
-    //Two passes over the PGN keep memory down: the first counts how often each position occurs, the second records moves only
-    //for positions seen often enough to hold a book move. In the starting position only BookFirstMoves are written.
+    //Builds Lisa's opening book from a PGN file. Each position in the first BookMaxPlies plies is keyed by Lisa's own
+    //GenerateFen, and a move is kept when it was played there in at least BookMinGames games and scored at least
+    //BookMinScorePercent for the side that played it. Its weight is the square root of the points it scored: popular,
+    //successful moves are still picked most often, but rarer sound moves get a real share rather than vanishing next to
+    //the main lines.
+    //Two passes over the PGN keep memory down: the first counts how often each position occurs, the second records
+    //moves only for positions seen often enough to hold a book move. In the starting position only BookFirstMoves are
+    //written.
     //Book line format:  <fen>;<move> <weight>,<move> <weight>
     public sealed class BookMaker
     {
@@ -44,7 +46,8 @@ namespace Lisa
         private long _gamesUsed;
         private long _gamesFailedToParse;
 
-        public BookMaker(string pgnFile, string bookFile, int maxPlies, int minGames, int minScorePercent, string firstMoves)
+        public BookMaker(string pgnFile, string bookFile, int maxPlies, int minGames, int minScorePercent,
+            string firstMoves)
         {
             _pgnFile = pgnFile;
             _bookFile = bookFile;
@@ -68,7 +71,9 @@ namespace Lisa
 
             if (!ReadAllowedFirstMoves())
             {
-                File.WriteAllText(_bookFile, "# BookFirstMoves could not be read as moves from the starting position: " + _firstMovesSetting + "\r\n");
+                File.WriteAllText(_bookFile,
+                    "# BookFirstMoves could not be read as moves from the starting position: " + _firstMovesSetting +
+                    "\r\n");
                 return;
             }
 
@@ -85,7 +90,8 @@ namespace Lisa
         }
 
 
-        //The settings give first moves in SAN (e4, Nf3, ...); the book stores them as Lisa's move strings (e2e4, g1f3, ...)
+        //The settings give first moves in SAN (e4, Nf3, ...); the book stores them as Lisa's move strings (e2e4, g1f3,
+        //...)
         private bool ReadAllowedFirstMoves()
         {
             foreach (string san in _firstMovesSetting.Split(','))
@@ -146,8 +152,8 @@ namespace Lisa
         }
 
 
-        //Replays the game's first plies. Counting pass: tallies each position. Recording pass: for positions seen at least
-        //BookMinGames times, tallies the move played and the points it earned for the side that played it
+        //Replays the game's first plies. Counting pass: tallies each position. Recording pass: for positions seen at
+        //least BookMinGames times, tallies the move played and the points it earned for the side that played it
         private void ProcessGame(List<string> headers, string moveText, bool recordMoves)
         {
 
@@ -278,11 +284,15 @@ namespace Lisa
             List<string> lines = new()
             {
                 "# Lisa opening book, built from " + _pgnFile,
-                "# Max plies " + _maxPlies + ", min games " + _minGames + ", min score " + _minScorePercent + "%, first moves " + _firstMovesSetting,
-                "# Games read " + _gamesRead + ", used " + _gamesUsed + ", stopped early by an unreadable move " + _gamesFailedToParse,
-                "# Positions counted " + positionsCounted + ", positions written " + bookLines.Count + ", moves written " + movesWritten,
+                "# Max plies " + _maxPlies + ", min games " + _minGames + ", min score " + _minScorePercent +
+                    "%, first moves " + _firstMovesSetting,
+                "# Games read " + _gamesRead + ", used " + _gamesUsed + ", stopped early by an unreadable move " +
+                    _gamesFailedToParse,
+                "# Positions counted " + positionsCounted + ", positions written " + bookLines.Count +
+                    ", moves written " + movesWritten,
                 "# Time " + (timer.ElapsedMilliseconds / 1000) + "s",
-                "# Format: <fen>;<move> <weight>,<move> <weight>  (weight = square root of the points scored with the move)"
+                "# Format: <fen>;<move> <weight>,<move> <weight>  " +
+                    "(weight = square root of the points scored with the move)"
             };
             lines.AddRange(bookLines);
 

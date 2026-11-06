@@ -65,7 +65,8 @@ namespace Lisa
                 }
                 else if (command.StartsWith("setoption"))
                 {
-                    //Lisa has no UCI options: setoption is accepted and ignored, so it can't fall through to the branches below
+                    //Lisa has no UCI options: setoption is accepted and ignored, so it can't fall through to the
+                    //branches below
                 }
                 else if (command.Contains("new"))
                 {
@@ -207,9 +208,11 @@ namespace Lisa
                 if (pv != null)
                 {
 
-                    string infoString = "info seldepth " + _search.InfoCurrentSearchDepth.ToString() + " depth " + _search.InfoCurrentSearchDepth.ToString() + 
-                        " time " + (_search.InfoSecondsUsed * 1000).ToString();
-                    infoString += " nodes " + _search.InfoNodesLookedAt.ToString() + " nps " + _search.InfoNodesPerSecond.ToString();
+                    string infoString = "info seldepth " + _search.Stats.CurrentSearchDepth.ToString() + " depth " +
+                        _search.Stats.CurrentSearchDepth.ToString() +
+                        " time " + (_search.Stats.SecondsUsed * 1000).ToString();
+                    infoString += " nodes " + _search.Stats.NodesLookedAt.ToString() + " nps " +
+                        _search.Stats.NodesPerSecond.ToString();
 
                     string pvString = "";
                     for (int nn = pv.Length - 1; nn >= 0; nn--)

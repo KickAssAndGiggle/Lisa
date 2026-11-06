@@ -41,25 +41,29 @@ namespace Lisa
             else if (RUN_MODE == ProgramMode.MakeTexelFile)
             {
                 InitialiseScorer();
-                TexelFileMaker maker = new(TEXEL_PGN_INPUT, TEXEL_EPD_OUTPUT, TEXEL_POSITIONS_PER_GAME, TEXEL_SKIP_PLIES, TEXEL_MAX_GAMES, TEXEL_GAME_STRIDE);
+                TexelFileMaker maker = new(TEXEL_PGN_INPUT, TEXEL_EPD_OUTPUT, TEXEL_POSITIONS_PER_GAME,
+                    TEXEL_SKIP_PLIES, TEXEL_MAX_GAMES, TEXEL_GAME_STRIDE);
                 maker.MakeFile();
             }
             else if (RUN_MODE == ProgramMode.TexelTune)
             {
                 InitialiseScorer();
-                TexelTuner tuner = new(TEXEL_TUNE_INPUT, TEXEL_TUNE_RESULTS, TEXEL_TUNE_MAX_POSITIONS, TEXEL_TUNE_THREADS);
+                TexelTuner tuner = new(TEXEL_TUNE_INPUT, TEXEL_TUNE_RESULTS, TEXEL_TUNE_MAX_POSITIONS,
+                    TEXEL_TUNE_THREADS);
                 tuner.Tune();
             }
             else if (RUN_MODE == ProgramMode.TexelTunePST)
             {
                 InitialiseScorer();
-                TexelPSTTuner pstTuner = new(TEXEL_TUNE_INPUT, TEXEL_PST_RESULTS, TEXEL_TUNE_MAX_POSITIONS, TEXEL_TUNE_THREADS, TEXEL_PST_EPOCHS);
+                TexelPSTTuner pstTuner = new(TEXEL_TUNE_INPUT, TEXEL_PST_RESULTS, TEXEL_TUNE_MAX_POSITIONS,
+                    TEXEL_TUNE_THREADS, TEXEL_PST_EPOCHS);
                 pstTuner.Tune();
             }
             else if (RUN_MODE == ProgramMode.MakeBook)
             {
                 InitialiseScorer();
-                BookMaker bookMaker = new(BOOK_PGN_INPUT, BOOK_OUTPUT, BOOK_MAX_PLIES, BOOK_MIN_GAMES, BOOK_MIN_SCORE_PERCENT, BOOK_FIRST_MOVES);
+                BookMaker bookMaker = new(BOOK_PGN_INPUT, BOOK_OUTPUT, BOOK_MAX_PLIES, BOOK_MIN_GAMES,
+                    BOOK_MIN_SCORE_PERCENT, BOOK_FIRST_MOVES);
                 bookMaker.MakeBook();
             }
 

@@ -6,8 +6,9 @@ namespace Lisa
 
         private const int MAX_DEPTH = 30;
 
-        //Quiet move history, by side to move, from square and to square. Every update pulls the value towards +/-QUIET_HISTORY_MAX
-        //in proportion to how far it still has to go, so values stay bounded and recent results can overturn old ones
+        //Quiet move history, by side to move, from square and to square. Every update pulls the value towards
+        //+/-QUIET_HISTORY_MAX in proportion to how far it still has to go, so values stay bounded and recent results
+        //can overturn old ones
         private const int QUIET_HISTORY_MAX = 16384;
         private const int QUIET_HISTORY_BONUS_CAP = 1200;
 
@@ -17,8 +18,6 @@ namespace Lisa
         //to be certain about it by now
 
         public static int[] QuietHistory = new int[2 * 64 * 64];
-        public static int[] History;
-        public static int[,] SingleMoveHistory;
         public static int[] CutCount;
         public static int[,] CutCountSingleMove;
 
@@ -35,8 +34,6 @@ namespace Lisa
 
         static Sorter()
         {
-            History = new int[6363];
-            SingleMoveHistory = new int[6363, 6363];
             CutCount = new int[6363];
             CutCountSingleMove = new int[6363, 6363];
 
@@ -52,7 +49,7 @@ namespace Lisa
         }
 
 
-        public static Move[] GetSortedMoves(ref Board theBoard, int rootMoveKey, bool capturesOnly, bool nonCapturesOnly, 
+        public static Move[] GetSortedMoves(ref Board theBoard, bool capturesOnly, bool nonCapturesOnly,
             bool lowDepth = false)
         {
 
@@ -97,16 +94,9 @@ namespace Lisa
                         list[nn].Score = 4750;
                     }
                 }
-                else if (USE_QUIET_HISTORY)
-                {
-                    list[nn].Score = QuietHistory[QuietHistoryIndex(theBoard.OnMove, list[nn])];
-                }
                 else
                 {
-                    //Previous ordering, kept so the two can be compared on the same build (QuietHistory=false in Settings.ini)
-                    int moveKey = list[nn].From * 100 + list[nn].To;
-                    list[nn].Score = History[moveKey];
-                    list[nn].Score += SingleMoveHistory[rootMoveKey, moveKey];
+                    list[nn].Score = QuietHistory[QuietHistoryIndex(theBoard.OnMove, list[nn])];
                 }
             }
 
@@ -116,8 +106,8 @@ namespace Lisa
         }
 
 
-        //Called with the node's side to move and remaining depth: the quiet move that caused a cutoff gets a bonus, and every
-        //quiet move searched before it in that node gets the same amount taken off
+        //Called with the node's side to move and remaining depth: the quiet move that caused a cutoff gets a bonus, and
+        //every quiet move searched before it in that node gets the same amount taken off
         public static void RewardQuietMove(int side, Move move, int depth)
         {
             UpdateQuietHistory(QuietHistoryIndex(side, move), Math.Min(depth * depth, QUIET_HISTORY_BONUS_CAP));
@@ -142,33 +132,11 @@ namespace Lisa
         }
 
 
-        public static void UpdateHistoryStandard(int rootMoveKey, int moveKey, int depth, bool wasCut)
+        //Counts a cutoff by a move, overall and under the current root move. Quiet IID adds these counts to its scores
+        public static void CountCut(int rootMoveKey, int moveKey)
         {
-            History[moveKey] += (depth * depth * depth);
-            SingleMoveHistory[rootMoveKey, moveKey] += (depth * depth * depth * depth);
-            if (wasCut)
-            {
-                CutCount[moveKey] += 1;
-                CutCountSingleMove[rootMoveKey, moveKey] += 1;
-            }
-        }
-
-
-        public static void UpdateHistoryAggressive(int rootMoveKey, int moveKey, int depth, bool wasCut)
-        {
-            History[moveKey] += (depth * depth * depth * depth);
-            SingleMoveHistory[rootMoveKey, moveKey] += (depth * depth * depth * depth * depth);
-            if (wasCut)
-            {
-                CutCount[moveKey] += 1;
-                CutCountSingleMove[rootMoveKey, moveKey] += 1;
-            }
-        }
-
-        public static void ReduceHistory(int rootMoveKey, int moveKey, int depth)
-        {
-            History[moveKey] -= (depth * depth);
-            SingleMoveHistory[rootMoveKey, moveKey] -= depth;
+            CutCount[moveKey] += 1;
+            CutCountSingleMove[rootMoveKey, moveKey] += 1;
         }
 
 
@@ -195,7 +163,8 @@ namespace Lisa
             }
             else
             {
-                if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerOnes[killerDepth].From, KillerOnes[killerDepth].To, killerDepth])
+                if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerOnes[killerDepth].From,
+                    KillerOnes[killerDepth].To, killerDepth])
                 {
                     KillerTwos[killerDepth] = KillerOnes[killerDepth];
                     SecondKillerPieces[killerDepth] = FirstKillerPieces[killerDepth];
@@ -211,7 +180,8 @@ namespace Lisa
                     }
                     else
                     {
-                        if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerTwos[killerDepth].From, KillerTwos[killerDepth].To, killerDepth])
+                        if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerTwos[killerDepth].From,
+                            KillerTwos[killerDepth].To, killerDepth])
                         {
                             KillerTwos[killerDepth] = kMove;
                             SecondKillerPieces[killerDepth] = killerPiece;
@@ -233,17 +203,15 @@ namespace Lisa
         public static void Reset()
         {
             Array.Clear(QuietHistory);
-            History = new int[6363];
-            SingleMoveHistory = new int[6363, 6363];
-            CutCount = new int[6363];
-            CutCountSingleMove = new int[6363, 6363];
-            KillerScores = new int[64, 64, MAX_DEPTH];
-            KillerOnes = new Move[MAX_DEPTH];
-            KillerTwos = new Move[MAX_DEPTH];
-            FirstKillerPieces = new int[MAX_DEPTH];
-            SecondKillerPieces = new int[MAX_DEPTH];
-            Refutations = new Move[MAX_DEPTH];
-            RefutationPieces = new int[MAX_DEPTH];
+            Array.Clear(CutCount);
+            Array.Clear(CutCountSingleMove);
+            Array.Clear(KillerScores);
+            Array.Clear(KillerOnes);
+            Array.Clear(KillerTwos);
+            Array.Clear(FirstKillerPieces);
+            Array.Clear(SecondKillerPieces);
+            Array.Clear(Refutations);
+            Array.Clear(RefutationPieces);
         }
 
     }

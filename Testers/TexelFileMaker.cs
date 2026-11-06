@@ -40,7 +40,8 @@ namespace Lisa
             public long Zobrist;
         }
 
-        public TexelFileMaker(string pgnFile, string epdFile, int positionsPerGame, int skipPlies, int maxGames, int gameStride)
+        public TexelFileMaker(string pgnFile, string epdFile, int positionsPerGame, int skipPlies, int maxGames,
+            int gameStride)
         {
             _pgnFile = pgnFile;
             _epdFile = epdFile;
@@ -174,7 +175,8 @@ namespace Lisa
                 {
                     if (_failures.Count < MAX_REPORTED_FAILURES)
                     {
-                        _failures.Add("Game " + _gamesRead + ", ply " + (ply + 1) + ": '" + sanMoves[ply] + "' in " + gameBoard.GenerateFen());
+                        _failures.Add("Game " + _gamesRead + ", ply " + (ply + 1) + ": '" + sanMoves[ply] + "' in " +
+                            gameBoard.GenerateFen());
                     }
                     return false;
                 }
@@ -425,7 +427,8 @@ namespace Lisa
         }
 
 
-        private static bool FindUniqueMove(ref Board theBoard, int piece, int fromSquare, int toSquare, int fromFile, int fromRank, byte promotion, out Move found)
+        private static bool FindUniqueMove(ref Board theBoard, int piece, int fromSquare, int toSquare, int fromFile,
+            int fromRank, byte promotion, out Move found)
         {
 
             found = new Move();
@@ -510,7 +513,8 @@ namespace Lisa
             {
                 "Texel file: " + _epdFile,
                 "From PGN: " + _pgnFile,
-                "Settings: positions/game " + _positionsPerGame + ", skip plies " + _skipPlies + ", max games " + _maxGames + ", stride " + _gameStride,
+                "Settings: positions/game " + _positionsPerGame + ", skip plies " + _skipPlies + ", max games " +
+                    _maxGames + ", stride " + _gameStride,
                 "",
                 "Games read: " + _gamesRead,
                 "Games used: " + _gamesUsed,
