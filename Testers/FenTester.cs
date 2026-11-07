@@ -39,6 +39,8 @@ namespace Lisa
                 linesForFile.Add("Score: " + search.BestScore.ToString());
                 linesForFile.Add(" ");
                 linesForFile.Add("TotalNodes: " + search.Stats.NodesLookedAt.ToString());
+                linesForFile.Add("NodesPerThread: " + search.NodesLookedAtPerThread());
+                linesForFile.AddRange(search.IterationLines);
                 linesForFile.Add("WithoutQuiesce: " + search.Stats.NodesLookedAtWithoutQuiesce.ToString());
                 linesForFile.Add("Quiesced: " + search.Stats.NodesQuiesced.ToString());
                 linesForFile.Add(" ");

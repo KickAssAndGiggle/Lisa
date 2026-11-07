@@ -66,6 +66,9 @@ namespace Lisa
         public static int PAWN_STRUCTURE_HASH_SIZE_MB = 64;
         public static int POSITION_SCORE_HASH_SIZE_MB = 64;
 
+        //Search threads, the main search included (Lazy SMP). Threads= in Settings.ini, or the UCI Threads option
+        public static int SEARCH_THREADS = 4;
+
         private static string _bookFile = "";
 
         static Globals()
@@ -169,6 +172,8 @@ namespace Lisa
                     new("fen=", new[] { ProgramMode.Perft, ProgramMode.FenToZobrist }, value => PERFT_FEN = value),
                     new("perftdepth=", new[] { ProgramMode.Perft }, value => PERFT_DEPTH = Convert.ToInt32(value)),
                     new("multifen_", new[] { ProgramMode.MultiFen }, value => MultiFenList.Add(value)),
+                    new("threads=", new[] { ProgramMode.UCI, ProgramMode.MultiFen, ProgramMode.EPD },
+                        value => SEARCH_THREADS = Math.Max(1, Convert.ToInt32(value))),
                     new("multifendepth=", new[] { ProgramMode.MultiFen, ProgramMode.EPD },
                         value => MULTI_FEN_DEPTH = Convert.ToByte(value)),
                     new("epdinputfile=", new[] { ProgramMode.EPD }, value => EPD_INPUT = value),

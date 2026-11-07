@@ -37,9 +37,15 @@ namespace Lisa
 
         private System.Timers.Timer _secondTimer;
 
+        private readonly Sorter _sorter = new();
+
         private SearchStats _stats = new();
 
         public ref readonly SearchStats Stats => ref _stats;
+
+        //One line per completed iteration of the main search, for the tester output files
+        private readonly List<string> _iterationLines = new();
+        public List<string> IterationLines => _iterationLines;
 
 
         #region Interaction with caller properties
@@ -50,7 +56,8 @@ namespace Lisa
         private Move[]? _rootMoves;
         private Dictionary<int, Move[]>? _rootPVs;
 
-        private bool _cancel = false;
+        //Volatile: set by the UCI thread, or by the main search to stop its helpers, and read inside the search
+        private volatile bool _cancel = false;
         private bool _hasCancelled = false;
         private bool _isSearching = false;
 
@@ -135,7 +142,7 @@ namespace Lisa
             if (!_cancel && _isSearching)
             {
                 _stats.SecondsUsed += 1;
-                _stats.NodesPerSecond = _stats.NodesLookedAt / _stats.SecondsUsed;
+                _stats.NodesPerSecond = (int)(NodesLookedAtAllThreads() / _stats.SecondsUsed);
                 InfoUpdated?.Invoke();
             }
         }

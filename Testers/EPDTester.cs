@@ -131,6 +131,8 @@ namespace Lisa
                     OutputLines.Add("Score: " + Search.BestScore.ToString());
                     OutputLines.Add(" ");
                     OutputLines.Add("TotalNodes: " + Search.Stats.NodesLookedAt.ToString());
+                    OutputLines.Add("NodesPerThread: " + Search.NodesLookedAtPerThread());
+                    OutputLines.AddRange(Search.IterationLines);
                     OutputLines.Add("WithoutQuiesce: " + Search.Stats.NodesLookedAtWithoutQuiesce.ToString());
                     OutputLines.Add("Quiesced: " + Search.Stats.NodesQuiesced.ToString());
                     OutputLines.Add(" ");

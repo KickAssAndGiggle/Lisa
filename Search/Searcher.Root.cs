@@ -124,24 +124,14 @@ namespace Lisa
             Move[] legal = legalList.ToArray();
             Array.Sort(legal);
 
-            //Create an array to store the best ordered moves from the previous depth of
-            //iterative deepening. If we run out of time, we will fall-back to the last
-            //fully completed depth's results
-            Move[]? prevIterationBest = null;
-            int totalUsedTickCount = 0;
-            bool quittingEarly = false;
             _stats.MaxSearchDepth = maxDepth;
             Dictionary<int, Move[]> pvDict = new();
 
             _startingWhiteMaterial = _theBoard.WhiteMaterial;
             _startingBlackMaterial = _theBoard.BlackMaterial;
 
-            int prevIterationAlpha = -5000;
-            int bestScoreAtDepth = 0;
-            int windowSize = 0;
-            bool nullWindowSearch;
-
-            Sorter.Reset();
+            _sorter.Reset();
+            _sorter.SetRootMoves(legal);
 
             _ply = 0;
             _inCheckAtPly[0] = _theBoard.IsInCheck(_theBoard.OnMove);
@@ -149,191 +139,10 @@ namespace Lisa
             _repetitionFloor = 0;
             _gameZobrists = prevZobrists != null ? new HashSet<long>(prevZobrists) : new HashSet<long>();
 
-            for (byte depth = 1; depth <= maxDepth; depth++)
-            {
+            StartHelpers(legal, maxDepth);
+            legal = SearchRoot(legal, 1, maxDepth, timeController.MaxTimeToUse, pvDict);
 
-                _fullDepth = depth;
-                _stats.CurrentSearchDepth = depth;
-
-                windowSize = 50;
-                bestScoreAtDepth = -5000;
-
-                int aspAlpha = prevIterationAlpha - windowSize;
-                int aspBeta = prevIterationAlpha + windowSize;
-
-                for (int nn = 0; nn < legal.Length; nn++)
-                {
-
-                    int moveStartTickCount = Environment.TickCount;
-                    int MoveKey = legal[nn].From * 100 + legal[nn].To;
-
-                    Move[] pv = new Move[depth + 1];
-                    pv[depth] = legal[nn];
-
-                    if (depth <= 4)
-                    {
-                        legal[nn].Score = 0 - EvaluateMove(legal[nn], MoveKey, -5000, 5000, depth, ref pv);
-                    }
-                    else
-                    {
-                        if (legal[nn].Score > -5000)
-                        {
-
-                            bool alphaWidened = false;
-                            bool betaWidened = false;
-                            bool nullWindowFailure = false;
-
-                        ReSearchAfterFallingOutsideWindow:
-
-                            if (nn == 0 || nullWindowFailure)
-                            {
-                                nullWindowSearch = false;
-                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv);
-
-                            }
-                            else
-                            {
-                                nullWindowSearch = true;
-                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspAlpha - 1, -aspAlpha, depth,
-                                    ref pv);
-                            }
-
-                            if (nullWindowSearch && (legal[nn].Score > aspAlpha))
-                            {
-                                nullWindowFailure = true;
-                                goto ReSearchAfterFallingOutsideWindow;
-                            }
-
-                            if (legal[nn].Score <= aspAlpha && aspAlpha != -5000)
-                            {
-                                if (nn > 0)
-                                {
-                                    //Not the best move, so no exact score is needed: only whether root selectivity will
-                                    //drop it
-                                    legal[nn].Score = ScoreRootMoveBelowBest(legal[nn], MoveKey, depth,
-                                        bestScoreAtDepth, legal[nn].Score, ref pv);
-                                }
-                                else if (!alphaWidened)
-                                {
-                                    aspAlpha -= windowSize;
-                                    alphaWidened = true;
-                                    goto ReSearchAfterFallingOutsideWindow;
-                                }
-                                else
-                                {
-                                    aspAlpha = -5000;
-                                    goto ReSearchAfterFallingOutsideWindow;
-                                }
-                            }
-                            else if (legal[nn].Score >= aspBeta && aspBeta != 5000)
-                            {
-                                if (!betaWidened)
-                                {
-                                    aspBeta += windowSize;
-                                    betaWidened = true;
-                                    goto ReSearchAfterFallingOutsideWindow;
-                                }
-                                else
-                                {
-                                    aspBeta = 5000;
-                                    goto ReSearchAfterFallingOutsideWindow;
-                                }
-                            }
-
-                            if (legal[nn].Score > bestScoreAtDepth)
-                            {
-                                bestScoreAtDepth = legal[nn].Score;
-                            }
-
-                            if (legal[nn].Score > aspAlpha)
-                            {
-                                aspAlpha = legal[nn].Score - windowSize;
-                                aspBeta = legal[nn].Score + windowSize;
-                            }
-
-                        }
-                    }
-
-                    int moveEndTickCount = Environment.TickCount;
-                    totalUsedTickCount += (moveEndTickCount - moveStartTickCount);
-                    _stats.CurrentSearchDepth = depth;
-
-                    if ((totalUsedTickCount > timeController.MaxTimeToUse && nn < legal.Length / 3 && depth >= 7) ||
-                        (_cancel && depth > 1))
-                    {
-                        if (prevIterationBest != null)
-                        {
-                            //We've gone over, and we are not almost done
-                            quittingEarly = true;
-                            legal = prevIterationBest;
-                            break;
-                        }
-
-                    }
-                    else
-                    {
-                        if (pvDict.ContainsKey(legal[nn].From * 100 + legal[nn].To))
-                        {
-                            pvDict.Remove(legal[nn].From * 100 + legal[nn].To);
-                        }
-                        pvDict.Add(legal[nn].From * 100 + legal[nn].To, pv);
-                    }
-
-                }
-
-                prevIterationAlpha = bestScoreAtDepth;
-
-                if (!quittingEarly)
-                {
-
-                    //Save a copy of of the sorted list, so if we have to give up in the next
-                    //iteration due to time constraints, we have a fallback result
-                    SortRootMoves(legal);
-                    prevIterationBest = (Move[])legal.Clone();
-
-                    _bestMove = legal[0];
-                    _bestScore = legal[0].Score;
-                    _bestPV = pvDict[legal[0].From * 100 + legal[0].To];
-
-                    if (depth >= 4)
-                    {
-                        if (totalUsedTickCount > timeController.MaxTimeToUse)
-                        {
-                            //We must exit here, we have used too much time
-                            break;
-                        }
-                        else if (totalUsedTickCount > Convert.ToInt32(timeController.MaxTimeToUse * 0.5))
-                        {
-                            //We've used 50% of our max time...odds of completing another ply is minimal
-                            break;
-                        }
-                    }
-
-                    if (depth >= 6)
-                    {
-                        int cutoff = RootSelectivityCutoff(depth);
-                        for (int NRed = 1; NRed < legal.Length; NRed++)
-                        {
-                            if (legal[NRed].Score < _bestScore - cutoff && !GivesCheck(legal[NRed]) &&
-                                !ThreatensMateInOne(legal[NRed]))
-                            {
-                                legal[NRed].Score = -5000;
-                            }
-                        }
-                    }
-
-                }
-                else
-                {
-                    break;
-                }
-
-                if (legal.Length > 1 && legal[1].Score == -5000 && depth >= 6)
-                {
-                    break;
-                }
-
-            }
+            StopHelpers();
 
             //Set the best move to the legal moves sorted to the highest score
             _bestMove = legal[0];
@@ -452,6 +261,257 @@ namespace Lisa
 
             InfoUpdated?.Invoke();
             BestMoveSelected?.Invoke();
+
+        }
+
+
+        //Iterative deepening over the root moves, run by the main search and by every helper: full windows to depth
+        //4, aspiration windows from depth 5, root selectivity from depth 6. Returns the root moves sorted best first,
+        //or the last completed iteration's if the time ran out. Helpers pass int.MaxValue as the time
+        private Move[] SearchRoot(Move[] legal, byte startDepth, byte maxDepth, int maxTimeToUse,
+            Dictionary<int, Move[]> pvDict)
+        {
+
+            //Create an array to store the best ordered moves from the previous depth of
+            //iterative deepening. If we run out of time, we will fall-back to the last
+            //fully completed depth's results
+            Move[]? prevIterationBest = null;
+            int totalUsedTickCount = 0;
+            bool quittingEarly = false;
+
+            int prevIterationAlpha = -5000;
+            int bestScoreAtDepth = 0;
+            int windowSize = 0;
+            bool nullWindowSearch;
+
+            _iterationLines.Clear();
+            int searchStartTickCount = Environment.TickCount;
+
+            for (byte depth = startDepth; depth <= maxDepth; depth++)
+            {
+
+                _fullDepth = depth;
+                _stats.CurrentSearchDepth = depth;
+
+                windowSize = 50;
+                bestScoreAtDepth = -5000;
+
+                int rootMovesSearched = 0;
+                int nullWindowReSearches = 0;
+                int failLowReSearches = 0;
+                int failHighReSearches = 0;
+                int belowBestSearches = 0;
+                int rootMovesDropped = 0;
+                string newlyDroppedMoves = "";
+                int windowSlides = 0;
+                int windowSlideTotal = 0;
+
+                int aspAlpha = prevIterationAlpha - windowSize;
+                int aspBeta = prevIterationAlpha + windowSize;
+
+                for (int nn = 0; nn < legal.Length; nn++)
+                {
+
+                    int moveStartTickCount = Environment.TickCount;
+                    int MoveKey = legal[nn].From * 100 + legal[nn].To;
+
+                    Move[] pv = new Move[depth + 1];
+                    pv[depth] = legal[nn];
+
+                    if (depth <= 4)
+                    {
+                        rootMovesSearched += 1;
+                        legal[nn].Score = 0 - EvaluateMove(legal[nn], MoveKey, -5000, 5000, depth, ref pv);
+                    }
+                    else
+                    {
+                        if (legal[nn].Score > -5000)
+                        {
+
+                            rootMovesSearched += 1;
+                            bool alphaWidened = false;
+                            bool betaWidened = false;
+                            bool nullWindowFailure = false;
+
+                        ReSearchAfterFallingOutsideWindow:
+
+                            if (nn == 0 || nullWindowFailure)
+                            {
+                                nullWindowSearch = false;
+                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv);
+
+                            }
+                            else
+                            {
+                                nullWindowSearch = true;
+                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspAlpha - 1, -aspAlpha, depth,
+                                    ref pv);
+                            }
+
+                            if (nullWindowSearch && (legal[nn].Score > aspAlpha))
+                            {
+                                nullWindowReSearches += 1;
+                                nullWindowFailure = true;
+                                goto ReSearchAfterFallingOutsideWindow;
+                            }
+
+                            if (legal[nn].Score <= aspAlpha && aspAlpha != -5000)
+                            {
+                                if (nn > 0)
+                                {
+                                    //Not the best move, so no exact score is needed: only whether root selectivity will
+                                    //drop it
+                                    belowBestSearches += 1;
+                                    legal[nn].Score = ScoreRootMoveBelowBest(legal[nn], MoveKey, depth,
+                                        bestScoreAtDepth, legal[nn].Score, ref pv);
+                                }
+                                else if (!alphaWidened)
+                                {
+                                    failLowReSearches += 1;
+                                    aspAlpha -= windowSize;
+                                    alphaWidened = true;
+                                    goto ReSearchAfterFallingOutsideWindow;
+                                }
+                                else
+                                {
+                                    failLowReSearches += 1;
+                                    aspAlpha = -5000;
+                                    goto ReSearchAfterFallingOutsideWindow;
+                                }
+                            }
+                            else if (legal[nn].Score >= aspBeta && aspBeta != 5000)
+                            {
+                                if (!betaWidened)
+                                {
+                                    failHighReSearches += 1;
+                                    aspBeta += windowSize;
+                                    betaWidened = true;
+                                    goto ReSearchAfterFallingOutsideWindow;
+                                }
+                                else
+                                {
+                                    failHighReSearches += 1;
+                                    aspBeta = 5000;
+                                    goto ReSearchAfterFallingOutsideWindow;
+                                }
+                            }
+
+                            if (legal[nn].Score > bestScoreAtDepth)
+                            {
+                                bestScoreAtDepth = legal[nn].Score;
+                            }
+
+                            if (legal[nn].Score > aspAlpha)
+                            {
+                                if (legal[nn].Score - windowSize < aspAlpha)
+                                {
+                                    windowSlides += 1;
+                                    windowSlideTotal += aspAlpha - (legal[nn].Score - windowSize);
+                                }
+                                aspAlpha = legal[nn].Score - windowSize;
+                                aspBeta = legal[nn].Score + windowSize;
+                            }
+
+                        }
+                    }
+
+                    int moveEndTickCount = Environment.TickCount;
+                    totalUsedTickCount += (moveEndTickCount - moveStartTickCount);
+                    _stats.CurrentSearchDepth = depth;
+
+                    if ((totalUsedTickCount > maxTimeToUse && nn < legal.Length / 3 && depth >= 7) ||
+                        (_cancel && depth > 1))
+                    {
+                        if (prevIterationBest != null)
+                        {
+                            //We've gone over, and we are not almost done
+                            quittingEarly = true;
+                            legal = prevIterationBest;
+                            break;
+                        }
+
+                    }
+                    else
+                    {
+                        if (pvDict.ContainsKey(legal[nn].From * 100 + legal[nn].To))
+                        {
+                            pvDict.Remove(legal[nn].From * 100 + legal[nn].To);
+                        }
+                        pvDict.Add(legal[nn].From * 100 + legal[nn].To, pv);
+                    }
+
+                }
+
+                prevIterationAlpha = bestScoreAtDepth;
+
+                if (!quittingEarly)
+                {
+
+                    //Save a copy of of the sorted list, so if we have to give up in the next
+                    //iteration due to time constraints, we have a fallback result
+                    SortRootMoves(legal);
+                    prevIterationBest = (Move[])legal.Clone();
+
+                    _bestMove = legal[0];
+                    _bestScore = legal[0].Score;
+                    _bestPV = pvDict[legal[0].From * 100 + legal[0].To];
+
+                    if (depth >= 4)
+                    {
+                        if (totalUsedTickCount > maxTimeToUse)
+                        {
+                            //We must exit here, we have used too much time
+                            break;
+                        }
+                        else if (totalUsedTickCount > Convert.ToInt32(maxTimeToUse * 0.5))
+                        {
+                            //We've used 50% of our max time...odds of completing another ply is minimal
+                            break;
+                        }
+                    }
+
+                    if (depth >= 6)
+                    {
+                        int cutoff = RootSelectivityCutoff(depth);
+                        for (int NRed = 1; NRed < legal.Length; NRed++)
+                        {
+                            if (legal[NRed].Score < _bestScore - cutoff && !GivesCheck(legal[NRed]) &&
+                                !ThreatensMateInOne(legal[NRed]))
+                            {
+                                if (legal[NRed].Score > -5000)
+                                {
+                                    newlyDroppedMoves += " " + ConvertMoveToString(legal[NRed]) + " " +
+                                        legal[NRed].Score;
+                                }
+                                legal[NRed].Score = -5000;
+                                rootMovesDropped += 1;
+                            }
+                        }
+                    }
+
+                    _iterationLines.Add("Depth " + depth + ": " + ConvertMoveToString(legal[0]) + " " + _bestScore +
+                        ", " + (Environment.TickCount - searchStartTickCount) + "ms, main nodes " +
+                        _stats.NodesLookedAt + ", all nodes " + NodesLookedAtAllThreads() + ", root moves " +
+                        rootMovesSearched +
+                        ", re-searches null/low/high " + nullWindowReSearches + "/" + failLowReSearches + "/" +
+                        failHighReSearches + ", below-best " + belowBestSearches + ", dropped " + rootMovesDropped +
+                        ", window slid down " + windowSlides + " times by " + windowSlideTotal +
+                        ", newly dropped:" + newlyDroppedMoves);
+
+                }
+                else
+                {
+                    break;
+                }
+
+                if (legal.Length > 1 && legal[1].Score == -5000 && depth >= 6)
+                {
+                    break;
+                }
+
+            }
+
+            return legal;
 
         }
 

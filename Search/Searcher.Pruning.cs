@@ -130,7 +130,7 @@ namespace Lisa
                 _theBoard.MakeMove(_phantomMove, _theBoard.OnMove, true);
                 int savedRepetitionFloor = _repetitionFloor;
                 _repetitionFloor = _ply + 1;
-                Move[] AllMovesAfterOppNull = Sorter.GetSortedMoves(ref _theBoard, false, false);
+                Move[] AllMovesAfterOppNull = _sorter.GetSortedMoves(ref _theBoard, false, false);
                 for (int nn = 0; nn < AllMovesAfterOppNull.Length; nn++)
                 {
                     if (_theBoard.MoveIsLegal(AllMovesAfterOppNull[nn], _theBoard.OnMove))
@@ -196,7 +196,7 @@ namespace Lisa
 
                 _stats.ProbCutAttempts += 1;
 
-                Move[] AllProbCutOppMoves = Sorter.GetSortedMoves(ref _theBoard, false, false);
+                Move[] AllProbCutOppMoves = _sorter.GetSortedMoves(ref _theBoard, false, false);
                 int BetaExceeded = 0;
                 for (int nn = 0; nn < AllProbCutOppMoves.Length / 3; nn++)
                 {

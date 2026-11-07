@@ -1,7 +1,9 @@
 ﻿using static Lisa.Globals;
 namespace Lisa
 {
-    public static class Sorter
+    //Move ordering state: quiet history, cut counts, killers and refutations. Each searching thread owns one, so the
+    //threads never write into each other's ordering
+    public sealed class Sorter
     {
 
         private const int MAX_DEPTH = 30;
@@ -12,44 +14,32 @@ namespace Lisa
         private const int QUIET_HISTORY_MAX = 16384;
         private const int QUIET_HISTORY_BONUS_CAP = 1200;
 
-#pragma warning disable CA2211 // Non-constant fields should not be visible
+        //Each root move gets its own 64 x 64 row of cut counts. A position has at most 218 legal moves
+        private const int MAX_ROOT_MOVES = 256;
 
-        //This is faster than the "correct" practice, and I've tested it enough times
-        //to be certain about it by now
+        //Public fields rather than properties: this is faster than the "correct" practice, and I've tested it enough
+        //times to be certain about it by now
 
-        public static int[] QuietHistory = new int[2 * 64 * 64];
-        public static int[] CutCount;
-        public static int[,] CutCountSingleMove;
+        public readonly int[] QuietHistory = new int[2 * 64 * 64];
+        public readonly int[] CutCount = new int[6363];
 
-        public static Move[] KillerOnes;
-        public static Move[] KillerTwos;
-        public static int[] FirstKillerPieces;
-        public static int[] SecondKillerPieces;
-        public static int[,,] KillerScores;
+        public readonly Move[] KillerOnes = new Move[MAX_DEPTH];
+        public readonly Move[] KillerTwos = new Move[MAX_DEPTH];
+        public readonly int[] FirstKillerPieces = new int[MAX_DEPTH];
+        public readonly int[] SecondKillerPieces = new int[MAX_DEPTH];
 
-        public static Move[] Refutations;
-        public static int[] RefutationPieces;
+        public readonly Move[] Refutations = new Move[MAX_DEPTH];
+        public readonly int[] RefutationPieces = new int[MAX_DEPTH];
 
-#pragma warning restore CA2211 // Non-constant fields should not be visible
+        //Killer scores for each from square, to square and ply from the root
+        private readonly int[,,] _killerScores = new int[64, 64, MAX_DEPTH];
 
-        static Sorter()
-        {
-            CutCount = new int[6363];
-            CutCountSingleMove = new int[6363, 6363];
-
-            //Create a new array of Killer Move trackers, for each From Square/To Square/Depth
-            KillerScores = new int[64, 64, MAX_DEPTH];
-            KillerOnes = new Move[MAX_DEPTH];
-            KillerTwos = new Move[MAX_DEPTH];
-            FirstKillerPieces = new int[MAX_DEPTH];
-            SecondKillerPieces = new int[MAX_DEPTH];
-
-            Refutations = new Move[MAX_DEPTH];
-            RefutationPieces = new int[MAX_DEPTH];
-        }
+        //Cut counts under each root move: row _rootMoveRow[rootMoveKey], column from * 64 + to
+        private readonly int[] _cutCountUnderRootMove = new int[MAX_ROOT_MOVES * 64 * 64];
+        private readonly int[] _rootMoveRow = new int[6363];
 
 
-        public static Move[] GetSortedMoves(ref Board theBoard, bool capturesOnly, bool nonCapturesOnly,
+        public Move[] GetSortedMoves(ref Board theBoard, bool capturesOnly, bool nonCapturesOnly,
             bool lowDepth = false)
         {
 
@@ -108,19 +98,19 @@ namespace Lisa
 
         //Called with the node's side to move and remaining depth: the quiet move that caused a cutoff gets a bonus, and
         //every quiet move searched before it in that node gets the same amount taken off
-        public static void RewardQuietMove(int side, Move move, int depth)
+        public void RewardQuietMove(int side, Move move, int depth)
         {
             UpdateQuietHistory(QuietHistoryIndex(side, move), Math.Min(depth * depth, QUIET_HISTORY_BONUS_CAP));
         }
 
 
-        public static void PenaliseQuietMove(int side, Move move, int depth)
+        public void PenaliseQuietMove(int side, Move move, int depth)
         {
             UpdateQuietHistory(QuietHistoryIndex(side, move), -Math.Min(depth * depth, QUIET_HISTORY_BONUS_CAP));
         }
 
 
-        private static void UpdateQuietHistory(int index, int bonus)
+        private void UpdateQuietHistory(int index, int bonus)
         {
             QuietHistory[index] += bonus - QuietHistory[index] * Math.Abs(bonus) / QUIET_HISTORY_MAX;
         }
@@ -132,22 +122,45 @@ namespace Lisa
         }
 
 
-        //Counts a cutoff by a move, overall and under the current root move. Quiet IID adds these counts to its scores
-        public static void CountCut(int rootMoveKey, int moveKey)
+        //Gives each root move its own row of cut counts. Called once per search, with the root's legal moves
+        public void SetRootMoves(Move[] rootMoves)
         {
-            CutCount[moveKey] += 1;
-            CutCountSingleMove[rootMoveKey, moveKey] += 1;
+            for (int nn = 0; nn < rootMoves.Length; nn++)
+            {
+                _rootMoveRow[rootMoves[nn].From * 100 + rootMoves[nn].To] = nn;
+            }
         }
 
 
-        public static void IncreaseKillerScore(int fullDepth, int depth, Move kMove, int piece, int score)
+        //Counts a cutoff by a move, overall and under the current root move. Quiet IID adds these counts to its
+        //scores. Move keys are from * 100 + to
+        public void CountCut(int rootMoveKey, int moveKey)
         {
-            KillerScores[kMove.From, kMove.To, fullDepth - depth] += score;
+            CutCount[moveKey] += 1;
+            _cutCountUnderRootMove[CutCountUnderRootMoveIndex(rootMoveKey, moveKey)] += 1;
+        }
+
+
+        public int CutCountUnderRootMove(int rootMoveKey, int moveKey)
+        {
+            return _cutCountUnderRootMove[CutCountUnderRootMoveIndex(rootMoveKey, moveKey)];
+        }
+
+
+        private int CutCountUnderRootMoveIndex(int rootMoveKey, int moveKey)
+        {
+            return _rootMoveRow[rootMoveKey] * 4096 + (moveKey / 100) * 64 + moveKey % 100;
+        }
+
+
+        public void IncreaseKillerScore(int fullDepth, int depth, Move kMove, int piece, int score)
+        {
+            _killerScores[kMove.From, kMove.To, fullDepth - depth] += score;
             ReplaceKillerIfAppropriate(kMove, fullDepth - depth, piece);
         }
 
 
-        private static void ReplaceKillerIfAppropriate(Move kMove, int killerDepth, int killerPiece)
+        private void ReplaceKillerIfAppropriate(Move kMove, int killerDepth, int killerPiece)
         {
 
             if ((kMove.From == KillerOnes[killerDepth].From && kMove.To == KillerOnes[killerDepth].To) ||
@@ -163,7 +176,7 @@ namespace Lisa
             }
             else
             {
-                if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerOnes[killerDepth].From,
+                if (_killerScores[kMove.From, kMove.To, killerDepth] > _killerScores[KillerOnes[killerDepth].From,
                     KillerOnes[killerDepth].To, killerDepth])
                 {
                     KillerTwos[killerDepth] = KillerOnes[killerDepth];
@@ -180,8 +193,8 @@ namespace Lisa
                     }
                     else
                     {
-                        if (KillerScores[kMove.From, kMove.To, killerDepth] > KillerScores[KillerTwos[killerDepth].From,
-                            KillerTwos[killerDepth].To, killerDepth])
+                        if (_killerScores[kMove.From, kMove.To, killerDepth] >
+                            _killerScores[KillerTwos[killerDepth].From, KillerTwos[killerDepth].To, killerDepth])
                         {
                             KillerTwos[killerDepth] = kMove;
                             SecondKillerPieces[killerDepth] = killerPiece;
@@ -193,19 +206,19 @@ namespace Lisa
         }
 
 
-        public static void SetRefutationMove(int fullDepth, int refutationDepth, Move rMove, int fromSquarePiece)
+        public void SetRefutationMove(int fullDepth, int refutationDepth, Move rMove, int fromSquarePiece)
         {
             Refutations[fullDepth - refutationDepth] = rMove;
             RefutationPieces[fullDepth - refutationDepth] = fromSquarePiece;
         }
 
 
-        public static void Reset()
+        public void Reset()
         {
             Array.Clear(QuietHistory);
             Array.Clear(CutCount);
-            Array.Clear(CutCountSingleMove);
-            Array.Clear(KillerScores);
+            Array.Clear(_cutCountUnderRootMove);
+            Array.Clear(_killerScores);
             Array.Clear(KillerOnes);
             Array.Clear(KillerTwos);
             Array.Clear(FirstKillerPieces);

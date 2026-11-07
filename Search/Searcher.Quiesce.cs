@@ -131,7 +131,7 @@ namespace Lisa
             Move[] allOppMoves;
             if (isInCheck && QuiesceDepth == 0)
             {
-                allOppMoves = Sorter.GetSortedMoves(ref _theBoard, !isInCheck, false, true);
+                allOppMoves = _sorter.GetSortedMoves(ref _theBoard, !isInCheck, false, true);
             }
             else
             {

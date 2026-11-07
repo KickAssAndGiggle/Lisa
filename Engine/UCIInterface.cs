@@ -211,7 +211,7 @@ namespace Lisa
                     string infoString = "info seldepth " + _search.Stats.CurrentSearchDepth.ToString() + " depth " +
                         _search.Stats.CurrentSearchDepth.ToString() +
                         " time " + (_search.Stats.SecondsUsed * 1000).ToString();
-                    infoString += " nodes " + _search.Stats.NodesLookedAt.ToString() + " nps " +
+                    infoString += " nodes " + _search.NodesLookedAtAllThreads().ToString() + " nps " +
                         _search.Stats.NodesPerSecond.ToString();
 
                     string pvString = "";

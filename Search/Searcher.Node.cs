@@ -37,6 +37,12 @@ namespace Lisa
                                 )
         {
 
+            //Stopped: unwind straight away. The result is never used
+            if (_cancel)
+            {
+                return alphaOnEntry;
+            }
+
             int ourDepth = _fullDepth - depth;
 
             NodeState node = new()
@@ -113,12 +119,12 @@ namespace Lisa
                 bool pvCut = TryPrimaryVariation(hasTTMove, ttMove, depth, beta, rootMoveKey, ref node);
                 if (pvCut)
                 {
-                    Sorter.SetRefutationMove(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From]);
+                    _sorter.SetRefutationMove(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From]);
                     int MoveKey = ttMove.From * 100 + ttMove.To;
-                    Sorter.CountCut(rootMoveKey, MoveKey);
+                    _sorter.CountCut(rootMoveKey, MoveKey);
                     if (!ttMove.IsCapture)
                     {
-                        Sorter.RewardQuietMove(_theBoard.OnMove, ttMove, depth);
+                        _sorter.RewardQuietMove(_theBoard.OnMove, ttMove, depth);
                     }
                     goto ReturnEarly;
                 }
@@ -128,11 +134,11 @@ namespace Lisa
 
             if (refutationCut)
             {
-                int MoveKey = Sorter.Refutations[ourDepth].From * 100 + Sorter.Refutations[ourDepth].To;
-                Sorter.CountCut(rootMoveKey, MoveKey);
-                if (!Sorter.Refutations[ourDepth].IsCapture)
+                int MoveKey = _sorter.Refutations[ourDepth].From * 100 + _sorter.Refutations[ourDepth].To;
+                _sorter.CountCut(rootMoveKey, MoveKey);
+                if (!_sorter.Refutations[ourDepth].IsCapture)
                 {
-                    Sorter.RewardQuietMove(_theBoard.OnMove, Sorter.Refutations[ourDepth], depth);
+                    _sorter.RewardQuietMove(_theBoard.OnMove, _sorter.Refutations[ourDepth], depth);
                 }
                 goto ReturnEarly;
             }
@@ -146,7 +152,7 @@ namespace Lisa
                 
                 int iidAlpha = node.Alpha;
                 int iidBeta = beta;
-                allOpCaps = Sorter.GetSortedMoves(ref _theBoard, true, false, true);
+                allOpCaps = _sorter.GetSortedMoves(ref _theBoard, true, false, true);
 
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOpCaps.Length; nn++)
@@ -168,7 +174,7 @@ namespace Lisa
 
             if (allOpCaps == null)
             {
-                allOpCaps = Sorter.GetSortedMoves(ref _theBoard, true, false,
+                allOpCaps = _sorter.GetSortedMoves(ref _theBoard, true, false,
                     (depth <= _fullDepth - 6 && nodeType != NodeTypes.PV));
             }
 
@@ -185,11 +191,12 @@ namespace Lisa
             if (nodeType != NodeTypes.All)
             {
                 if (!node.RefutationSeparated ||
-                    (Sorter.KillerOnes[ourDepth].From != Sorter.Refutations[ourDepth].From ||
-                    Sorter.KillerOnes[ourDepth].To != Sorter.Refutations[ourDepth].To))
+                    (_sorter.KillerOnes[ourDepth].From != _sorter.Refutations[ourDepth].From ||
+                    _sorter.KillerOnes[ourDepth].To != _sorter.Refutations[ourDepth].To))
                 {
-                    bool killerOneCut = TryKiller(Sorter.KillerOnes, Sorter.FirstKillerPieces, ref _stats.KillerOne, 10,
-                        false, ttMove, nodeType, depth, beta, rootMoveKey,
+                    bool killerOneCut = TryKiller(_sorter.KillerOnes, _sorter.FirstKillerPieces, ref _stats.KillerOne,
+                        10,
+                        ttMove, nodeType, depth, beta, rootMoveKey,
                         ref node, ref node.KillerOneSeparated, ref node.AlphaRaisedByKillerOne);
 
                     if (killerOneCut)
@@ -203,11 +210,12 @@ namespace Lisa
                 }
 
                 if (!node.RefutationSeparated ||
-                    (Sorter.KillerTwos[ourDepth].From != Sorter.Refutations[ourDepth].From ||
-                    Sorter.KillerTwos[ourDepth].To != Sorter.Refutations[ourDepth].To))
+                    (_sorter.KillerTwos[ourDepth].From != _sorter.Refutations[ourDepth].From ||
+                    _sorter.KillerTwos[ourDepth].To != _sorter.Refutations[ourDepth].To))
                 {
-                    bool killerTwoCut = TryKiller(Sorter.KillerTwos, Sorter.SecondKillerPieces, ref _stats.KillerTwo, 8,
-                        true, ttMove, nodeType, depth, beta, rootMoveKey,
+                    bool killerTwoCut = TryKiller(_sorter.KillerTwos, _sorter.SecondKillerPieces, ref _stats.KillerTwo,
+                        8,
+                        ttMove, nodeType, depth, beta, rootMoveKey,
                         ref node, ref node.KillerTwoSeparated, ref node.AlphaRaisedByKillerTwo);
 
                     if (killerTwoCut)
@@ -244,7 +252,7 @@ namespace Lisa
                 int iidAlpha = node.Alpha;
                 int iidBeta = beta;
 
-                allOppMoves = Sorter.GetSortedMoves(ref _theBoard, false, true, true);
+                allOppMoves = _sorter.GetSortedMoves(ref _theBoard, false, true, true);
 
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOppMoves.Length; nn++)
@@ -261,15 +269,15 @@ namespace Lisa
                         iidAlpha = allOppMoves[nn].Score;
                     }
                     int moveKey = allOppMoves[nn].From * 100 + allOppMoves[nn].To;
-                    allOppMoves[nn].Score += Sorter.CutCount[moveKey];
-                    allOppMoves[nn].Score += Sorter.CutCountSingleMove[rootMoveKey, moveKey];
+                    allOppMoves[nn].Score += _sorter.CutCount[moveKey];
+                    allOppMoves[nn].Score += _sorter.CutCountUnderRootMove(rootMoveKey, moveKey);
                 }
                 Array.Sort(allOppMoves);
             }
 
             if (allOppMoves == null)
             {
-                allOppMoves = Sorter.GetSortedMoves(ref _theBoard, false, true, (depth >= 5));
+                allOppMoves = _sorter.GetSortedMoves(ref _theBoard, false, true, (depth >= 5));
             }
 
             int quietPlayed = 0;
@@ -281,12 +289,12 @@ namespace Lisa
             {
                 if ((ttMove.From == allOppMoves[nn].From && ttMove.To == allOppMoves[nn].To &&
                     ttMove.PromotionPiece == allOppMoves[nn].PromotionPiece) ||
-                    (node.KillerOneSeparated && allOppMoves[nn].From == Sorter.KillerOnes[ourDepth].From &&
-                        allOppMoves[nn].To == Sorter.KillerOnes[ourDepth].To) ||
-                    (node.KillerTwoSeparated && allOppMoves[nn].From == Sorter.KillerTwos[ourDepth].From &&
-                        allOppMoves[nn].To == Sorter.KillerTwos[ourDepth].To) ||
-                    (node.RefutationSeparated && allOppMoves[nn].From == Sorter.Refutations[ourDepth].From &&
-                        allOppMoves[nn].To == Sorter.Refutations[ourDepth].To))
+                    (node.KillerOneSeparated && allOppMoves[nn].From == _sorter.KillerOnes[ourDepth].From &&
+                        allOppMoves[nn].To == _sorter.KillerOnes[ourDepth].To) ||
+                    (node.KillerTwoSeparated && allOppMoves[nn].From == _sorter.KillerTwos[ourDepth].From &&
+                        allOppMoves[nn].To == _sorter.KillerTwos[ourDepth].To) ||
+                    (node.RefutationSeparated && allOppMoves[nn].From == _sorter.Refutations[ourDepth].From &&
+                        allOppMoves[nn].To == _sorter.Refutations[ourDepth].To))
                 {
                     continue;
                 }
@@ -422,20 +430,20 @@ namespace Lisa
 
                     if (score >= beta)
                     {
-                        Sorter.RewardQuietMove(_theBoard.OnMove, allOppMoves[nn], SearchDepth);
+                        _sorter.RewardQuietMove(_theBoard.OnMove, allOppMoves[nn], SearchDepth);
                         for (int qq = 0; qq < quietsSearchedCount; qq++)
                         {
-                            Sorter.PenaliseQuietMove(_theBoard.OnMove, quietsSearched[qq], SearchDepth);
+                            _sorter.PenaliseQuietMove(_theBoard.OnMove, quietsSearched[qq], SearchDepth);
                         }
                         if (!isInCheck && quietPlayed <= 4)
                         {
-                            Sorter.IncreaseKillerScore(_fullDepth, depth, allOppMoves[nn],
+                            _sorter.IncreaseKillerScore(_fullDepth, depth, allOppMoves[nn],
                                 _theBoard.Piece[allOppMoves[nn].From], 5 - quietPlayed);
                         }
                         node.Alpha = score;
                         node.BetaCutoff = true;
                         node.BestIndex = nn;
-                        Sorter.SetRefutationMove(_fullDepth, depth, allOppMoves[nn],
+                        _sorter.SetRefutationMove(_fullDepth, depth, allOppMoves[nn],
                             _theBoard.Piece[allOppMoves[nn].From]);
 
                         if (quietPlayed == 1)
@@ -488,7 +496,7 @@ namespace Lisa
                     _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth,
                         allOppMoves[node.BestIndex], TT_POS_TYPE_BETA_CUT);
                     int MoveKey = allOppMoves[node.BestIndex].From * 100 + allOppMoves[node.BestIndex].To;
-                    Sorter.CountCut(rootMoveKey, MoveKey);
+                    _sorter.CountCut(rootMoveKey, MoveKey);
                 }
                 else
                 {
@@ -513,17 +521,17 @@ namespace Lisa
                     if (node.AlphaRaisedByKillerTwo)
                     {
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth,
-                            Sorter.KillerTwos[ourDepth], TT_POS_TYPE_EXACT);
+                            _sorter.KillerTwos[ourDepth], TT_POS_TYPE_EXACT);
                     }
                     else if (node.AlphaRaisedByKillerOne)
                     {
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth,
-                            Sorter.KillerOnes[ourDepth], TT_POS_TYPE_EXACT);
+                            _sorter.KillerOnes[ourDepth], TT_POS_TYPE_EXACT);
                     }
                     else if (node.AlphaRaisedByRefutation)
                     {
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth,
-                            Sorter.Refutations[ourDepth], TT_POS_TYPE_EXACT);
+                            _sorter.Refutations[ourDepth], TT_POS_TYPE_EXACT);
                     }
                     else
                     {
@@ -688,7 +696,7 @@ namespace Lisa
                         node.Alpha = Score;
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth, ttMove,
                             TT_POS_TYPE_BETA_CUT);
-                        Sorter.IncreaseKillerScore(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From], 12);
+                        _sorter.IncreaseKillerScore(_fullDepth, depth, ttMove, _theBoard.Piece[ttMove.From], 12);
                         return true;
                     }
                     else if (Score > node.Alpha)
@@ -722,12 +730,12 @@ namespace Lisa
 
             int ourDepth = _fullDepth - depth;
 
-            if ((Sorter.Refutations[ourDepth].From != 0 || Sorter.Refutations[ourDepth].To != 0)
-                && (Sorter.Refutations[ourDepth].From != ttMove.From ||
-                Sorter.Refutations[ourDepth].To != ttMove.To))
+            if ((_sorter.Refutations[ourDepth].From != 0 || _sorter.Refutations[ourDepth].To != 0)
+                && (_sorter.Refutations[ourDepth].From != ttMove.From ||
+                _sorter.Refutations[ourDepth].To != ttMove.To))
             {
-                if (_theBoard.Piece[Sorter.Refutations[ourDepth].From] == Sorter.RefutationPieces[ourDepth] &&
-                    _theBoard.MoveIsLegal(Sorter.Refutations[ourDepth], _theBoard.OnMove, true))
+                if (_theBoard.Piece[_sorter.Refutations[ourDepth].From] == _sorter.RefutationPieces[ourDepth] &&
+                    _theBoard.MoveIsLegal(_sorter.Refutations[ourDepth], _theBoard.OnMove, true))
                 {
 
                     node.Played += 1;
@@ -743,13 +751,13 @@ namespace Lisa
                     if (nodeType == NodeTypes.PV && node.AlphaRaised && !nullWindowSearchFailed)
                     {
                         nullWindowSearch = true;
-                        score = 0 - EvaluateMove(Sorter.Refutations[ourDepth], rootMoveKey, -node.Alpha - 1,
+                        score = 0 - EvaluateMove(_sorter.Refutations[ourDepth], rootMoveKey, -node.Alpha - 1,
                             -node.Alpha, (byte)(depth - 1), ref node.LocalPV);
                     }
                     else
                     {
                         nullWindowSearch = false;
-                        score = 0 - EvaluateMove(Sorter.Refutations[ourDepth], rootMoveKey, -beta, -node.Alpha,
+                        score = 0 - EvaluateMove(_sorter.Refutations[ourDepth], rootMoveKey, -beta, -node.Alpha,
                             (byte)(depth - 1), ref node.LocalPV);
                     }
 
@@ -764,7 +772,7 @@ namespace Lisa
                         node.Alpha = score;
                         _stats.CutOffUsingRefutation += 1;
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth,
-                            Sorter.Refutations[ourDepth], TT_POS_TYPE_BETA_CUT);
+                            _sorter.Refutations[ourDepth], TT_POS_TYPE_BETA_CUT);
                         return true;
                     }
                     else if (score > node.Alpha)
@@ -773,7 +781,7 @@ namespace Lisa
                         node.AlphaRaisedByNonGeneratedMove = true;
                         node.AlphaRaised = true;
                         node.AlphaRaisedByRefutation = true;
-                        node.PV[depth - 1] = Sorter.Refutations[ourDepth];
+                        node.PV[depth - 1] = _sorter.Refutations[ourDepth];
                         for (int ND = depth - 2; ND >= 0; ND--)
                         {
                             node.PV[ND] = node.LocalPV[ND];
@@ -811,8 +819,8 @@ namespace Lisa
                     (allOppCaps[nn].From != ttMove.From || allOppCaps[nn].To != ttMove.To ||
                         allOppCaps[nn].PromotionPiece != ttMove.PromotionPiece))
                 {
-                    if (node.RefutationSeparated && allOppCaps[nn].From == Sorter.Refutations[ourDepth].From &&
-                        allOppCaps[nn].To == Sorter.Refutations[ourDepth].To)
+                    if (node.RefutationSeparated && allOppCaps[nn].From == _sorter.Refutations[ourDepth].From &&
+                        allOppCaps[nn].To == _sorter.Refutations[ourDepth].To)
                     {
                         continue;
                     }
@@ -850,7 +858,7 @@ namespace Lisa
                         node.BestIndex = nn;
                         node.BetaCutoff = true;
                         node.CapsOnlyCut = true;
-                        Sorter.SetRefutationMove(_fullDepth, depth, allOppCaps[nn],
+                        _sorter.SetRefutationMove(_fullDepth, depth, allOppCaps[nn],
                             _theBoard.Piece[allOppCaps[nn].From]);
                         return true;
                     }
@@ -875,14 +883,11 @@ namespace Lisa
         }
 
 
-        //Tries the killer in one slot. Killer two passes refutationPieceFromToSquare as true, recording the piece on
-        //the killer's to square rather than its from square; it is a known bug, kept so that fixing it can be measured
-        //on its own
+        //Tries the killer in one slot (KillerOnes or KillerTwos) for this node's ply
         private bool TryKiller(Move[] killers,
                                int[] killerPieces,
                                ref KillerStats killerStats,
                                int killerBonus,
-                               bool refutationPieceFromToSquare,
                                Move ttMove,
                                NodeTypes nodeType,
                                byte depth,
@@ -972,15 +977,14 @@ namespace Lisa
                         killerStats.CutOffs += 1;
                         _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth, killers[ourDepth],
                             TT_POS_TYPE_BETA_CUT);
-                        Sorter.IncreaseKillerScore(_fullDepth, depth, killers[ourDepth],
+                        _sorter.IncreaseKillerScore(_fullDepth, depth, killers[ourDepth],
                             _theBoard.Piece[killers[ourDepth].From], killerBonus);
                         if (!killers[ourDepth].IsCapture)
                         {
-                            Sorter.RewardQuietMove(_theBoard.OnMove, killers[ourDepth], depth);
+                            _sorter.RewardQuietMove(_theBoard.OnMove, killers[ourDepth], depth);
                         }
-                        Sorter.SetRefutationMove(_fullDepth, depth, killers[ourDepth],
-                            _theBoard.Piece[refutationPieceFromToSquare ? killers[ourDepth].To
-                                : killers[ourDepth].From]);
+                        _sorter.SetRefutationMove(_fullDepth, depth, killers[ourDepth],
+                            _theBoard.Piece[killers[ourDepth].From]);
                         return true;
                     }
                     else if (score > node.Alpha)
@@ -1034,8 +1038,8 @@ namespace Lisa
                     allOpCaps[LC].PromotionPiece != ttMove.PromotionPiece))
                 {
 
-                    if (node.RefutationSeparated && allOpCaps[LC].From == Sorter.Refutations[ourDepth].From &&
-                        allOpCaps[LC].To == Sorter.Refutations[ourDepth].To)
+                    if (node.RefutationSeparated && allOpCaps[LC].From == _sorter.Refutations[ourDepth].From &&
+                        allOpCaps[LC].To == _sorter.Refutations[ourDepth].To)
                     {
                         continue;
                     }
@@ -1074,7 +1078,8 @@ namespace Lisa
                         node.BetaCutoff = true;
                         node.BestIndex = LC;
                         node.CapsOnlyCut = true;
-                        Sorter.SetRefutationMove(_fullDepth, depth, allOpCaps[LC], _theBoard.Piece[allOpCaps[LC].From]);
+                        _sorter.SetRefutationMove(_fullDepth, depth, allOpCaps[LC],
+                            _theBoard.Piece[allOpCaps[LC].From]);
                         return true;
                     }
                     if (LCScore > node.Alpha)
