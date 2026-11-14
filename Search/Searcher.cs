@@ -3,7 +3,6 @@ namespace Lisa
 {
     public sealed partial class Searcher
     {
-
         #region Events and delegates
 
         public delegate void BestMoveSelectedEventHandler();
@@ -16,7 +15,6 @@ namespace Lisa
         public event TablebaseHitEventHandler? TablebaseHit;
 
         #endregion
-
 
 
         private Board _theBoard;
@@ -91,6 +89,8 @@ namespace Lisa
 
         private Move _phantomMove = new();
 
+        //Creates the main searcher with its own transposition table, board and the one-second timer that sends
+        //the GUI progress updates
         public Searcher()
         {
             _transTable = new TranspositionTable();
@@ -100,12 +100,14 @@ namespace Lisa
         }
 
 
+        //Asks the search to stop as soon as it next checks
         public void Cancel()
         {
             _cancel = true;
         }
 
 
+        //One empty principal variation buffer per ply
         private static Move[][] NewLocalPVs()
         {
             Move[][] localPVs = new Move[128][];
@@ -169,6 +171,8 @@ namespace Lisa
         #region Minor private helper functions
 
 
+        //Fires once a second during a search: adds a second to the time used, updates nodes per second and
+        //raises InfoUpdated so the GUI gets a progress line
         private void SecondTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
             if (!_cancel && _isSearching)
@@ -180,9 +184,9 @@ namespace Lisa
         }
 
 
+        //Clears the search flags, best score and statistics for a new search, and starts the one-second timer
         private void ResetStatTrackers()
         {
-
             _isSearching = true;
             _hasCancelled = false;
             _cancel = false;
@@ -197,11 +201,9 @@ namespace Lisa
             //us
             _secondTimer.Interval = 1000;
             _secondTimer.Start();
-
         }
 
 
         #endregion
-
     }
 }

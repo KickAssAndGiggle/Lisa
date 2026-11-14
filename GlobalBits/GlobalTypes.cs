@@ -3,7 +3,6 @@
     //The structs and enums. They are nested in Globals, so code reaches them through using static Lisa.Globals
     public static partial class Globals
     {
-
         #region Public Global Enums And Structs
 
         public struct TTMove
@@ -79,6 +78,7 @@
             public bool IsCapture;
             public byte PromotionPiece;
             public int Score;
+            //Orders moves by score, highest first, so sorting puts the best scored moves at the front
             public int CompareTo(Move obj)
             {
                 if (obj.Score == Score)
@@ -145,6 +145,5 @@
         };
 
         #endregion
-
     }
 }

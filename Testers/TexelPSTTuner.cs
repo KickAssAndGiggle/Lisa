@@ -11,7 +11,6 @@ namespace Lisa
     //Only White's tables are tuned; MirrorPSTsForBlack builds Black's from them.
     public sealed class TexelPSTTuner
     {
-
         private const int TABLE_SIZE = 384;                         //6 pieces x 64 squares, per phase
         private const int PARAMETER_COUNT = TABLE_SIZE * 2;         //early tables, then late tables
         private const int MAX_PIECES = 32;
@@ -59,6 +58,8 @@ namespace Lisa
 
         private double _k;
 
+        //Stores the EPD and results file paths, the most positions to load (0 for all), the number of threads
+        //(0 for one per processor) and the number of Adam epochs
         public TexelPSTTuner(string epdFile, string resultsFile, int maxPositions, int threads, int epochs)
         {
             _epdFile = epdFile;
@@ -71,9 +72,11 @@ namespace Lisa
         }
 
 
+        //Tunes White's piece-square tables against game results: loads the positions, splits each eval into
+        //its PST part and the rest, fits K, runs Adam, rounds the tables, then checks them with the real eval and
+        //writes the results
         public void Tune()
         {
-
             _timer.Start();
             File.WriteAllText(_logFile, "");
 
@@ -127,7 +130,6 @@ namespace Lisa
 
             WriteResults(startError, modelError, realError, calledCorrectlyLines);
             Log("Finished.");
-
         }
 
 
@@ -136,13 +138,11 @@ namespace Lisa
         //settle
         private void RunAdam()
         {
-
             double[] firstMoment = new double[PARAMETER_COUNT];
             double[] secondMoment = new double[PARAMETER_COUNT];
 
             for (int epoch = 1; epoch <= _epochs; epoch++)
             {
-
                 double[] gradient = Gradient(_tables, out double tunedError);
 
                 double learningRate = LEARNING_RATE_START +
@@ -172,7 +172,6 @@ namespace Lisa
                     WriteResults(double.NaN, double.NaN, double.NaN, Array.Empty<string>());
                 }
             }
-
         }
 
 
@@ -182,7 +181,6 @@ namespace Lisa
         //sums into its own array and the chunks are added in a fixed order, so every run gives identical numbers
         private double[] Gradient(double[] tables, out double tunedError)
         {
-
             int count = _fens.Length;
             int chunkCount = _threads * CHUNKS_PER_THREAD;
             double[][] chunkGradients = new double[chunkCount][];
@@ -257,13 +255,13 @@ namespace Lisa
             }
             tunedError = totalError / totalPositions;
             return total;
-
         }
 
 
+        //The model's eval of one position from White's point of view: its eval without the PSTs plus the PST
+        //entries for its pieces in these tables, tapered by its phase
         private double ModelEval(double[] tables, int position)
         {
-
             double early = 0;
             double late = 0;
             int featureStart = position * MAX_PIECES;
@@ -282,10 +280,10 @@ namespace Lisa
                 }
             }
             return _evalWithoutPST[position] + (early * (256 - _phase[position]) + late * _phase[position]) / 256.0;
-
         }
 
 
+        //The model's eval of every position with these tables
         private double[] ModelEvals(double[] tables)
         {
             double[] evals = new double[_fens.Length];
@@ -297,6 +295,8 @@ namespace Lisa
         }
 
 
+        //True if the position is one of those held out of tuning, to check the tables on positions they
+        //weren't tuned on
         private bool IsHeldOut(int position)
         {
             return position % HOLDOUT_EVERY == HOLDOUT_EVERY - 1;
@@ -306,7 +306,6 @@ namespace Lisa
         //Mean of (result - expected)^2 over all positions, or only the tuned ones, or only the held-out ones
         private double Error(double[] evals, bool tunedOnly, bool heldOutOnly)
         {
-
             double scale = -_k * Math.Log(10.0) / 400.0;
             double total = 0;
             long positions = 0;
@@ -325,14 +324,12 @@ namespace Lisa
             }
 
             return total / positions;
-
         }
 
 
         //Golden-section search for the K with the lowest error over all positions, using the starting tables
         private double FitK(double[] evals)
         {
-
             double low = 0.1;
             double high = 4.0;
             double ratio = (Math.Sqrt(5.0) - 1.0) / 2.0;
@@ -367,7 +364,6 @@ namespace Lisa
             }
 
             return (low + high) / 2.0;
-
         }
 
 
@@ -375,7 +371,6 @@ namespace Lisa
         //the starting tables, so the model reproduces the real eval exactly at the starting tables
         private void ExtractFeatures()
         {
-
             int count = _fens.Length;
             _evalWithoutPST = new double[count];
             _phase = new int[count];
@@ -423,13 +418,12 @@ namespace Lisa
             });
 
             Log("Features extracted for " + count + " positions");
-
         }
 
 
-        //The tables are laid out early then late, piece by piece in PAWN..KING order, 64 squares each in Lisa's square
-        //order (a8 = 0).
-        //A pawn can never stand on the first or last rank, so those entries are never tuned
+        //Copies White's current tables into the starting and working tables, and marks which entries are
+        //tuned. Laid out early then late, piece by piece in PAWN..KING order, 64 squares each (a8 = 0). A pawn can
+        //never stand on the first or last rank, so those entries are never tuned
         private void ReadStartTables()
         {
             for (int piece = PAWN; piece <= KING; piece++)
@@ -453,7 +447,6 @@ namespace Lisa
         //model
         private double RealErrorWithTables()
         {
-
             for (int piece = PAWN; piece <= KING; piece++)
             {
                 int[] early = WhiteTable(piece, true);
@@ -486,10 +479,10 @@ namespace Lisa
             });
 
             return Error(evals, false, false);
-
         }
 
 
+        //White's early or late game table for the piece
         private static int[] WhiteTable(int piece, bool early)
         {
             switch (piece)
@@ -510,10 +503,10 @@ namespace Lisa
         }
 
 
+        //Reads the positions and their game results (1, 0.5 or 0) from the EPD file, up to the maximum.
         //Each line: <fen> c9 "1-0";  The clocks are added because InitialiseFromFEN expects six fields
         private bool LoadPositions()
         {
-
             if (!File.Exists(_epdFile))
             {
                 Log("EPD file not found: " + _epdFile);
@@ -525,7 +518,6 @@ namespace Lisa
 
             foreach (string line in File.ReadLines(_epdFile))
             {
-
                 if (_maxPositions > 0 && fens.Count >= _maxPositions)
                 {
                     break;
@@ -564,16 +556,14 @@ namespace Lisa
             Log("Loaded " + _fens.Length + " positions from " + _epdFile + ", using " + _threads + " threads, " +
                 _epochs + " epochs");
             return _fens.Length > 0;
-
         }
 
 
-        //Rewritten every LOG_EVERY_EPOCHS epochs (with the unrounded tables, rounded for display) and once more at the
-        //end.
-        //The tables are in the same layout as EvalWeights.cs, so each can be pasted over the old one
+        //Writes the errors, the called-correctly counts and the tables to the results file. Rewritten every
+        //LOG_EVERY_EPOCHS epochs (unrounded tables, rounded for display) and once more at the end. The tables
+        //are in the same layout as EvalWeights.cs, so each can be pasted over the old one
         private void WriteResults(double startError, double modelError, double realError, string[] calledCorrectlyLines)
         {
-
             List<string> lines = new();
             if (double.IsNaN(realError))
             {
@@ -627,7 +617,6 @@ namespace Lisa
             }
 
             File.WriteAllLines(_resultsFile, lines);
-
         }
 
 
@@ -654,6 +643,7 @@ namespace Lisa
         }
 
 
+        //True if the eval from White's point of view points the way the game went (see CountCalledCorrectly)
         private static bool IsCalledCorrectly(double whiteEval, double result)
         {
             if (result == 1.0)
@@ -668,6 +658,7 @@ namespace Lisa
         }
 
 
+        //A called-correctly count as text, with its percentage
         private static string CalledCorrectlyText(int correct, int considered)
         {
             return correct + " of " + considered + " (" + (100.0 * correct / considered).ToString("F3",
@@ -675,6 +666,7 @@ namespace Lisa
         }
 
 
+        //The called-correctly counts before and after tuning as text, with their percentages
         private static string CalledCorrectlyChangeText(int before, int after, int considered)
         {
             return before + " -> " + after + " of " + considered + " (" +
@@ -683,23 +675,25 @@ namespace Lisa
         }
 
 
+        //Adds a line to the log file, stamped with the time since tuning began
         private void Log(string message)
         {
             File.AppendAllText(_logFile, FormatTime(_timer.Elapsed) + "  " + message + "\r\n");
         }
 
 
+        //The error as text, to 8 decimal places
         private static string FormatError(double error)
         {
             return error.ToString("F8", CultureInfo.InvariantCulture);
         }
 
 
+        //The elapsed time as hh:mm:ss
         private static string FormatTime(TimeSpan elapsed)
         {
             return ((int)elapsed.TotalHours).ToString("00") + ":" + elapsed.Minutes.ToString("00") + ":" +
                 elapsed.Seconds.ToString("00");
         }
-
     }
 }

@@ -6,13 +6,13 @@ namespace Lisa
     //A move is picked at random in proportion to its weight
     public sealed class OpeningBook
     {
-
         private readonly Dictionary<string, BookMove[]> _positions = new();
         private readonly Random _random = new();
 
+        //Loads the book file: one position per line, as a FEN, a semicolon, then comma-separated moves each
+        //with a weight. Blank lines and lines starting with # are skipped
         public OpeningBook(string bookFile)
         {
-
             try
             {
                 foreach (string line in File.ReadLines(bookFile))
@@ -52,13 +52,13 @@ namespace Lisa
                 }
             }
             catch { }
-
         }
 
 
+        //If the FEN is in the book, picks one of its moves at random in proportion to the weights and returns
+        //true. Otherwise returns false
         public bool LookInBook(string fen, out byte fromSquare, out byte toSquare)
         {
-
             fromSquare = 255;
             toSquare = 255;
 
@@ -86,15 +86,13 @@ namespace Lisa
             }
 
             return false;
-
         }
 
 
-        //a8 = 0, h1 = 63
+        //The square number for a name such as e4 (a8 = 0, h1 = 63)
         private static byte SquareFromName(string name)
         {
             return (byte)((8 - (name[1] - '0')) * 8 + (name[0] - 'a'));
         }
-
     }
 }

@@ -3,10 +3,10 @@ namespace Lisa
 {
     public sealed class FenTester
     {
-
         private string[] _fens;
         private string _fenOutputFile;
 
+        //Stores the FENs to test and the output file path
         public FenTester(string[] FENsToTest, string OutputFile)
         {
             _fens = FENsToTest;
@@ -14,14 +14,14 @@ namespace Lisa
         }
 
 
+        //Searches each FEN to MULTI_FEN_DEPTH and writes the best move, time, score and search statistics for
+        //each to the output file
         public void Test()
         {
-
             List<string> linesForFile = new();
 
             foreach (string fen in _fens)
             {
-
                 int startTicks = System.Environment.TickCount;
 
                 Board fenBoard = new();
@@ -125,7 +125,6 @@ namespace Lisa
                 linesForFile.Add(" ");
                 linesForFile.Add(" ");
                 linesForFile.Add(" ");
-
             }
 
             StreamWriter sw = File.CreateText(_fenOutputFile);
@@ -134,10 +133,6 @@ namespace Lisa
                 sw.WriteLine(line);
             }
             sw.Close();
-
-
         }
-
-
     }
 }

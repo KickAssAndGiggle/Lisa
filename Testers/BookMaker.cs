@@ -15,7 +15,6 @@ namespace Lisa
     //Book line format:  <fen>;<move> <weight>,<move> <weight>
     public sealed class BookMaker
     {
-
         private const string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         private sealed class MoveStats
@@ -48,6 +47,7 @@ namespace Lisa
         private long _gamesFailedToParse;
         private long _gamesTooShort;
 
+        //Stores the PGN and book file paths and the book-making settings
         public BookMaker(string pgnFile, string bookFile, int maxPlies, int minGames, int minScorePercent,
             string firstMoves, int minGamePlies)
         {
@@ -61,9 +61,11 @@ namespace Lisa
         }
 
 
+        //Builds the opening book from the PGN file in two passes: the first counts how often each position
+        //occurs, the second records the moves played from the common ones. Writes the book file, or a one-line
+        //error to it if the PGN or the first-move setting can't be read
         public void MakeBook()
         {
-
             if (!File.Exists(_pgnFile))
             {
                 File.WriteAllText(_bookFile, "# PGN file not found: " + _pgnFile + "\r\n");
@@ -90,7 +92,6 @@ namespace Lisa
             ReadGames(true);
 
             WriteBook(timer, positionsCounted);
-
         }
 
 
@@ -116,9 +117,9 @@ namespace Lisa
         }
 
 
+        //Reads the PGN file one game at a time and passes each game's headers and move text to ProcessGame
         private void ReadGames(bool recordMoves)
         {
-
             using StreamReader reader = new(_pgnFile, Encoding.UTF8, true, 1 << 20);
 
             List<string> headers = new();
@@ -152,7 +153,6 @@ namespace Lisa
             {
                 ProcessGame(headers, moveText.ToString(), recordMoves);
             }
-
         }
 
 
@@ -160,7 +160,6 @@ namespace Lisa
         //least BookMinGames times, tallies the move played and the points it earned for the side that played it
         private void ProcessGame(List<string> headers, string moveText, bool recordMoves)
         {
-
             _gamesRead += 1;
 
             string result = "";
@@ -211,7 +210,6 @@ namespace Lisa
             int plies = Math.Min(_maxPlies, sanMoves.Count);
             for (int ply = 0; ply < plies; ply++)
             {
-
                 long key = _board.CurrentZobrist;
                 int mover = _board.OnMove;
 
@@ -247,20 +245,20 @@ namespace Lisa
                 _board.MakeMove(played, _board.OnMove, false);
                 _board.ResetUndoMoves();
             }
-
         }
 
 
+        //Writes the book: for each position, the moves played in enough games that scored well enough (only the
+        //allowed first moves from the start position), best first, weighted by the square root of their points.
+        //A header of settings and counts goes at the top
         private void WriteBook(Stopwatch timer, long positionsCounted)
         {
-
             string startFen = StartPositionFen();
             List<string> bookLines = new();
             long movesWritten = 0;
 
             foreach (BookEntry entry in _entries.Values)
             {
-
                 List<KeyValuePair<string, MoveStats>> kept = new();
                 foreach (KeyValuePair<string, MoveStats> move in entry.Moves)
                 {
@@ -309,15 +307,14 @@ namespace Lisa
             lines.AddRange(bookLines);
 
             File.WriteAllLines(_bookFile, lines);
-
         }
 
 
+        //The starting position as Lisa's own FEN, so it matches the FENs stored in the book
         private string StartPositionFen()
         {
             _board.InitialiseFromFEN(START_FEN);
             return _board.GenerateFen();
         }
-
     }
 }

@@ -7,7 +7,6 @@ namespace Lisa
     //A term whose weight is 0 is skipped, so it costs no time.
     public static partial class Scorer
     {
-
         //Adds every extra term to the four halves. With lines, each term is also written to the breakdown, through
         //the same AddTaperedTerm the other terms use, so the breakdown total still matches ScorePosition.
         //The piece masks come from Board.GeneratePieceAttacksWithoutKing, attackedByWhite and attackedByBlack from
@@ -17,7 +16,6 @@ namespace Lisa
             in TTPawnAnalysis pawns, int phase, List<string>? lines, ref int whiteOpening, ref int whiteEndgame,
             ref int blackOpening, ref int blackEndgame)
         {
-
             if (KNIGHT_VALUE_PER_PAWN_ABOVE_FIVE != 0 || ROOK_VALUE_LOST_PER_PAWN_ABOVE_FIVE != 0)
             {
                 AddBothTerm(lines, "Pawn count adjustment (knights, rooks)",
@@ -181,12 +179,11 @@ namespace Lisa
                     -SafeCheckPenalty(ref theBoard, BLACK, in whitePieces, attackedByBlack),
                     phase, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
             }
-
         }
 
 
-        //The three below add a term to the opening halves, the endgame halves, or both. With lines the term goes
-        //through AddTaperedTerm, which also writes it to the breakdown
+        //Adds a term's white and black values to the opening halves. With lines, it goes through AddTaperedTerm,
+        //which also writes it to the breakdown
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AddOpeningTerm(List<string>? lines, string name, int white, int black, int phase,
             ref int whiteOpening, ref int whiteEndgame, ref int blackOpening, ref int blackEndgame)
@@ -202,6 +199,8 @@ namespace Lisa
         }
 
 
+        //Adds a term's white and black values to the endgame halves. With lines, it goes through AddTaperedTerm,
+        //which also writes it to the breakdown
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AddEndgameTerm(List<string>? lines, string name, int white, int black, int phase,
             ref int whiteOpening, ref int whiteEndgame, ref int blackOpening, ref int blackEndgame)
@@ -217,6 +216,8 @@ namespace Lisa
         }
 
 
+        //Adds a term's white and black values to both the opening and endgame halves. With lines, it goes
+        //through AddTaperedTerm, which also writes it to the breakdown
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AddBothTerm(List<string>? lines, string name, int white, int black, int phase,
             ref int whiteOpening, ref int whiteEndgame, ref int blackOpening, ref int blackEndgame)
@@ -234,6 +235,7 @@ namespace Lisa
         }
 
 
+        //The other side
         private static int Opponent(int side)
         {
             return side == WHITE ? BLACK : WHITE;
@@ -254,12 +256,14 @@ namespace Lisa
         }
 
 
+        //The side's pawn square list (-1 for an empty slot)
         private static int[] PawnSquaresOf(ref Board theBoard, int side)
         {
             return side == WHITE ? theBoard.WhitePawnSquares : theBoard.BlackPawnSquares;
         }
 
 
+        //How many knights and bishops the side has
         private static int MinorPieceCount(ref Board theBoard, int side)
         {
             if (side == WHITE)
@@ -507,6 +511,7 @@ namespace Lisa
         }
 
 
+        //1 if a knight or bishop of the side stands on the square, otherwise 0
         private static int MinorOnSquare(ref Board theBoard, int square, int side)
         {
             return theBoard.Color[square] == side &&
@@ -618,6 +623,8 @@ namespace Lisa
         }
 
 
+        //True if an enemy pawn stands on the given file further up the board than the pawn, counted from the
+        //pawn's side
         private static bool EnemyPawnAheadOnFile(int pawn, int side, int[] enemyPawns, int file)
         {
             int rank = RelativeRank(pawn, side);
@@ -784,6 +791,8 @@ namespace Lisa
         }
 
 
+        //One direction of CheckRays: walks out from the king one step at a time, marking the empty squares and
+        //stopping at the first piece, which is marked too unless it belongs to the checking side
         private static ulong CheckRay(ref Board theBoard, int king, int checkingSide, int rowStep, int fileStep)
         {
             ulong checkSquares = 0;
@@ -809,6 +818,5 @@ namespace Lisa
             }
             return checkSquares;
         }
-
     }
 }

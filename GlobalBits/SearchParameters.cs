@@ -2,7 +2,6 @@
 {
     public static partial class Globals
     {
-
         #region Search parameters
 
         public static int DEPTH2_FUTILITY_MARGIN = 155;
@@ -45,6 +44,5 @@
         public static int LMP_QUIET_MOVES_D5 = 8;
 
         #endregion
-
     }
 }

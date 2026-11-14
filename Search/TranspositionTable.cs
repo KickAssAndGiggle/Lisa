@@ -8,7 +8,6 @@ namespace Lisa
     //data. A reader copies the entry before checking it: a torn mix of two writes no longer matches and reads as a miss
     public sealed class TranspositionTable
     {
-
         private TTMove[] _primaryMoveList;
         private TTScore[] _scoreList;
         private TTPawnAnalysis[] _pawnStructList;
@@ -20,11 +19,11 @@ namespace Lisa
         private readonly int _scoreSize;
         private readonly int _passedPawnSize;
 
-        //instrumentationOnly gives every table a single entry, for callers outside search that only need
-        //ScorePosition to run. Lookups check the full Zobrist, so a tiny table just means misses, which recalculate.
+        //Creates the move, eval score and pawn tables, sized from Settings.ini. instrumentationOnly gives every
+        //table a single entry, for callers outside search that only need ScorePosition to run. Lookups check the
+        //full Zobrist, so a tiny table just means misses, which recalculate.
         public TranspositionTable(bool instrumentationOnly = false)
         {
-
             if (instrumentationOnly)
             {
                 _ttSize = 1;
@@ -57,7 +56,6 @@ namespace Lisa
             _primaryMoveList = new TTMove[_ttBuckets * 2];
             _scoreList = new TTScore[_scoreSize];
             _pawnStructList = new TTPawnAnalysis[_passedPawnSize];
-
         }
 
 
@@ -67,11 +65,13 @@ namespace Lisa
             return (int)Math.Abs(zobrist % _ttBuckets) * 2;
         }
 
+        //Index of the position's entry in the eval score table
         private int MakeScoreTTHash(long zobrist)
         {
             return (int)Math.Abs(zobrist % _scoreSize);
         }
 
+        //Index of the pawn structure's entry in the pawn table
         private int MakePawnTTHash(long pawnOnlyZobrist)
         {
             return (int)Math.Abs(pawnOnlyZobrist % _passedPawnSize);
@@ -102,9 +102,10 @@ namespace Lisa
         }
 
 
+        //Stores a search result in the position's two-entry bucket. It replaces the first entry if it is deeper
+        //than that entry's result, and otherwise goes in the second. posType is the node type (PV, All or Cut)
         public void AddToTranstable(long zobrist, int posScore, byte posDepth, Move bestResponse, byte posType)
         {
-
             int bucket = MakeTTBucket(zobrist);
             byte deepestDepth;
             if (_primaryMoveList[bucket].PositionFlag >= 200)
@@ -138,7 +139,6 @@ namespace Lisa
             {
                 _primaryMoveList[bucket + 1] = entry;
             }
-
         }
 
 
@@ -146,18 +146,16 @@ namespace Lisa
         //the stored entry
         public void AddPawnStructureToTransTable(long pawnOnlyZobrist, ref TTPawnAnalysis entry)
         {
-
             int ttPPHash = MakePawnTTHash(pawnOnlyZobrist);
             entry.Filled = 1;
             entry.Zobrist = pawnOnlyZobrist ^ PawnEntryCheck(in entry);
             _pawnStructList[ttPPHash] = entry;
-
         }
 
 
+        //Finds the stored pawn analysis for a pawn key. Returns false, with an empty analysis, on a miss
         public bool LookupPPScore(long zobrist, out TTPawnAnalysis posScore)
         {
-
             int ttHash = MakePawnTTHash(zobrist);
             posScore = _pawnStructList[ttHash];
             if (posScore.Filled == 1 && (posScore.Zobrist ^ PawnEntryCheck(in posScore)) == zobrist)
@@ -172,9 +170,9 @@ namespace Lisa
         }
 
 
+        //Stores both sides' evaluation scores, without tempo, under the position's key
         public void AddScoreToTransTable(long zobrist, int whiteScore, int blackScore)
         {
-
             int TTHash = MakeScoreTTHash(zobrist);
             TTScore entry = new()
             {
@@ -183,13 +181,12 @@ namespace Lisa
             };
             entry.Zobrist = zobrist ^ ScoreEntryCheck(entry);
             _scoreList[TTHash] = entry;
-
         }
 
 
+        //Finds the stored evaluation scores for a position. Returns false, with empty scores, on a miss
         public bool LookupScore(long zobrist, out TTScore posScore)
         {
-
             int ttHash = MakeScoreTTHash(zobrist);
             posScore = _scoreList[ttHash];
             if ((posScore.Zobrist ^ ScoreEntryCheck(posScore)) == zobrist)
@@ -201,12 +198,12 @@ namespace Lisa
                 posScore = new TTScore();
                 return false;
             }
-
         }
 
+        //Finds the stored search result for a position in either entry of its bucket. Returns false, with an
+        //empty entry, on a miss
         public bool LookupPos(long zobrist, out TTMove posEntry)
         {
-
             int bucket = MakeTTBucket(zobrist);
             posEntry = _primaryMoveList[bucket];
             if ((posEntry.Zobrist ^ MoveEntryCheck(posEntry)) == zobrist)
@@ -220,10 +217,11 @@ namespace Lisa
             }
             posEntry = new TTMove();
             return false;
-
         }
 
 
+        //Packs every field of a move entry into one value. It is XORed into the stored key, so a torn mix of
+        //two writes no longer matches and reads as a miss
         private static long MoveEntryCheck(TTMove entry)
         {
             return (uint)entry.Score | ((long)entry.BestResponseFrom << 32) | ((long)entry.BestResponseTo << 40) |
@@ -231,6 +229,7 @@ namespace Lisa
         }
 
 
+        //Packs both scores of a score entry into one value, used the same way as MoveEntryCheck
         private static long ScoreEntryCheck(TTScore entry)
         {
             return (uint)entry.WhiteScore | ((long)entry.BlackScore << 32);
@@ -264,18 +263,21 @@ namespace Lisa
         }
 
 
+        //Packs two ints into one ulong, low and high halves
         private static ulong Pair(int low, int high)
         {
             return (uint)low | ((ulong)(uint)high << 32);
         }
 
 
+        //Mixes a value into the running check for PawnEntryCheck
         private static ulong MixIn(ulong check, ulong value)
         {
             return (check ^ value) * 0x9E3779B97F4A7C15UL + (check >> 29);
         }
 
 
+        //Empties all three tables by allocating them afresh
         public void Clear()
         {
             _primaryMoveList = new TTMove[_ttBuckets * 2];
@@ -283,6 +285,5 @@ namespace Lisa
             _pawnStructList = new TTPawnAnalysis[_passedPawnSize];
             GC.Collect();
         }
-
     }
 }

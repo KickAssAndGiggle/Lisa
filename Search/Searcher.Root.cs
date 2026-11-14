@@ -3,7 +3,6 @@ namespace Lisa
 {
     public sealed partial class Searcher
     {
-
         /// <summary>
         /// Search for the best move on a particular board state
         /// </summary>
@@ -32,7 +31,6 @@ namespace Lisa
                            List<long>? prevZobrists = null
                           )
         {
-
             //Reset the variables we use to track stats and status for the UCI protocol,
             //start the timer, initialise some key variables
             ResetStatTrackers();
@@ -247,7 +245,6 @@ namespace Lisa
                 }
             }
 
-
             _transTable.Clear();
 
         EndSearch:
@@ -262,7 +259,6 @@ namespace Lisa
 
             InfoUpdated?.Invoke();
             BestMoveSelected?.Invoke();
-
         }
 
 
@@ -272,7 +268,6 @@ namespace Lisa
         private Move[] SearchRoot(Move[] legal, byte startDepth, byte maxDepth, int maxTimeToUse,
             Dictionary<int, Move[]> pvDict)
         {
-
             //Create an array to store the best ordered moves from the previous depth of
             //iterative deepening. If we run out of time, we will fall-back to the last
             //fully completed depth's results
@@ -294,7 +289,6 @@ namespace Lisa
 
             for (byte depth = startDepth; depth <= maxDepth; depth++)
             {
-
                 _fullDepth = depth;
                 _stats.CurrentSearchDepth = depth;
 
@@ -316,7 +310,6 @@ namespace Lisa
 
                 for (int nn = 0; nn < legal.Length; nn++)
                 {
-
                     int moveStartTickCount = Environment.TickCount;
                     int MoveKey = legal[nn].From * 100 + legal[nn].To;
 
@@ -332,7 +325,6 @@ namespace Lisa
                     {
                         if (legal[nn].Score > -5000)
                         {
-
                             rootMovesSearched += 1;
                             bool alphaWidened = false;
                             bool betaWidened = false;
@@ -349,7 +341,6 @@ namespace Lisa
                             {
                                 nullWindowSearch = false;
                                 legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv);
-
                             }
                             else if (demoted)
                             {
@@ -436,7 +427,6 @@ namespace Lisa
                                 aspAlpha = legal[nn].Score - windowSize;
                                 aspBeta = legal[nn].Score + windowSize;
                             }
-
                         }
                     }
 
@@ -454,7 +444,6 @@ namespace Lisa
                             legal = prevIterationBest;
                             break;
                         }
-
                     }
                     else
                     {
@@ -464,14 +453,12 @@ namespace Lisa
                         }
                         pvDict.Add(legal[nn].From * 100 + legal[nn].To, pv);
                     }
-
                 }
 
                 prevIterationAlpha = bestScoreAtDepth;
 
                 if (!quittingEarly)
                 {
-
                     //Save a copy of of the sorted list, so if we have to give up in the next
                     //iteration due to time constraints, we have a fallback result
                     SortRootMoves(legal);
@@ -521,7 +508,6 @@ namespace Lisa
                         failHighReSearches + ", below-best " + belowBestSearches + ", demoted " + rootMovesDemoted +
                         ", window slid down " + windowSlides + " times by " + windowSlideTotal +
                         ", newly demoted:" + newlyDemotedMoves);
-
                 }
                 else
                 {
@@ -532,17 +518,17 @@ namespace Lisa
                 {
                     break;
                 }
-
             }
 
             return legal;
-
         }
 
 
+        //Marks the search as an endgame when 18 or fewer pieces are left. In UCI mode with the tablebase on,
+        //asks the online tablebase for the move when there are 6 or fewer pieces (7 with plenty of time), and
+        //returns true if it gave one
         private bool TryEndgameTableBase(ref TimeManager timeController)
         {
-
             int pieceCount = 0;
             for (int nn = 0; nn <= 63; nn++)
             {
@@ -567,7 +553,6 @@ namespace Lisa
             }
 
             return false;
-
         }
 
 
@@ -642,6 +627,5 @@ namespace Lisa
                 moves[jj + 1] = moving;
             }
         }
-
     }
 }

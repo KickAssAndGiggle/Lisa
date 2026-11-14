@@ -8,10 +8,9 @@ namespace Lisa
 {
     public sealed class FenToZobristConverter
     {
-
+        //Writes the FEN and its Zobrist key to the output file
         public void ConvertFenToZobrist(string Fen, string OutputFile)
         {
-
             Board theBoard = new();
             theBoard.InitialiseFromFEN(Fen);
             string ZobString = theBoard.CurrentZobrist.ToString();
@@ -20,8 +19,6 @@ namespace Lisa
             SW.WriteLine("Fen: " + Fen);
             SW.WriteLine("Zob: " + ZobString);
             SW.Close();
-
         }
-
     }
 }

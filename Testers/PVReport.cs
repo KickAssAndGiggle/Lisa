@@ -5,7 +5,6 @@ namespace Lisa
     //search has finished, so the UCI engine never pays for the replay or the static evaluations.
     public static class PVReport
     {
-
         //The top root moves, best first, each with its score and PV. Every PV move is followed by Lisa's
         //static eval of the position it reaches, from the root side-to-move's point of view (the same
         //point of view as Score).
@@ -94,12 +93,15 @@ namespace Lisa
         }
 
 
+        //The eval as text with its sign, such as +35 or -12
         private static string FormatEval(int eval)
         {
             return eval.ToString("+0;-0;0");
         }
 
 
+        //Finds the legal move in the position with the same from, to and promotion as wanted. Returns false if
+        //there isn't one
         private static bool TryFindLegalMove(Move wanted, ref Board theBoard, out Move found)
         {
             Move[] allMoves = theBoard.GenerateAllMoves(theBoard.OnMove);
@@ -187,6 +189,7 @@ namespace Lisa
         }
 
 
+        //True if the side to move has at least one legal move
         private static bool HasLegalMove(ref Board theBoard)
         {
             Move[] allMoves = theBoard.GenerateAllMoves(theBoard.OnMove);
@@ -199,6 +202,5 @@ namespace Lisa
             }
             return false;
         }
-
     }
 }

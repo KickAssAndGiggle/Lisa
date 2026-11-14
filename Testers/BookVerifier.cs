@@ -10,7 +10,6 @@ namespace Lisa
     //no moves drops out of the book. Writes the cleaned book, a log, and every rejected move with its score.
     public sealed class BookVerifier
     {
-
         //Each worker thread runs its own single-threaded search, so many book moves are searched at once. A
         //fixed-depth search of an opening position needs far less hash than a game does
         private const int WORKER_TT_HASH_MB = 16;
@@ -52,6 +51,8 @@ namespace Lisa
         private readonly object _logLock = new();
         private readonly Stopwatch _timer = new();
 
+        //Stores the file paths, search depth, the score each side's book moves must reach, and the number of
+        //worker threads (0 for one per processor)
         public BookVerifier(string inputFile, string outputFile, byte depth, int minScoreWhite, int minScoreBlack,
             int threads)
         {
@@ -66,9 +67,10 @@ namespace Lisa
         }
 
 
+        //Scores every move in the book with a search, using several worker threads, then writes the moves that
+        //score well enough to the output file and the rest to the rejects file. Progress goes to the log file
         public void Verify()
         {
-
             File.WriteAllText(_logFile, "");
 
             if (!File.Exists(_inputFile))
@@ -105,13 +107,13 @@ namespace Lisa
 
             WriteResults();
             Log("Finished.");
-
         }
 
 
+        //Reads the book file into positions and their moves and weights, keeping its header lines, and makes
+        //the list of moves the workers take from
         private void ReadBook()
         {
-
             List<int> itemLine = new();
             List<int> itemMove = new();
 
@@ -171,14 +173,12 @@ namespace Lisa
 
             _itemLine = itemLine.ToArray();
             _itemMove = itemMove.ToArray();
-
         }
 
 
         //Run by each worker thread: takes the next unscored book move until none are left
         private void VerifyMoves()
         {
-
             Searcher searcher = new();
             Board board = new();
 
@@ -200,14 +200,12 @@ namespace Lisa
                     Log(done + " of " + _itemLine.Length + " moves searched");
                 }
             }
-
         }
 
 
         //The score of a book move for the side that played it, or ILLEGAL_MOVE_SCORE if it can't be played there
         private int ScoreForMover(Searcher searcher, Board board, string fen, string moveText)
         {
-
             board.InitialiseFromFEN(fen);
 
             List<Move> legal = LegalMoves(board);
@@ -222,7 +220,6 @@ namespace Lisa
             }
 
             return ILLEGAL_MOVE_SCORE;
-
         }
 
 
@@ -230,7 +227,6 @@ namespace Lisa
         //it scored instead
         private int SideToMoveScore(Searcher searcher, Board board)
         {
-
             List<Move> legal = LegalMoves(board);
 
             if (legal.Count == 0)
@@ -247,10 +243,10 @@ namespace Lisa
 
             searcher.Search(ref board, _depth);
             return searcher.BestScore;
-
         }
 
 
+        //The legal moves for the side to move on the board
         private static List<Move> LegalMoves(Board board)
         {
             List<Move> legal = new();
@@ -265,9 +261,10 @@ namespace Lisa
         }
 
 
+        //Writes the verified book (only moves scoring at least the minimum for their side, dropping positions
+        //left with none) and the rejects file, with the score each rejected move got
         private void WriteResults()
         {
-
             List<string> bookLines = new();
             List<string> rejectLines = new()
             {
@@ -280,7 +277,6 @@ namespace Lisa
 
             foreach (BookLine line in _lines)
             {
-
                 int minScore = line.WhiteToMove ? _minScoreWhite : _minScoreBlack;
                 List<string> kept = new();
 
@@ -310,7 +306,6 @@ namespace Lisa
                 {
                     positionsDropped += 1;
                 }
-
             }
 
             List<string> output = new(_headerLines)
@@ -327,10 +322,10 @@ namespace Lisa
 
             Log("Moves kept " + movesKept + ", rejected " + movesRejected + ", positions dropped " + positionsDropped);
             Log("Cleaned book written to " + _outputFile + ", rejected moves to " + _rejectsFile);
-
         }
 
 
+        //Adds a line to the log file, stamped with the time since verifying began. Safe to call from any thread
         private void Log(string message)
         {
             TimeSpan elapsed = _timer.Elapsed;
@@ -340,6 +335,5 @@ namespace Lisa
                 File.AppendAllText(_logFile, line + "\r\n", Encoding.UTF8);
             }
         }
-
     }
 }

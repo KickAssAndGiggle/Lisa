@@ -4,7 +4,6 @@
     //write these by name on Globals, so they must stay public static fields of Globals (this is a partial of it)
     public static partial class Globals
     {
-
         #region Default Piece Square Table
 
 
@@ -374,9 +373,10 @@
         #endregion
 
 
+        //Builds the per-piece arrays the eval uses (material, SEE values, king attack and defence units,
+        //mobility weights) from the named weights, then fills Black's piece-square tables
         public static void InitialiseScorer()
         {
-
             MATERIAL = new int[6] { 100, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE, 0 };
             MAX_MATERIAL = (800 + (MATERIAL[KNIGHT] * 2) + (MATERIAL[BISHOP] * 2) + (MATERIAL[ROOK] * 2) +
                 MATERIAL[QUEEN]) * 2;
@@ -399,13 +399,13 @@
                 ENDGAME_MOBILITY_PER_QUEEN_UNSAFE_MOVE_BONUS, 0 };
 
             MirrorPSTsForBlack();
-
         }
 
 
+        //Fills each of Black's piece-square tables from White's, mirrored top to bottom so each square gets
+        //the value of the matching square from White's side
         private static void MirrorPSTsForBlack()
         {
-
             for (int NN = 0; NN <= 7; NN++)
             {
                 BlackBishopEarlyPST[NN] = WhiteBishopEarlyPST[56 + NN];
@@ -533,9 +533,6 @@
                 BlackRookEarlyPST[NN] = WhiteRookEarlyPST[NN - 56];
                 BlackRookLatePST[NN] = WhiteRookLatePST[NN - 56];
             }
-
-
         }
-
     }
 }

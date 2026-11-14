@@ -3,7 +3,9 @@ namespace Lisa
 {
     public sealed partial class Searcher
     {
-
+        //Quiescence search: plays legalMove, takes the static eval as a stand-pat score, then searches the
+        //captures that don't lose material (every move when the first ply leaves the side in check) until the
+        //position is quiet. Returns the score for the side to move after legalMove
         private int Quiesce(Move legalMove,
                             int alpha,
                             int beta,
@@ -11,7 +13,6 @@ namespace Lisa
                             int RootMoveKey
                            )
         {
-
             if (_cancel)
             {
                 return -5000;
@@ -212,7 +213,6 @@ namespace Lisa
                             alpha = score;
                             alphaRaised = true;
                         }
-
                     }
                 }
             }
@@ -237,21 +237,18 @@ namespace Lisa
             _moveStackTop = moveStackMark;
             _theBoard.UnmakeLastMove();
             return alpha;
-
         }
 
 
+        //The search at depth 1: quiescence from legalMove
         private int DepthOneEval(Move legalMove,
                                  int alpha,
                                  int beta,
                                  int rootMoveKey
                                 )
         {
-
             alpha = Quiesce(legalMove, alpha, beta, 0, rootMoveKey);
             return alpha;
-
         }
-
     }
 }

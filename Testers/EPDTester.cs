@@ -3,10 +3,10 @@ namespace Lisa
 {
     public class EPDTester
     {
-
         private readonly string EPDInFile = "";
         private readonly string EPDOutFile = "";
 
+        //Stores the EPD input and output file paths
         public EPDTester(string InputFilename, string OutputFileName)
         {
             EPDInFile = InputFilename;
@@ -14,10 +14,10 @@ namespace Lisa
         }
 
 
+        //Searches each EPD position to the given depth and writes the move chosen, whether it matches the best
+        //(bm) or avoided (am) moves, and the time, score and search statistics. Totals go at the end
         public void AnalyzePositions(byte Depth)
         {
-
-
             string[] Lines = File.ReadAllLines(EPDInFile);
             List<string> OutputLines = new();
             int Total = 0; int CorrectSolves = 0; int TotalTicks = 0;
@@ -25,7 +25,6 @@ namespace Lisa
 
             foreach (string S in Lines)
             {
-
                 if (!S.Trim().StartsWith("#"))
                 {
                     string Fen = "";
@@ -255,9 +254,7 @@ namespace Lisa
                     OutputLines.Add(" ");
                     OutputLines.Add(" ");
                     OutputLines.Add(" ");
-
                 }
-
             }
 
             OutputLines.Add("=========================================================================");
@@ -277,10 +274,6 @@ namespace Lisa
                 SW.WriteLine(S);
             }
             SW.Close();
-
-
         }
-
     }
-
 }

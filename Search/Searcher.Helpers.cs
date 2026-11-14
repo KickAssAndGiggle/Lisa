@@ -3,7 +3,6 @@ namespace Lisa
 {
     public sealed partial class Searcher
     {
-
         //Lazy SMP. While the main searcher searches, SEARCH_THREADS - 1 helper searchers search the same root position
         //on their own threads, sharing its transposition table. Only the main searcher chooses the move: the helpers
         //exist to fill the shared table, so the main search finds more of its positions already searched.
@@ -33,7 +32,6 @@ namespace Lisa
         //each step, so the shared table holds deeper results than the main search has reached
         private void StartHelpers(Move[] rootMoves, byte maxDepth)
         {
-
             if (_helpers.Length != SEARCH_THREADS - 1)
             {
                 Searcher[] helpers = new Searcher[SEARCH_THREADS - 1];
@@ -61,7 +59,6 @@ namespace Lisa
                 _helperThreads.Add(thread);
                 thread.Start();
             }
-
         }
 
 
@@ -93,6 +90,7 @@ namespace Lisa
         }
 
 
+        //The total nodes searched by the main search and all the helpers
         public long NodesLookedAtAllThreads()
         {
             long total = _stats.NodesLookedAt;
@@ -105,9 +103,10 @@ namespace Lisa
         }
 
 
+        //Sets this helper up for a new search: its own copy of the root position and root moves, the game's
+        //earlier positions for repetition checks, and fresh statistics and move ordering
         private void PrepareAsHelper(string rootFen, Move[] rootMoves, HashSet<long> gameZobrists, bool endGame)
         {
-
             _theBoard = new Board();
             _theBoard.InitialiseFromFEN(rootFen);
             _theBoard.RecalcPSTScores();
@@ -126,7 +125,6 @@ namespace Lisa
             _inCheckAtPly[0] = _theBoard.IsInCheck(_theBoard.OnMove);
             _pathZobrist[0] = _theBoard.CurrentZobrist;
             _repetitionFloor = 0;
-
         }
 
 
@@ -136,6 +134,5 @@ namespace Lisa
             SearchRoot(_helperRootMoves, (byte)(1 + depthOffset), maxDepth, int.MaxValue,
                 new Dictionary<int, Move[]>());
         }
-
     }
 }

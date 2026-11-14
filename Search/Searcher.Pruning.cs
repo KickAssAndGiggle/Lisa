@@ -3,9 +3,9 @@ namespace Lisa
 {
     public sealed partial class Searcher
     {
-
-        //previousMoveWasCheck: the opponent has just answered our check. Futility is skipped there, as a side
-        //mid-attack (often material down after a sacrifice) is exactly what static eval misjudges
+        //Futility and reverse futility pruning at null-window nodes 2 to 6 plies from the leaves: true if the
+        //static eval plus a margin is below alpha, or minus a margin is above beta. Futility is skipped right
+        //after a check, as a side mid-attack (often down material after a sacrifice) is what static eval misjudges
         private bool TryFutilityCut(Move legalMove,
                                     byte depth,
                                     int beta,
@@ -16,7 +16,6 @@ namespace Lisa
                                     ref int alpha
                                    )
         {
-
             if (beta - alpha == 1 && !legalMove.IsCapture && !isInCheck && _fullDepth >= 10 &&
                 nodeType != NodeTypes.PV &&
                 alpha != 5000 && beta != 5000 && alpha != -5000 && beta != -5000)
@@ -99,10 +98,12 @@ namespace Lisa
             }
 
             return false;
-
         }
 
 
+        //Null move pruning: the side to move passes and the other side's legal replies are searched in turn,
+        //2 to 5 plies shallower. Returns true, with alpha set to the static eval, as soon as one reply still leaves
+        //the side that passed at beta or above. A checking reply ends the attempt
         private bool TryNullMove(Move legalMove,
                                  int rootMoveKey,
                                  byte depth,
@@ -114,7 +115,6 @@ namespace Lisa
                                  ref int alpha
                                 )
         {
-
             if (beta - alpha == 1 &&
                 !_endGame && 
                 staticEval > beta && 
@@ -181,10 +181,11 @@ namespace Lisa
             }
 
             return false;
-
         }
 
 
+        //At expected Cut nodes deep enough in the tree, searches the first third of the moves 4 plies
+        //shallower. Returns true, with alpha set to beta, once three of them reach beta
         private bool TryProbCut(NodeTypes nodeType,
                                 byte depth,
                                 int beta,
@@ -193,10 +194,8 @@ namespace Lisa
                                 ref NodeState node
                                )
         {
-
             if (!isInCheck && nodeType == NodeTypes.Cut && depth > 4 && depth < _fullDepth && _fullDepth > 8)
             {
-
                 _stats.ProbCutAttempts += 1;
 
                 int moveStackMark = _moveStackTop;
@@ -206,7 +205,6 @@ namespace Lisa
                 {
                     if (_theBoard.MoveIsLegal(AllProbCutOppMoves[nn], _theBoard.OnMove))
                     {
-
                         bool nullWindowSearchFailed = false; bool nullWindowSearch;
 
                     ProbCuteResearchAfterNull:
@@ -243,14 +241,12 @@ namespace Lisa
                                 return true;
                             }
                         }
-
                     }
                 }
                 _moveStackTop = moveStackMark;
             }
 
             return false;
-
         }
 
 
@@ -278,6 +274,7 @@ namespace Lisa
         }
 
 
+        //The number of quiet moves after which LMP starts skipping them at this depth, or 0 for none
         private static int LateMovePruningThreshold(int depth)
         {
             switch (depth)
@@ -296,6 +293,7 @@ namespace Lisa
         }
 
 
+        //True if the move puts the opponent in check
         private bool GivesCheck(Move move)
         {
             return _theBoard.MoveGivesCheck(move, _theBoard.OnMove);
@@ -335,6 +333,7 @@ namespace Lisa
         }
 
 
+        //True if the side to move has at least one legal move
         private bool HasLegalMove()
         {
             Move[] moves = _theBoard.GenerateAllMoves(_theBoard.OnMove);
@@ -347,6 +346,5 @@ namespace Lisa
             }
             return false;
         }
-
     }
 }

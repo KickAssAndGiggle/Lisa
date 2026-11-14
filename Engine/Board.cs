@@ -4,7 +4,6 @@ namespace Lisa
 {
     public sealed class Board
     {
-
         #region Public visible arrays
 
         // Having these as just public fields probably wouldn't win any "perfect coding style" prize from
@@ -174,9 +173,6 @@ namespace Lisa
         private readonly UndoState[] _undo = new UndoState[40];
 
 
-
-
-
         private int _undoMoveCount = 0;
 
         private int _halfMoveClock;
@@ -192,11 +188,10 @@ namespace Lisa
         private readonly long _zobristBlackToMove = 9077444444444444;
 
 
-
-
+        //Builds the move offsets and the board lookup tables (square colours, lines, knight moves, king zones,
+        //passed pawn squares, Zobrist keys and piece-square tables). Call InitialiseFromFEN before using it
         public Board()
         {
-
             _offset[0] = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
             _offset[1] = new int[] { -21, -19, -12, -8, 8, 12, 19, 21 };
             _offset[2] = new int[] { -11, -9, 9, 11, 0, 0, 0, 0 };
@@ -273,18 +268,17 @@ namespace Lisa
             InitKingZoneLookup();
 
             InitPSTs();
-
         }
 
 
+        //Copies the early and late game piece-square tables for both colours from the eval weights into
+        //this board's per-piece tables
         private void InitPSTs()
         {
-
             for (int nn = 0; nn <= 5; nn++)
             {
                 if (nn == PAWN)
                 {
-
                     _earlyWhitePST[nn] = new int[64];
                     Array.Copy(WhitePawnEarlyPST, 0, _earlyWhitePST[nn], 0, 64);
 
@@ -296,11 +290,9 @@ namespace Lisa
 
                     _lateBlackPST[nn] = new int[64];
                     Array.Copy(BlackPawnLatePST, 0, _lateBlackPST[nn], 0, 64);
-
                 }
                 else if (nn == KNIGHT)
                 {
-
                     _earlyWhitePST[nn] = new int[64];
                     Array.Copy(WhiteKnightEarlyPST, 0, _earlyWhitePST[nn], 0, 64);
 
@@ -312,11 +304,9 @@ namespace Lisa
 
                     _lateBlackPST[nn] = new int[64];
                     Array.Copy(BlackKnightLatePST, 0, _lateBlackPST[nn], 0, 64);
-
                 }
                 else if (nn == BISHOP)
                 {
-
                     _earlyWhitePST[nn] = new int[64];
                     Array.Copy(WhiteBishopEarlyPST, 0, _earlyWhitePST[nn], 0, 64);
 
@@ -328,11 +318,9 @@ namespace Lisa
 
                     _lateBlackPST[nn] = new int[64];
                     Array.Copy(BlackBishopLatePST, 0, _lateBlackPST[nn], 0, 64);
-
                 }
                 else if (nn == ROOK)
                 {
-
                     _earlyWhitePST[nn] = new int[64];
                     Array.Copy(WhiteRookEarlyPST, 0, _earlyWhitePST[nn], 0, 64);
 
@@ -344,11 +332,9 @@ namespace Lisa
 
                     _lateBlackPST[nn] = new int[64];
                     Array.Copy(BlackRookLatePST, 0, _lateBlackPST[nn], 0, 64);
-
                 }
                 else if (nn == QUEEN)
                 {
-
                     _earlyWhitePST[nn] = new int[64];
                     Array.Copy(WhiteQueenEarlyPST, 0, _earlyWhitePST[nn], 0, 64);
 
@@ -360,11 +346,9 @@ namespace Lisa
 
                     _lateBlackPST[nn] = new int[64];
                     Array.Copy(BlackQueenLatePST, 0, _lateBlackPST[nn], 0, 64);
-
                 }
                 else if (nn == KING)
                 {
-
                     _earlyWhitePST[nn] = new int[64];
                     Array.Copy(WhiteKingEarlyPST, 0, _earlyWhitePST[nn], 0, 64);
 
@@ -376,16 +360,15 @@ namespace Lisa
 
                     _lateBlackPST[nn] = new int[64];
                     Array.Copy(BlackKingLatePST, 0, _lateBlackPST[nn], 0, 64);
-
                 }
             }
-
         }
 
 
+        //Recalculates both sides' early and late game piece-square totals from scratch for the current
+        //position
         public void RecalcPSTScores()
         {
-
             WhiteEarlyPSTScore = 0; BlackEarlyPSTScore = 0;
             WhiteLatePSTScore = 0; BlackLatePSTScore = 0;
 
@@ -402,14 +385,13 @@ namespace Lisa
                     BlackLatePSTScore += _lateBlackPST[Piece[nn]][nn];
                 }
             }
-
-
         }
 
 
+        //Fills the piece-square and en passant Zobrist keys from a fixed-seed random generator, so the keys
+        //are the same on every run
         private void InitZobristKeys()
         {
-
             // Seed must remain constant as the opening book uses our zobrist keys
             Random rnd = new(1762353731);
 
@@ -430,16 +412,15 @@ namespace Lisa
                 rnd.NextBytes(randBytes);
                 _zobristEPSquares[sq] = BitConverter.ToInt64(randBytes, 0);
             }
-
         }
 
 
+        //Fills KnightDestinations: for each square, the squares a knight on it can move to. Uses the
+        //move generator on the empty board
         private void InitKnightDestinationLookup()
         {
-
             for (int from = 0; from <= 63; from++)
             {
-
                 bool[] toSquares = new bool[64];
 
                 Piece[from] = KNIGHT;
@@ -454,18 +435,16 @@ namespace Lisa
                 Piece[from] = -1;
                 Color[from] = EMPTY;
                 KnightDestinations[from] = toSquares;
-
             }
-
         }
 
 
+        //Fills SameDiagonal (the squares a bishop on each square reaches on an empty board, plus the square
+        //itself) and the table of squares lying between two squares on a diagonal
         private void InitSameDiagonalLookup()
         {
-
             for (int from = 0; from <= 63; from++)
             {
-
                 bool[] ToSquares = new bool[64];
                 _squaresBetweenDiagonal[from] = new int[64][];
 
@@ -521,15 +500,14 @@ namespace Lisa
                 Piece[from] = -1;
                 Color[from] = EMPTY;
                 SameDiagonal[from] = ToSquares;
-
             }
-
         }
 
 
+        //Fills SameRank (which squares share a rank) and the table of squares lying between two squares on
+        //the same rank
         private void InitSameRankLookup()
         {
-
             for (int from = 0; from <= 63; from++)
             {
                 SameRank[from] = new bool[64];
@@ -560,13 +538,13 @@ namespace Lisa
                     }
                 }
             }
-
         }
 
 
+        //Fills SameFile (which squares share a file) and the table of squares lying between two squares on
+        //the same file
         private void InitSameFileLookup()
         {
-
             for (int from = 0; from <= 63; from++)
             {
                 SameFile[from] = new bool[64];
@@ -597,9 +575,7 @@ namespace Lisa
                         }
                     }
                 }
-
             }
-
         }
 
 
@@ -610,10 +586,8 @@ namespace Lisa
         //Each zone is a bit mask, one bit per square (bit 0 is a8)
         private void InitKingZoneLookup()
         {
-
             for (int kingSq = 0; kingSq <= 63; kingSq++)
             {
-
                 ulong whiteZone = 0;
                 ulong blackZone = 0;
                 int kingRow = kingSq / 8;
@@ -640,15 +614,14 @@ namespace Lisa
 
                 WhiteKingZone[kingSq] = whiteZone;
                 BlackKingZone[kingSq] = blackZone;
-
             }
-
         }
 
 
+        //Fills the passed pawn lookups: for a pawn of each colour on each square, the squares in front of
+        //it on its own and the adjacent files that an enemy pawn would have to stand on to stop it being passed
         private void InitPassedPawnLookup()
         {
-
             for (int nn = 8; nn <= 55; nn++)
             {
                 List<int> passSquares = new();
@@ -713,9 +686,10 @@ namespace Lisa
         }
 
 
+        //Builds CurrentZobrist and PawnOnlyZobrist from scratch for the current position: pieces, side to
+        //move, castling rights and en passant square
         private void SetInitialZobrist()
         {
-
             for (int sq = 0; sq <= 63; sq++)
             {
                 if (Color[sq] == WHITE)
@@ -765,34 +739,39 @@ namespace Lisa
             {
                 CurrentZobrist ^= _zobristBlackCanCastleQSide;
             }
-
         }
 
 
+        //Flips White's king side castling right in or out of CurrentZobrist
         private void ToggleZobristWhiteCanCastleKSide()
         {
             CurrentZobrist ^= _zobristWhiteCanCastleKSide;
         }
 
 
+        //Flips White's queen side castling right in or out of CurrentZobrist
         private void ToggleZobristWhiteCanCastleQSide()
         {
             CurrentZobrist ^= _zobristWhiteCanCastleQSide;
         }
 
 
+        //Flips Black's king side castling right in or out of CurrentZobrist
         private void ToggleZobristBlackCanCastleKSide()
         {
             CurrentZobrist ^= _zobristBlackCanCastleKSide;
         }
 
 
+        //Flips Black's queen side castling right in or out of CurrentZobrist
         private void ToggleZobristBlackCanCastleQSide()
         {
             CurrentZobrist ^= _zobristBlackCanCastleQSide;
         }
 
 
+        //Flips a piece of the given colour on the given square in or out of CurrentZobrist, and in or out of
+        //PawnOnlyZobrist too if it is a pawn
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ToggleZobristPieceOnSquare(int pSquare, int pColor, int pPiece)
         {
@@ -815,21 +794,24 @@ namespace Lisa
         }
 
 
+        //Flips the side to move in or out of CurrentZobrist
         private void ToggleZobristOnMove()
         {
             CurrentZobrist ^= _zobristBlackToMove;
         }
 
 
+        //Flips the given en passant square in or out of CurrentZobrist
         private void ToggleZobristEnPasantSquare(int PSquare)
         {
             CurrentZobrist ^= _zobristEPSquares[PSquare];
         }
 
 
+        //Returns the current position as a FEN string: pieces, side to move, castling rights and en passant
+        //square. The move clocks are not included
         public string GenerateFen()
         {
-
             string Fen = "";
             string CastleString = "";
             if (!_whiteCanKSideCastle && !_whiteCanQSideCastle && !_blackCanKSideCastle && !_blackCanQSideCastle)
@@ -884,7 +866,6 @@ namespace Lisa
                     }
                     switch (Piece[nn])
                     {
-
                         case PAWN:
 
                             Fen += (Color[nn] == WHITE ? "P" : "p");
@@ -938,7 +919,6 @@ namespace Lisa
             {
                 switch (EnPasantCapSquare)
                 {
-
                     case 16:
 
                         Fen += " a6 ";
@@ -1027,7 +1007,6 @@ namespace Lisa
 
             Fen = Fen.Trim();
             return Fen;
-
         }
 
 
@@ -1035,7 +1014,6 @@ namespace Lisa
         //so one Board can load many positions in turn
         private void ForgetPreviousPosition()
         {
-
             for (int sq = 0; sq < 64; sq++)
             {
                 Color[sq] = EMPTY;
@@ -1094,13 +1072,13 @@ namespace Lisa
             _lastMoveWasCastle = false;
             _undoMoveCount = 0;
             _seeUndoCount = 0;
-
         }
 
 
+        //Sets up the board from a FEN string: pieces, side to move, castling rights, en passant square and
+        //move clocks, then works out the material, piece squares, game phase, PST scores and Zobrist keys
         public void InitialiseFromFEN(string fen)
         {
-
             ForgetPreviousPosition();
 
             for (int nn = 0; nn <= 63; nn++)
@@ -1147,7 +1125,6 @@ namespace Lisa
 
             if (InfoSplits[2] != "-")
             {
-
                 //ep cap is available
                 int fileOffset = 0;
                 if (InfoSplits[2].StartsWith("b"))
@@ -1182,7 +1159,6 @@ namespace Lisa
                 int AlgRank = Convert.ToInt32(InfoSplits[2].Substring(1));
                 int ConvRank = 8 - AlgRank;
                 EnPasantCapSquare = (byte)((ConvRank * 8) + fileOffset);
-
             }
             else
             {
@@ -1198,7 +1174,6 @@ namespace Lisa
 
             for (int rank = 0; rank < 63; rank += 8)
             {
-
                 do
                 {
                     string CharVal = fenSplits[line].Substring(0, 1);
@@ -1398,7 +1373,6 @@ namespace Lisa
 
                     fenSplits[line] = fenSplits[line].Substring(1);
                     indent += 1;
-
                 } while (true);
 
                 indent = 0;
@@ -1467,24 +1441,23 @@ namespace Lisa
             {
                 GamePhase -= 4;
             }
-
         }
 
 
+        //Adds a move to the end of _moveList
         private void AddMoveToList(byte from, byte to, bool Cap, byte PromPiece = 0)
         {
-
             _moveListTopIndex += 1;
             _moveList[_moveListTopIndex].From = from;
             _moveList[_moveListTopIndex].To = to;
             _moveList[_moveListTopIndex].IsCapture = Cap;
             _moveList[_moveListTopIndex].PromotionPiece = PromPiece;
-
         }
 
+        //Adds a capture to the end of _moveList with an MVV-LVA style ordering score: 4000 plus the victim's
+        //value minus the attacker's. En passant scores 4020, and an even trade gets a small bonus for cheaper attackers
         private void AddMoveToListWithScore(byte from, byte to, bool Cap, byte PromPiece = 0, bool IsEP = false)
         {
-
             _moveListTopIndex += 1;
             _moveList[_moveListTopIndex].From = from;
             _moveList[_moveListTopIndex].To = to;
@@ -1502,7 +1475,6 @@ namespace Lisa
             {
                 _moveList[_moveListTopIndex].Score += (10 - Piece[from]);
             }
-
         }
 
 
@@ -1626,6 +1598,7 @@ namespace Lisa
         }
 
 
+        //The side's non-capture moves, as a new array
         public Move[] GenerateNonCaptureMoves(int toMove)
         {
             return new Span<Move>(_moveList, 0, FillMoveListWithNonCaptures(toMove)).ToArray();
@@ -1644,32 +1617,26 @@ namespace Lisa
         //Leaves the moves in _moveList and returns how many there are
         private int FillMoveListWithNonCaptures(int toMove)
         {
-
             Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
 
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
-
                 if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
-
                     int P = Piece[sq];
 
                     if (P != PAWN) //It's not a pawn
                     {
-
                         int[] dirs = _x88Offset[P];
                         int dirCount = _offsets[P];
                         bool slides = _slide[P];
                         int from88 = sq + (sq & 56);
                         for (int off = 0; off < dirCount; off++)
                         {
-
                             int dir = dirs[off];
                             for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
-
                                 byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
                                 if (localColor[nextSq] != EMPTY)
                                 {
@@ -1682,9 +1649,7 @@ namespace Lisa
                                 {
                                     break;
                                 }
-
                             }
-
                         }
 
                         if (P == KING)
@@ -1724,14 +1689,11 @@ namespace Lisa
                                 }
                             }
                         }
-
                     }
                     else
                     {
-
                         if (toMove == WHITE)
                         {
-
                             if (localColor[(byte)(sq - 8)] == EMPTY)
                             {
                                 if ((byte)(sq - 8) <= 7)
@@ -1754,11 +1716,9 @@ namespace Lisa
                                     }
                                 }
                             }
-
                         }
                         else
                         {
-
                             if (localColor[(byte)(sq + 8)] == EMPTY)
                             {
                                 if ((byte)(sq + 8) >= 56)
@@ -1780,38 +1740,29 @@ namespace Lisa
                                     }
                                 }
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             return _moveListTopIndex + 1;
-
-
         }
 
 
+        //The side's captures on the given square, promotions included, as a new array
         public Move[] GenerateCapsToSquare(int toMove, int ToSquare)
         {
-
             Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
 
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
-
                 if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
-
                     int P = Piece[sq];
 
                     if (P != PAWN) //It's not a pawn
                     {
-
                         if (P == ROOK)
                         {
                             if (sq % 8 != ToSquare % 8 && sq / 8 != ToSquare / 8)
@@ -1860,11 +1811,9 @@ namespace Lisa
                         int from88 = sq + (sq & 56);
                         for (int off = 0; off < dirCount; off++)
                         {
-
                             int dir = dirs[off];
                             for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
-
                                 byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
@@ -1883,18 +1832,13 @@ namespace Lisa
                                 {
                                     break;
                                 }
-
                             }
-
                         }
-
                     }
                     else
                     {
-
                         if (toMove == WHITE)
                         {
-
                             if ((byte)(sq - 7) == ToSquare && sq % 8 != 7)
                             {
                                 if (localColor[(byte)(sq - 7)] != EMPTY && localColor[(byte)(sq - 7)] != toMove)
@@ -1938,12 +1882,9 @@ namespace Lisa
                                     AddMoveToList(sq, EnPasantCapSquare, true);
                                 }
                             }
-
-
                         }
                         else
                         {
-
                             if ((byte)(sq + 7) == ToSquare && sq % 8 != 0)
                             {
                                 if (localColor[(byte)(sq + 7)] != EMPTY && localColor[(byte)(sq + 7)] != toMove)
@@ -1987,18 +1928,13 @@ namespace Lisa
                                     AddMoveToList(sq, EnPasantCapSquare, true);
                                 }
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
             return ret.ToArray();
-
         }
 
 
@@ -2014,32 +1950,26 @@ namespace Lisa
         //Leaves the moves in _moveList and returns how many there are
         private int FillMoveListWithCaptures(int toMove)
         {
-
             Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
 
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
-
                 if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
-
                     int P = Piece[sq];
 
                     if (P != PAWN) //It's not a pawn
                     {
-
                         int[] dirs = _x88Offset[P];
                         int dirCount = _offsets[P];
                         bool slides = _slide[P];
                         int from88 = sq + (sq & 56);
                         for (int off = 0; off < dirCount; off++)
                         {
-
                             int dir = dirs[off];
                             for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
-
                                 byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
@@ -2058,18 +1988,13 @@ namespace Lisa
                                 {
                                     break;
                                 }
-
                             }
-
                         }
-
                     }
                     else
                     {
-
                         if (toMove == WHITE)
                         {
-
                             if (sq % 8 != 7)
                             {
                                 if (localColor[(byte)(sq - 7)] != EMPTY && localColor[(byte)(sq - 7)] != toMove)
@@ -2113,12 +2038,9 @@ namespace Lisa
                                     AddMoveToList(sq, EnPasantCapSquare, true);
                                 }
                             }
-
-
                         }
                         else
                         {
-
                             if (sq % 8 != 0)
                             {
                                 if (localColor[(byte)(sq + 7)] != EMPTY && localColor[(byte)(sq + 7)] != toMove)
@@ -2162,17 +2084,12 @@ namespace Lisa
                                     AddMoveToList(sq, EnPasantCapSquare, true);
                                 }
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             return _moveListTopIndex + 1;
-
         }
 
 
@@ -2189,32 +2106,26 @@ namespace Lisa
         //Leaves the scored moves, unsorted, in _moveList and returns how many there are
         private int FillMoveListWithScoredCaptures(int toMove)
         {
-
             Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
 
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
-
                 if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
-
                     int P = Piece[sq];
 
                     if (P != PAWN) //It's not a pawn
                     {
-
                         int[] dirs = _x88Offset[P];
                         int dirCount = _offsets[P];
                         bool slides = _slide[P];
                         int from88 = sq + (sq & 56);
                         for (int off = 0; off < dirCount; off++)
                         {
-
                             int dir = dirs[off];
                             for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
-
                                 byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
@@ -2233,18 +2144,13 @@ namespace Lisa
                                 {
                                     break;
                                 }
-
                             }
-
                         }
-
                     }
                     else
                     {
-
                         if (toMove == WHITE)
                         {
-
                             if (sq % 8 != 7)
                             {
                                 if (localColor[(byte)(sq - 7)] != EMPTY && localColor[(byte)(sq - 7)] != toMove)
@@ -2288,12 +2194,9 @@ namespace Lisa
                                     AddMoveToListWithScore(sq, EnPasantCapSquare, true, 0, true);
                                 }
                             }
-
-
                         }
                         else
                         {
-
                             if (sq % 8 != 0)
                             {
                                 if (localColor[(byte)(sq + 7)] != EMPTY && localColor[(byte)(sq + 7)] != toMove)
@@ -2337,48 +2240,39 @@ namespace Lisa
                                     AddMoveToListWithScore(sq, EnPasantCapSquare, true, 0, true);
                                 }
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             return _moveListTopIndex + 1;
-
         }
 
 
+        //The side's knight, bishop, rook and queen moves, captures and non-captures, as a new array.
+        //Pawn and king moves are left out
         public Move[] GeneratePieceMovesWithoutKing(int toMove)
         {
-
             Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
 
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
-
                 if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
-
                     int P = Piece[sq];
 
                     if (P != PAWN && P != KING) //It's not a pawn or king
                     {
-
                         int[] dirs = _x88Offset[P];
                         int dirCount = _offsets[P];
                         bool slides = _slide[P];
                         int from88 = sq + (sq & 56);
                         for (int off = 0; off < dirCount; off++)
                         {
-
                             int dir = dirs[off];
                             for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
-
                                 byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
@@ -2400,20 +2294,14 @@ namespace Lisa
                                 {
                                     break;
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
             return ret.ToArray();
-
         }
 
 
@@ -2423,7 +2311,6 @@ namespace Lisa
         //side's pieces and the same attacks as bit masks
         public ReadOnlySpan<PieceAttacks> GeneratePieceAttacksWithoutKing(int toMove, out PieceAttackMasks masks)
         {
-
             PieceAttacks[] attackers = toMove == WHITE ? _whitePieceAttacks : _blackPieceAttacks;
             byte[] localColor = Color;
             int[] localPiece = Piece;
@@ -2432,7 +2319,6 @@ namespace Lisa
 
             for (int sq = 0; sq < 64; sq++)
             {
-
                 if (localColor[sq] != toMove)
                 {
                     continue;
@@ -2460,11 +2346,9 @@ namespace Lisa
                 ulong attackedByThisPiece = 0;
                 for (int off = 0; off < dirCount; off++)
                 {
-
                     int dir = dirs[off];
                     for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                     {
-
                         int nextSq = (to88 + (to88 & 7)) >> 1;
                         attackedByThisPiece |= 1UL << nextSq;
 
@@ -2472,9 +2356,7 @@ namespace Lisa
                         {
                             break;
                         }
-
                     }
-
                 }
 
                 ref PieceAttacks attacker = ref attackers[attackerCount];
@@ -2499,14 +2381,14 @@ namespace Lisa
                 {
                     masks.Queen |= attackedByThisPiece;
                 }
-
             }
 
             return new ReadOnlySpan<PieceAttacks>(attackers, 0, attackerCount);
-
         }
 
 
+        //All the side's pseudo-legal moves, as a new array. The legality-check parameters cut the list down
+        //to moves by pieces that could attack the given king square
         public Move[] GenerateAllMoves(int toMove, bool isLegalityCheck = false, int legalityCheckKingSquare = -1,
             bool legalityCheckLastMoveWasCastle = false)
         {
@@ -2529,21 +2411,17 @@ namespace Lisa
         private int FillMoveListWithAllMoves(int toMove, bool isLegalityCheck, int legalityCheckKingSquare,
             bool legalityCheckLastMoveWasCastle)
         {
-
             Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
 
             for (byte sq = 0; sq < 64; sq++) //Loop each square
             {
-
                 if (localColor[sq] == toMove) //sq has a piece of right color for toMove
                 {
-
                     int P = Piece[sq];
 
                     if (P != PAWN) //It's not a pawn
                     {
-
                         if (P == ROOK && !legalityCheckLastMoveWasCastle)
                         {
                             if (isLegalityCheck && sq % 8 != legalityCheckKingSquare % 8 &&
@@ -2597,11 +2475,9 @@ namespace Lisa
                         int from88 = sq + (sq & 56);
                         for (int off = 0; off < dirCount; off++)
                         {
-
                             int dir = dirs[off];
                             for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                             {
-
                                 byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
 
                                 if (localColor[nextSq] != EMPTY)
@@ -2627,9 +2503,7 @@ namespace Lisa
                                 {
                                     break;
                                 }
-
                             }
-
                         }
 
                         if (P == KING && !isLegalityCheck)
@@ -2669,14 +2543,11 @@ namespace Lisa
                                 }
                             }
                         }
-
                     }
                     else
                     {
-
                         if (toMove == WHITE)
                         {
-
                             if (!isLegalityCheck || sq / 8 == legalityCheckKingSquare / 8 + 1)
                             {
                                 if (localColor[(byte)(sq - 8)] == EMPTY && !isLegalityCheck)
@@ -2746,11 +2617,9 @@ namespace Lisa
                                     }
                                 }
                             }
-
                         }
                         else
                         {
-
                             if (!isLegalityCheck || sq / 8 == legalityCheckKingSquare / 8 - 1)
                             {
                                 if (localColor[(byte)(sq + 8)] == EMPTY && !isLegalityCheck)
@@ -2818,21 +2687,17 @@ namespace Lisa
                                         AddMoveToList(sq, EnPasantCapSquare, true);
                                     }
                                 }
-
                             }
                         }
-
                     }
-
                 }
-
             }
 
             return _moveListTopIndex + 1;
-
         }      
 
 
+        //True if the side has at least one legal move
         public bool HasLegalMove(int side)
         {
             Move[] moves = GenerateAllMoves(side);
@@ -2847,9 +2712,11 @@ namespace Lisa
         }
 
 
+        //True if the move is legal for the side in the current position. First checks the move fits the
+        //position (with isKillerValidCheck, the extra checks a killer move from another position needs), then
+        //that it doesn't leave the king in check, or castle out of, through or into check
         public bool MoveIsLegal(Move theMove, int toMove, bool isKillerValidCheck = false)
         {
-
             if (!isKillerValidCheck)
             {
                 if (toMove == WHITE)
@@ -2899,7 +2766,6 @@ namespace Lisa
             }
             else
             {
-
                 if (!theMove.IsCapture && Color[theMove.To] != EMPTY)
                 {
                     return false;
@@ -3084,7 +2950,6 @@ namespace Lisa
                         return false;
                     }
                 }
-
             }
 
             // If we are not in check, a non-king move from a square that shares no line with our king
@@ -3192,7 +3057,6 @@ namespace Lisa
 
             UnmakeLastMove();
             return !illegal;
-
         }
 
 
@@ -3240,9 +3104,11 @@ namespace Lisa
         }
 
 
+        //Plays the move on the board, saving what UnmakeLastMove needs to take it back. Updates the pieces,
+        //castling rights, en passant square, material, PST scores, game phase and Zobrist keys. A null move only
+        //passes the turn and clears the en passant square
         public void MakeMove(Move theMove, int toMove, bool NullMove)
         {
-
             ref UndoState undo = ref _undo[_undoMoveCount];
 
             bool MoveWasCastle = false;
@@ -3289,7 +3155,6 @@ namespace Lisa
 
             if (!NullMove)
             {
-
                 if (Piece[theMove.From] == PAWN)
                 {
                     if (Color[theMove.From] == WHITE)
@@ -3767,7 +3632,6 @@ namespace Lisa
                                     BlackHasDarkSquaredBishop = false;
                                     BlackDarkBishopSquare = 255;
                                     GamePhase += 1;
-
                                 }
                                 else if (theMove.To == BlackLightBishopSquare)
                                 {
@@ -3855,11 +3719,9 @@ namespace Lisa
                             _blackCanQSideCastle = false;
                         }
                     }
-
                 }
                 else
                 {
-
                     ToggleZobristPieceOnSquare(theMove.From, Color[theMove.From], Piece[theMove.From]);
                     if (Color[theMove.From] == WHITE)
                     {
@@ -4013,7 +3875,6 @@ namespace Lisa
                             ToggleZobristEnPasantSquare(EnPasantCapSquare);
                         }
                         EnPasantCapSquare = 255;
-
                     }
                     else if (Piece[theMove.To] == PAWN)
                     {
@@ -4046,7 +3907,6 @@ namespace Lisa
                         }
                         EnPasantCapSquare = 255;
                     }
-
                 }
 
                 if (theMove.PromotionPiece > 0)
@@ -4089,7 +3949,6 @@ namespace Lisa
                     Piece[theMove.To] = theMove.PromotionPiece;
                     ToggleZobristPieceOnSquare(theMove.To, Color[theMove.To], theMove.PromotionPiece);
                 }
-
             }
             else
             {
@@ -4104,13 +3963,12 @@ namespace Lisa
             _lastMoveWasCastle = MoveWasCastle;
             OnMove = (OnMove == WHITE ? BLACK : WHITE);
             ToggleZobristOnMove();
-
         }
 
 
+        //Takes back the last move made with MakeMove, restoring the board exactly as it was before it
         public void UnmakeLastMove()
         {
-
             _undoMoveCount -= 1;
             ref UndoState undo = ref _undo[_undoMoveCount];
 
@@ -4315,7 +4173,6 @@ namespace Lisa
                 }
                 else
                 {
-
                     ToggleZobristPieceOnSquare(toUndo.To, Color[toUndo.To], Piece[toUndo.To]);
                     Color[toUndo.From] = Color[toUndo.To];
                     Piece[toUndo.From] = Piece[toUndo.To];
@@ -4350,7 +4207,6 @@ namespace Lisa
 
                     if (Piece[toUndo.From] == KING)
                     {
-
                         if (toUndo.To == toUndo.From + 2)
                         {
                             //Castle kingside
@@ -4374,7 +4230,6 @@ namespace Lisa
                                 ToggleZobristPieceOnSquare(5, BLACK, ROOK);
                                 ToggleZobristPieceOnSquare(7, BLACK, ROOK);
                             }
-
                         }
                         else if (toUndo.To == toUndo.From - 2)
                         {
@@ -4437,7 +4292,6 @@ namespace Lisa
                     Piece[toUndo.From] = PAWN;
                     ToggleZobristPieceOnSquare(toUndo.From, Color[toUndo.From], PAWN);
                 }
-
             }
             else
             {
@@ -4450,7 +4304,6 @@ namespace Lisa
 
             OnMove = (OnMove == WHITE ? BLACK : WHITE);
             ToggleZobristOnMove();
-
         }
 
 
@@ -4459,7 +4312,6 @@ namespace Lisa
         // Returns a signed value (negative = the exchange loses material). En passant returns 1.
         public int See(int toSquare, int fromSquare = -1)
         {
-
             if (Piece[toSquare] == -1)
             {
                 //en-pasant capture
@@ -4526,7 +4378,6 @@ namespace Lisa
             }
 
             return _seeGain[0];
-
         }
 
         // The square of byColor's least valuable piece attacking square (pawn, knight, bishop, rook,
@@ -4654,13 +4505,10 @@ namespace Lisa
             return -1;
         }
 
+        //Empties the undo history, so the current position becomes the start for MakeMove and UnmakeLastMove
         public void ResetUndoMoves()
         {
             _undoMoveCount = 0;
         }
-
-
     }
-
-
 }

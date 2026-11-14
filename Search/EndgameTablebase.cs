@@ -9,7 +9,6 @@ namespace Lisa
 {
     public sealed class EndgameTablebase
     {
-
         public struct TablebasePosition
         {
             public bool checkmate;
@@ -38,9 +37,10 @@ namespace Lisa
             public int? dtm;
         }
 
+        //Asks the online Lichess 7-piece tablebase for the position's best move and returns it in UCI form,
+        //or an empty string if there is no answer. Failed requests are logged to C:\PSOutput\Fen_TB_Misses.txt
         public string FindBestMoveFrom7ManTablebase(string fen)
         {
-
             fen = fen.Replace(" ", "_");
             try
             {
@@ -74,9 +74,6 @@ namespace Lisa
                 sw.Close();
                 return "";
             }
-
         }
-
-
     }
 }

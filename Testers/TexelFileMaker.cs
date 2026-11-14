@@ -10,7 +10,6 @@ namespace Lisa
     //about which engine was stronger: both must be rated at least minEngineRating, no more than maxEloGap apart
     public sealed class TexelFileMaker
     {
-
         private const int MAX_REPORTED_FAILURES = 20;
         private const int SAMPLING_SEED = 20261101;
 
@@ -44,6 +43,7 @@ namespace Lisa
             public long Zobrist;
         }
 
+        //Stores the PGN and EPD file paths and the position-sampling settings
         public TexelFileMaker(string pgnFile, string epdFile, int positionsPerGame, int skipPlies, int maxGames,
             int maxEloGap, int minEngineRating)
         {
@@ -57,9 +57,10 @@ namespace Lisa
         }
 
 
+        //Reads the PGN file one game at a time and writes sampled quiet positions from suitable games, each
+        //with the game's result, to the EPD file. Stops once enough games have been used, then writes a report
         public void MakeFile()
         {
-
             if (!File.Exists(_pgnFile))
             {
                 Console.WriteLine("PGN file not found: " + _pgnFile);
@@ -79,7 +80,6 @@ namespace Lisa
             string? line;
             while (!enoughGames && (line = reader.ReadLine()) != null)
             {
-
                 string trimmed = line.Trim();
 
                 if (trimmed.StartsWith("["))
@@ -109,14 +109,14 @@ namespace Lisa
             timer.Stop();
 
             WriteReport(timer);
-
         }
 
 
-        //Returns false once enough games have been used
+        //Skips games from a set position, with ratings too low or too far apart, without a result, or with an
+        //unreadable move. Otherwise writes a sample of the game's candidate positions. Returns false once enough
+        //games have been used
         private bool ProcessGame(List<string> headers, string moveText, StreamWriter writer)
         {
-
             _gamesRead += 1;
 
             string result = "";
@@ -169,11 +169,11 @@ namespace Lisa
             WriteSample(candidates, result, writer);
 
             return _gamesUsed < _maxGames;
-
         }
 
 
-        //An unrated or unreadable rating fails
+        //True if both players are rated at least the minimum and are within the maximum Elo gap. An unrated
+        //or unreadable rating fails
         private bool RatingsAreClose(string whiteElo, string blackElo)
         {
             if (!int.TryParse(whiteElo, out int white) || !int.TryParse(blackElo, out int black))
@@ -184,11 +184,11 @@ namespace Lisa
         }
 
 
-        //A position is a candidate when the side to move is not in check, the move that reached it was
-        //not a capture, and the move played from it is neither a capture nor a promotion
+        //Replays the game, adding each candidate position after the first skipPlies plies. Returns false at a
+        //move it can't read. A candidate has the side to move not in check, wasn't reached by a capture, and the
+        //move played from it is neither a capture nor a promotion
         private bool ReplayGame(List<string> sanMoves, List<Candidate> candidates)
         {
-
             Board gameBoard = new();
             gameBoard.InitialiseFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             gameBoard.ResetUndoMoves();
@@ -197,7 +197,6 @@ namespace Lisa
 
             for (int ply = 0; ply < sanMoves.Count; ply++)
             {
-
                 if (!TryParseSAN(sanMoves[ply], ref gameBoard, out Move played))
                 {
                     if (_failures.Count < MAX_REPORTED_FAILURES)
@@ -225,18 +224,16 @@ namespace Lisa
             }
 
             return true;
-
         }
 
 
-        //Partial Fisher-Yates shuffle: takes candidates in random order until enough unseen positions are found
+        //Writes up to positionsPerGame of the candidates, picked at random, each with the game's result,
+        //skipping positions already written. A partial Fisher-Yates shuffle makes the picks
         private void WriteSample(List<Candidate> candidates, string result, StreamWriter writer)
         {
-
             int taken = 0;
             for (int i = 0; i < candidates.Count && taken < _positionsPerGame; i++)
             {
-
                 int pick = _sampler.Next(i, candidates.Count);
                 Candidate chosen = candidates[pick];
                 candidates[pick] = candidates[i];
@@ -269,7 +266,6 @@ namespace Lisa
                     _draws += 1;
                 }
             }
-
         }
 
 
@@ -293,7 +289,6 @@ namespace Lisa
         //Strips comments {...}, variations (...), NAGs $n, move numbers and the result token
         internal static List<string> ExtractSANMoves(string moveText)
         {
-
             List<string> moves = new();
             StringBuilder token = new();
             int variationDepth = 0;
@@ -301,7 +296,6 @@ namespace Lisa
 
             for (int i = 0; i <= moveText.Length; i++)
             {
-
                 char c = i < moveText.Length ? moveText[i] : ' ';
 
                 if (inBraceComment)
@@ -339,13 +333,13 @@ namespace Lisa
             }
 
             return moves;
-
         }
 
 
+        //Adds a PGN token to the move list as a SAN move, dropping NAGs, results, move numbers and any
+        //check or annotation marks
         private static void AddMoveToken(string token, List<string> moves)
         {
-
             if (token.StartsWith("$") || token == "1-0" || token == "0-1" || token == "1/2-1/2" || token == "*")
             {
                 return;
@@ -375,14 +369,12 @@ namespace Lisa
             {
                 moves.Add(token);
             }
-
         }
 
 
         //Matches a SAN token against the legal moves; succeeds only when exactly one legal move fits
         internal static bool TryParseSAN(string san, ref Board theBoard, out Move found)
         {
-
             found = new Move();
             int toMove = theBoard.OnMove;
 
@@ -450,14 +442,14 @@ namespace Lisa
             }
 
             return FindUniqueMove(ref theBoard, piece, -1, toSquare, fromFile, fromRank, promotion, out found);
-
         }
 
 
+        //Finds the legal move of the given piece to the square that matches the from square, file or rank
+        //(-1 for any) and promotion. Succeeds only when exactly one move fits
         private static bool FindUniqueMove(ref Board theBoard, int piece, int fromSquare, int toSquare, int fromFile,
             int fromRank, byte promotion, out Move found)
         {
-
             found = new Move();
             int matches = 0;
             int toMove = theBoard.OnMove;
@@ -490,10 +482,10 @@ namespace Lisa
             }
 
             return matches == 1;
-
         }
 
 
+        //The piece for a SAN promotion letter (N, B, R or Q), or 0 for anything else
         private static byte PromotionPieceFromLetter(char letter)
         {
             return letter switch
@@ -507,7 +499,7 @@ namespace Lisa
         }
 
 
-        //a8 = 0, h1 = 63
+        //The square number for a name such as e4 (a8 = 0, h1 = 63), or -1 if it isn't a square
         private static int SquareFromName(string name)
         {
             if (name[0] < 'a' || name[0] > 'h' || name[1] < '1' || name[1] > '8')
@@ -518,6 +510,7 @@ namespace Lisa
         }
 
 
+        //The tag name of a PGN header line, such as Result from [Result "1-0"]
         internal static string HeaderTag(string header)
         {
             int space = header.IndexOf(' ');
@@ -525,6 +518,7 @@ namespace Lisa
         }
 
 
+        //The quoted value of a PGN header line, such as 1-0 from [Result "1-0"]
         internal static string HeaderValue(string header)
         {
             int first = header.IndexOf('"');
@@ -533,9 +527,10 @@ namespace Lisa
         }
 
 
+        //Writes a report of the settings, game and position counts, results, time taken and the first moves
+        //that couldn't be read, next to the EPD file
         private void WriteReport(Stopwatch timer)
         {
-
             List<string> report = new()
             {
                 "Texel file: " + _epdFile,
@@ -564,8 +559,6 @@ namespace Lisa
             }
 
             File.WriteAllLines(_epdFile + ".report.txt", report);
-
         }
-
     }
 }

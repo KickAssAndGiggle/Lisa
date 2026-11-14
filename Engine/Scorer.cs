@@ -4,7 +4,6 @@ namespace Lisa
 {
     public static partial class Scorer
     {
-
         //Indexed by square, one bit per square (bit 0 is a8): the squares next to it, and the squares a knight's
         //move away from it
         private static readonly ulong[] _kingNeighbourMasks = BuildStepMasks(false);
@@ -17,10 +16,12 @@ namespace Lisa
         private const ulong CENTRE_SQUARES = (1UL << 27) | (1UL << 28) | (1UL << 35) | (1UL << 36);
 
 
+        //Evaluates the position, returning the score from the point of view of the side that has just moved (not
+        //the side on move). Uses the eval cache, may return a material-and-PST estimate early (lazy eval) when
+        //that is far outside alpha-beta, and otherwise adds every term, tapered between opening and endgame
         public static int ScorePosition(ref Board theBoard, ref TranspositionTable tt, int alpha, int beta,
             bool allowLazyEval, int lastMoveCapMaterial)
         {
-
             bool InTT = tt.LookupScore(theBoard.CurrentZobrist, out TTScore lookup);
             if (InTT)
             {
@@ -44,7 +45,6 @@ namespace Lisa
 
             if (allowLazyEval)
             {
-
                 int whiteLazyScore = ((whiteOpeningScore * (256 - phase)) + (whiteEndgameScore * phase)) / 256;
                 int blackLazyScore = ((blackOpeningScore * (256 - phase)) + (blackEndgameScore * phase)) / 256;
                 int lazy = theBoard.OnMove == BLACK ? whiteLazyScore - blackLazyScore : blackLazyScore - whiteLazyScore;
@@ -85,7 +85,6 @@ namespace Lisa
                         }
                     }
                 }
-
             }
 
             //Generated once and shared by mobility, king attack and king defence
@@ -241,7 +240,6 @@ namespace Lisa
                 whiteScore += TEMPO_BONUS;
                 return (blackScore - whiteScore);
             }
-
         }
 
 
@@ -283,9 +281,10 @@ namespace Lisa
         }
 
 
+        //Penalises a rook stuck in its corner behind its own a or h pawn while its king stands beside it on
+        //the back rank. On the queen side the penalty is eased when the b or c file has no pawn of that side
         public static void PenaliseTrappedRook(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             if (theBoard.BlackKingSquare <= 3)
             {
                 if (theBoard.Piece[0] == ROOK && theBoard.Color[0] == BLACK)
@@ -349,13 +348,13 @@ namespace Lisa
                     }
                 }
             }
-
         }
 
 
+        //Rewards a knight or bishop standing directly in front of an enemy pawn that has reached its fifth
+        //rank
         public static void RewardBlockadingDangerousPawns(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             for (int NN = 32; NN <= 39; NN++)
             {
                 if (theBoard.Piece[NN] == PAWN && theBoard.Color[NN] == BLACK)
@@ -379,13 +378,13 @@ namespace Lisa
                     }
                 }
             }
-
         }
 
 
+        //Rewards a knight on the fifth rank (c to f file) for each own pawn defending it. The d and e file
+        //outposts get the bigger bonus
         public static void RewardKnightOutpost(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             if (theBoard.Piece[26] == KNIGHT && theBoard.Color[26] == WHITE)
             {
                 if (theBoard.Piece[33] == PAWN && theBoard.Color[33] == WHITE)
@@ -481,14 +480,12 @@ namespace Lisa
                     blackScore += KNIGHT_OUTPOST_MINOR_BONUS;
                 }
             }
-
-
         }
 
 
+        //Rewards each pawn defended by an own pawn, with a separate weight for pawns beyond their third rank
         public static void RewardPawnChains(ref Board theBoard, out int WhiteChainScore, out int BlackChainScore)
         {
-
             WhiteChainScore = 0; BlackChainScore = 0;
             for (int PP = 0; PP <= 7; PP++)
             {
@@ -541,7 +538,6 @@ namespace Lisa
                     }
                 }
             }
-
         }
 
 
@@ -653,13 +649,14 @@ namespace Lisa
         }
 
 
+        //Adds both sides' mobility (see AddMobility) and, in the opening half only, the knight centre and rim
+        //terms
         public static void RewardMobility(ref Board theBoard, ReadOnlySpan<PieceAttacks> whitePieceAttacks,
             ReadOnlySpan<PieceAttacks> blackPieceAttacks, in PieceAttackMasks whitePieces,
             in PieceAttackMasks blackPieces, ulong whitePawnAttacks, ulong blackPawnAttacks,
             ref int whiteOpeningScore, ref int blackOpeningScore,
             ref int whiteEndgameScore, ref int blackEndgameScore)
         {
-
             //A piece's moves are the squares it bears on, less those holding its own side's pieces and the enemy
             //king. Squares an enemy pawn attacks have their own (unsafe) weights.
             //Each piece type has its own per-move weight in each half: a queen collects far more moves than a knight,
@@ -674,7 +671,6 @@ namespace Lisa
                 KnightCentreAndRim(theBoard.WhiteKnightTwoSquare);
             blackOpeningScore += KnightCentreAndRim(theBoard.BlackKnightOneSquare) +
                 KnightCentreAndRim(theBoard.BlackKnightTwoSquare);
-
         }
 
 
@@ -696,6 +692,7 @@ namespace Lisa
         }
 
 
+        //How many files have none of the side's pawns, given its per-file pawn counts
         private static int PawnlessFiles(int[] filePawns)
         {
             int count = 0;
@@ -710,9 +707,10 @@ namespace Lisa
         }
 
 
+        //Penalises each pawn still on its starting square when no own pawn stands beside it or one square
+        //ahead on an adjacent file to support its advance. Flank and centre pawns have their own penalties
         public static void PenaliseBackwardsPawns(ref Board theBoard, out int whiteBWPScore, out int blackBWPScore)
         {
-
             whiteBWPScore = 0; blackBWPScore = 0;
 
             //white
@@ -995,13 +993,11 @@ namespace Lisa
                     }
                 }
             }
-
-
         }
 
+        //Rewards each rook on its seventh rank
         public static void RewardRooksOnTheSeventh(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             if (theBoard.WhiteRookOneSquare >= 8 && theBoard.WhiteRookOneSquare <= 15)
             {
                 whiteScore += ROOK_ON_SEVENTH_BONUS;
@@ -1021,13 +1017,12 @@ namespace Lisa
             {
                 blackScore += ROOK_ON_SEVENTH_BONUS;
             }
-
         }
 
 
+        //Penalises a side with a single bishop for each of its pawns on that bishop's colour
         private static void RewardPawnBishopSynergy(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             if (theBoard.BlackHasDarkSquaredBishop && !theBoard.BlackHasLightSquaredBishop)
             {
                 blackScore -= theBoard.BlackPawnsOnDarkSquares * BISHOP_PAWN_COLOR_PENALTY;
@@ -1045,15 +1040,12 @@ namespace Lisa
             {
                 whiteScore -= theBoard.WhitePawnsOnLightSquares * BISHOP_PAWN_COLOR_PENALTY;
             }
-
-
         }
 
 
         //private static void EncouragePawnsOnOppositeSideToKingToAdvance(ref Board theBoard, ref int whiteScore, ref
         //int blackScore)
         //{
-
         //    if (theBoard.WhiteKingSquare % 8 >= 5)
         //    {
         //        if (theBoard.Color[48] == WHITE && theBoard.Piece[48] == PAWN)
@@ -1119,9 +1111,9 @@ namespace Lisa
         //}
 
 
+        //Rewards each bishop for the enemy queen, rooks and knights on its diagonals (see BishopTargetBonus)
         private static void RewardActiveBishop(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             if (theBoard.WhiteHasDarkSquaredBishop)
             {
                 whiteScore += BishopTargetBonus(theBoard.WhiteDarkBishopSquare, theBoard.BlackQueenSquare,
@@ -1146,7 +1138,6 @@ namespace Lisa
                     theBoard.WhiteRookOneSquare, theBoard.WhiteRookTwoSquare, theBoard.WhiteKnightOneSquare,
                     theBoard.WhiteKnightTwoSquare);
             }
-
         }
 
 
@@ -1169,9 +1160,10 @@ namespace Lisa
         }
 
 
+        //Rewards each side's passed pawns: a bonus for each file whose front pawn is passed, more the further
+        //it has advanced, plus a bonus for passers on neighbouring files (connected)
         public static void RewardPassedPawns(ref Board theBoard, out int whitePPScore, out int blackPPScore)
         {
-
             whitePPScore = 0; 
             blackPPScore = 0;
 
@@ -1285,13 +1277,13 @@ namespace Lisa
                     }
                 }
             }
-
         }
 
 
+        //Rewards each rook on a file with none of its own pawns, with an extra bonus if the file has no enemy
+        //pawns either
         private static void RewardRooksOnOpenFiles(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             if (theBoard.WhiteRookOneSquare != 255 && theBoard.WhiteFilePawns[theBoard.WhiteRookOneSquare % 8] == 0)
             {
                 //White rook one on semi open file
@@ -1335,14 +1327,14 @@ namespace Lisa
                     blackScore += ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS;
                 }
             }
-
         }
 
 
+        //Penalises each pawn with no own pawns on the files beside it. a and h file pawns have their own
+        //penalty
         private static void PenaliseIsolatedPawns(ref Board theBoard, out int whiteIsoPawnScore,
             out int blackIsoPawnScore)
         {
-
             whiteIsoPawnScore = 0; blackIsoPawnScore = 0;
 
             if (theBoard.WhiteFilePawns[0] > 0 && theBoard.WhiteFilePawns[1] == 0)
@@ -1381,14 +1373,14 @@ namespace Lisa
                     blackIsoPawnScore -= CENTER_PAWN_ISOLATED_PENALTY * theBoard.BlackFilePawns[NN];
                 }
             }
-
         }
 
 
+        //Penalises each file holding two, or three or more, of a side's pawns, with an extra penalty when
+        //the file also holds an enemy pawn
         private static void PenaliseDoubledAndTripledPawns(ref Board theBoard, out int whiteDblPawnScore,
             out int blackDblPawnScore)
         {
-
             whiteDblPawnScore = 0; 
             blackDblPawnScore = 0;
 
@@ -1427,13 +1419,13 @@ namespace Lisa
                     }
                 }
             }
-
         }
 
 
+        //Penalises a king that has left its first two ranks (more while the enemy queen is on), or stepped up
+        //to its second rank in the centre, and otherwise adds its pawn shelter (see KingShelterScore)
         private static void RewardKingSafety(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             //###TODO: Knights?
 
             if (theBoard.WhiteKingSquare < 48)
@@ -1475,7 +1467,6 @@ namespace Lisa
                 }
                 blackScore += KingShelterScore(ref theBoard, theBoard.BlackKingSquare % 8, BLACK);
             }
-
         }
 
 
@@ -1483,7 +1474,6 @@ namespace Lisa
         private static void PenaliseKingAttack(ref Board theBoard, ReadOnlySpan<PieceAttacks> whitePieceAttacks,
             ReadOnlySpan<PieceAttacks> blackPieceAttacks, ref int whiteScore, ref int blackScore)
         {
-
             if (theBoard.WhiteQueenSquare != 255)
             {
                 blackScore -= KING_ATTACK_PENALTY[NetKingAttackUnits(ref theBoard, whitePieceAttacks, blackPieceAttacks,
@@ -1495,7 +1485,6 @@ namespace Lisa
                 whiteScore -= KING_ATTACK_PENALTY[NetKingAttackUnits(ref theBoard, blackPieceAttacks, whitePieceAttacks,
                     theBoard.WhiteKingSquare, BLACK)];
             }
-
         }
 
 
@@ -1888,6 +1877,7 @@ namespace Lisa
         }
 
 
+        //For each square, a mask of the square itself and every square on its two diagonals
         private static ulong[] BuildDiagonalMasks()
         {
             ulong[] masks = new ulong[64];
@@ -1931,6 +1921,7 @@ namespace Lisa
         }
 
 
+        //The number of king moves between the two squares on an empty board
         private static int KingDistance(int squareA, int squareB)
         {
             return Math.Max(Math.Abs(squareA % 8 - squareB % 8), Math.Abs(squareA / 8 - squareB / 8));
@@ -2061,9 +2052,10 @@ namespace Lisa
         }
 
 
+        //Rewards a king that has castled, or stands where castling would have put it, on either wing. Also
+        //rewards a king still on its starting square for each rook still on its starting corner
         private static void RewardBeingCastled(ref Board theBoard, ref int whiteScore, ref int blackScore)
         {
-
             //A side's only king, if it still has one, stands on its king square, so that is the only square tested
             int whiteKing = theBoard.WhiteKingSquare;
             if (whiteKing <= 63 && theBoard.Color[whiteKing] == WHITE && theBoard.Piece[whiteKing] == KING)
@@ -2128,7 +2120,6 @@ namespace Lisa
                     blackScore += KSIDE_CASTLE_RIGHTS;
                 }
             }
-
         }
 
         //Out of 64, how much of its endgame advantage the stronger side keeps. It is below 64 only in endgames that
@@ -2177,6 +2168,7 @@ namespace Lisa
         }
 
 
+        //The number of the side's pieces on the board, counting pawns and the king
         private static int PieceCountWithPawnsAndKing(ref Board theBoard, bool white)
         {
             if (white)
@@ -2225,7 +2217,5 @@ namespace Lisa
             }
             return 0;
         }
-
-
     }
 }

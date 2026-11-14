@@ -5,7 +5,6 @@
     //Must be created with new(), not default, or the arrays are null
     public struct SearchStats
     {
-
         public int SecondsUsed;
         public int NodesLookedAt;
         public int NodesPerSecond;
@@ -53,6 +52,7 @@
         public KillerStats KillerOne;
         public KillerStats KillerTwo;
 
+        //Creates the arrays for the LMR and LMP counters
         public SearchStats()
         {
             LMRReducedBy = new int[6];
@@ -61,7 +61,6 @@
             LMRReSearchFailedBy = new int[6];
             LMPPruned = new int[4];
         }
-
     }
 
 

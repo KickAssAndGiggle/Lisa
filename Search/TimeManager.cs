@@ -8,12 +8,12 @@ namespace Lisa
 {
     public sealed class TimeManager
     {
-
         public int MaxTimeToUse;
 
+        //Sets MaxTimeToUse, the most milliseconds to spend on this move: a fixed amount when the clock is under
+        //two minutes, otherwise a share of the time left that grows as pieces come off the board
         public TimeManager(int millisecondsLeft, Board theBoard)
         {
-
             if (millisecondsLeft < 500)
             {
                 MaxTimeToUse = 50;
@@ -65,11 +65,6 @@ namespace Lisa
                     MaxTimeToUse = Convert.ToInt32(millisecondsLeft * 0.12);
                 }
             }
-
         }
-
-
-
-
     }
 }

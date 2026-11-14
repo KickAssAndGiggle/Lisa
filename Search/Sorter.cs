@@ -5,7 +5,6 @@ namespace Lisa
     //threads never write into each other's ordering
     public sealed class Sorter
     {
-
         private const int MAX_DEPTH = 30;
 
         //Quiet move history, by side to move, from square and to square. Every update pulls the value towards
@@ -44,7 +43,6 @@ namespace Lisa
         public Span<Move> GetSortedMoves(ref Board theBoard, Span<Move> buffer, bool capturesOnly,
             bool nonCapturesOnly, bool lowDepth = false)
         {
-
             int moveCount;
             if (capturesOnly)
             {
@@ -95,7 +93,6 @@ namespace Lisa
 
             list.Sort();
             return list;
-
         }
 
 
@@ -107,18 +104,22 @@ namespace Lisa
         }
 
 
+        //Takes the history bonus RewardQuietMove would give at this depth off a quiet move
         public void PenaliseQuietMove(int side, Move move, int depth)
         {
             UpdateQuietHistory(QuietHistoryIndex(side, move), -Math.Min(depth * depth, QUIET_HISTORY_BONUS_CAP));
         }
 
 
+        //Adds a bonus (or a penalty) to one history entry, scaled down as the entry nears QUIET_HISTORY_MAX
+        //so it can never pass it
         private void UpdateQuietHistory(int index, int bonus)
         {
             QuietHistory[index] += bonus - QuietHistory[index] * Math.Abs(bonus) / QUIET_HISTORY_MAX;
         }
 
 
+        //The history entry for a quiet move by the side, from its from and to squares
         private static int QuietHistoryIndex(int side, Move move)
         {
             return (side == WHITE ? 0 : 4096) + move.From * 64 + move.To;
@@ -144,18 +145,23 @@ namespace Lisa
         }
 
 
+        //How many cutoffs the move has caused under the given root move
         public int CutCountUnderRootMove(int rootMoveKey, int moveKey)
         {
             return _cutCountUnderRootMove[CutCountUnderRootMoveIndex(rootMoveKey, moveKey)];
         }
 
 
+        //Where the count for a move under a root move is kept: the root move's row, then the move's from and
+        //to squares
         private int CutCountUnderRootMoveIndex(int rootMoveKey, int moveKey)
         {
             return _rootMoveRow[rootMoveKey] * 4096 + (moveKey / 100) * 64 + moveKey % 100;
         }
 
 
+        //Adds to the killer score of a move at this node's ply, then makes it a killer there if it now scores
+        //higher than a current one
         public void IncreaseKillerScore(int fullDepth, int depth, Move kMove, int piece, int score)
         {
             _killerScores[kMove.From, kMove.To, fullDepth - depth] += score;
@@ -163,9 +169,10 @@ namespace Lisa
         }
 
 
+        //Makes the move a killer at the given ply if it isn't one already: it fills an empty first slot, or
+        //takes the place of a killer with a lower killer score
         private void ReplaceKillerIfAppropriate(Move kMove, int killerDepth, int killerPiece)
         {
-
             if ((kMove.From == KillerOnes[killerDepth].From && kMove.To == KillerOnes[killerDepth].To) ||
                 (kMove.From == KillerTwos[killerDepth].From && kMove.To == KillerTwos[killerDepth].To))
             {
@@ -205,10 +212,11 @@ namespace Lisa
                     }
                 }
             }
-
         }
 
 
+        //Records the move as this ply's refutation, with the piece that was on its from square so its
+        //validity can be checked later
         public void SetRefutationMove(int fullDepth, int refutationDepth, Move rMove, int fromSquarePiece)
         {
             Refutations[fullDepth - refutationDepth] = rMove;
@@ -216,6 +224,7 @@ namespace Lisa
         }
 
 
+        //Clears the history, cut counts, killers and refutations, ready for a new search
         public void Reset()
         {
             Array.Clear(QuietHistory);
@@ -229,7 +238,5 @@ namespace Lisa
             Array.Clear(Refutations);
             Array.Clear(RefutationPieces);
         }
-
     }
-
 }

@@ -3,9 +3,10 @@ namespace Lisa
 {
     class Program
     {
+        //Runs the mode set in Settings.ini: the UCI engine, or one of the tools (perft, FEN and EPD testing,
+        //Texel file making and tuning, opening book making and verifying)
         static void Main(string[] args)
         {
-
             if (RUN_MODE == ProgramMode.Perft)
             {
                 InitialiseScorer();
@@ -73,7 +74,6 @@ namespace Lisa
                     BOOK_MIN_SCORE_WHITE, BOOK_MIN_SCORE_BLACK, BOOK_VERIFY_THREADS);
                 verifier.Verify();
             }
-
         }
     }
 }

@@ -6,7 +6,8 @@ namespace Lisa
     //ScorePosition itself, so if the two ever drift apart the output says so.
     public static partial class Scorer
     {
-
+        //A line-by-line breakdown of the evaluation of the FEN: every term for White and Black, the half it
+        //counts in, and its tapered effect, then the total, checked against ScorePosition
         public static List<string> EvalBreakdownLines(string fen)
         {
             Board theBoard = new();
@@ -289,6 +290,8 @@ namespace Lisa
         }
 
 
+        //Writes one term's breakdown line, with its tapered effect at this phase, and adds it to the opening
+        //halves, the endgame halves, or both
         private static void AddTaperedTerm(List<string> lines, string name, string half, int white, int black,
             int phase, bool inOpening, bool inEndgame,
             ref int whiteOpening, ref int whiteEndgame, ref int blackOpening, ref int blackEndgame)
@@ -310,6 +313,8 @@ namespace Lisa
         }
 
 
+        //Writes one breakdown line for a term that counts in full whatever the phase, and adds it to the
+        //scores
         private static void AddUntaperedTerm(List<string> lines, string name, int white, int black, ref int whiteScore,
             ref int blackScore)
         {
@@ -320,6 +325,7 @@ namespace Lisa
         }
 
 
+        //The piece-square table for the piece, side and half of the game
         private static int[] PSTFor(int piece, int side, bool early)
         {
             switch (piece)
@@ -346,10 +352,10 @@ namespace Lisa
         }
 
 
+        //The value as text with its sign, such as +35 or -12
         private static string FormatSigned(int value)
         {
             return value.ToString("+0;-0;0");
         }
-
     }
 }

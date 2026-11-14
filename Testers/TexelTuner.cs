@@ -10,7 +10,6 @@ namespace Lisa
     //over every position is the error. Weights are nudged one at a time, keeping any nudge that lowers the error.
     public sealed class TexelTuner
     {
-
         //Weights the tuner may change. Comment a line out to leave that weight alone.
         //Pawn material is fixed at 100 (in InitialiseScorer) so the scale stays in centipawns.
         private static readonly string[] TUNABLE_WEIGHTS =
@@ -184,6 +183,8 @@ namespace Lisa
         private long _passes;
         private readonly Stopwatch _timer = new();
 
+        //Stores the EPD and results file paths, the most positions to load (0 for all) and the number of
+        //threads (0 for one per processor)
         public TexelTuner(string epdFile, string resultsFile, int maxPositions, int threads)
         {
             _epdFile = epdFile;
@@ -195,9 +196,11 @@ namespace Lisa
         }
 
 
+        //Texel-tunes the weights in TUNABLE_WEIGHTS: fits K to the starting weights, then nudges each weight
+        //in turn while it lowers the error, halving step sizes as it goes, until a full pass changes nothing.
+        //The results file is kept up to date throughout
         public void Tune()
         {
-
             _timer.Start();
             File.WriteAllText(_logFile, "");
 
@@ -224,7 +227,6 @@ namespace Lisa
             bool converged = false;
             while (!converged)
             {
-
                 _iteration += 1;
                 bool anyStepAboveOne = false;
                 foreach (Weight weight in _weights)
@@ -269,7 +271,6 @@ namespace Lisa
 
             WriteResults(true);
             Log("Finished.");
-
         }
 
 
@@ -278,7 +279,6 @@ namespace Lisa
         //Returns true if the weight moved.
         private bool TuneWeight(Weight weight)
         {
-
             int original = GetValue(weight);
 
             double upError = double.MaxValue;
@@ -313,13 +313,13 @@ namespace Lisa
             }
 
             return false;
-
         }
 
 
+        //Keeps the improvement found at value, then carries on stepping the weight the same way while each
+        //step lowers the error. Leaves the weight at its best value
         private void FollowDirection(Weight weight, int value, double error, int step)
         {
-
             _bestError = error;
             int bestValue = value;
 
@@ -337,10 +337,10 @@ namespace Lisa
             SetValue(weight, bestValue);
             Log(weight.Name + " " + weight.StartValue + " -> " + bestValue + " (step " + weight.Step + "), error " +
                 FormatError(_bestError));
-
         }
 
 
+        //Sets the weight to value, re-evaluates every position and returns the error
         private double ErrorWithValue(Weight weight, int value)
         {
             SetValue(weight, value);
@@ -353,7 +353,6 @@ namespace Lisa
         //one-entry eval cache, made fresh for this pass so no score worked out under the old weights is reused.
         private void EvaluateAllPositions()
         {
-
             InitialiseScorer();
 
             int count = _fens.Length;
@@ -376,14 +375,12 @@ namespace Lisa
             });
 
             _passes += 1;
-
         }
 
 
         //Mean of (result - expected score)^2, where expected score = 1 / (1 + 10^(-k * eval / 400))
         private double ErrorFromEvals(double k)
         {
-
             double scale = -k * Math.Log(10.0) / 400.0;
             double total = 0;
 
@@ -395,7 +392,6 @@ namespace Lisa
             }
 
             return total / _whiteEvals.Length;
-
         }
 
 
@@ -403,7 +399,6 @@ namespace Lisa
         //so that the weights do the moving. Golden-section search: the error has a single low point in K.
         private double FitK()
         {
-
             double low = 0.1;
             double high = 4.0;
             double ratio = (Math.Sqrt(5.0) - 1.0) / 2.0;
@@ -434,14 +429,13 @@ namespace Lisa
             }
 
             return (low + high) / 2.0;
-
         }
 
 
+        //Reads the positions and their game results (1, 0.5 or 0) from the EPD file, up to the maximum.
         //Each line: <fen> c9 "1-0";  The clocks are added because InitialiseFromFEN expects six fields.
         private bool LoadPositions()
         {
-
             if (!File.Exists(_epdFile))
             {
                 Log("EPD file not found: " + _epdFile);
@@ -454,7 +448,6 @@ namespace Lisa
 
             foreach (string line in File.ReadLines(_epdFile))
             {
-
                 if (_maxPositions > 0 && fens.Count >= _maxPositions)
                 {
                     break;
@@ -499,16 +492,15 @@ namespace Lisa
                 (unreadable > 0 ? " (" + unreadable + " unreadable lines skipped)" : "") + ", using " + _threads +
                 " threads");
             return _fens.Length > 0;
-
         }
 
 
+        //Finds each weight named in TUNABLE_WEIGHTS among Globals' public static int fields, with its step
+        //and limit. Logs and returns false if one can't be found
         private bool FindWeights()
         {
-
             foreach (string name in TUNABLE_WEIGHTS)
             {
-
                 FieldInfo? field = typeof(Globals).GetField(name, BindingFlags.Public | BindingFlags.Static);
                 if (field == null || field.FieldType != typeof(int) || field.IsInitOnly || field.IsLiteral)
                 {
@@ -529,27 +521,28 @@ namespace Lisa
 
             Log("Tuning " + _weights.Count + " weights");
             return true;
-
         }
 
 
+        //The weight's current value
         private static int GetValue(Weight weight)
         {
             return (int)weight.Field.GetValue(null)!;
         }
 
 
+        //Sets the weight's value
         private static void SetValue(Weight weight, int value)
         {
             weight.Field.SetValue(null, value);
         }
 
 
+        //Writes K, the error, the called-correctly counts and every weight's current value to the results file.
         //Rewritten after every improvement, so stopping Lisa at any point leaves the best weights found so far.
-        //The lines are in the same form as EvalWeights.cs so they can be pasted straight over the old ones.
+        //The weight lines are in the same form as EvalWeights.cs so they can be pasted straight over the old ones.
         private void WriteResults(bool finished)
         {
-
             List<string> lines = new()
             {
                 finished ? "Texel tuning finished" : "Texel tuning in progress (best so far)",
@@ -579,7 +572,6 @@ namespace Lisa
             }
 
             File.WriteAllLines(_resultsFile, lines);
-
         }
 
 
@@ -601,6 +593,7 @@ namespace Lisa
         }
 
 
+        //True if the eval from White's point of view points the way the game went (see CountCalledCorrectly)
         private static bool IsCalledCorrectly(double whiteEval, double result)
         {
             if (result == 1.0)
@@ -615,6 +608,7 @@ namespace Lisa
         }
 
 
+        //A called-correctly count as text, with its percentage
         private static string CalledCorrectlyText(int correct, int considered)
         {
             return correct + " of " + considered + " (" + (100.0 * correct / considered).ToString("F3",
@@ -622,6 +616,7 @@ namespace Lisa
         }
 
 
+        //The called-correctly counts before and after tuning as text, with their percentages
         private static string CalledCorrectlyChangeText(int before, int after, int considered)
         {
             return before + " -> " + after + " of " + considered + " (" +
@@ -630,23 +625,25 @@ namespace Lisa
         }
 
 
+        //Adds a line to the log file, stamped with the time since tuning began
         private void Log(string message)
         {
             File.AppendAllText(_logFile, FormatTime(_timer.Elapsed) + "  " + message + "\r\n");
         }
 
 
+        //The error as text, to 8 decimal places
         private static string FormatError(double error)
         {
             return error.ToString("F8", CultureInfo.InvariantCulture);
         }
 
 
+        //The elapsed time as hh:mm:ss
         private static string FormatTime(TimeSpan elapsed)
         {
             return ((int)elapsed.TotalHours).ToString("00") + ":" + elapsed.Minutes.ToString("00") + ":" +
                 elapsed.Seconds.ToString("00");
         }
-
     }
 }

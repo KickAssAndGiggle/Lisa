@@ -3,11 +3,11 @@ namespace Lisa
 {
     public class PerftRunner
     {
-
         private readonly string _perftFen = "";
         private readonly int _perftDepth = 0;
         private readonly string _perftOutputFile;
 
+        //Stores the perft FEN, the deepest depth to count to and the output file path
         public PerftRunner(string fen, int depth, string outputFile)
         {
             _perftFen = fen;
@@ -16,9 +16,10 @@ namespace Lisa
         }
 
 
+        //Counts the legal move paths from the FEN at each depth from 1 up to the perft depth, writing each count
+        //and its time to the output file
         public void DoPerft()
         {
-
             List<string> lines = new();
             Board perftBoard = new();
             perftBoard.InitialiseFromFEN(_perftFen);
@@ -26,7 +27,6 @@ namespace Lisa
 
             do
             {
-
                 long perftMovesAtDepth = 0;
                 depth += 1;
 
@@ -52,7 +52,6 @@ namespace Lisa
                 lines.Add("Milliseconds: " + (endTicks - startTicks).ToString());
                 lines.Add(" ");
                 lines.Add(" ");
-
             } while (depth < _perftDepth);
 
             StreamWriter sw = File.CreateText(_perftOutputFile);
@@ -61,10 +60,11 @@ namespace Lisa
                 sw.WriteLine(line);
             }
             sw.Close();
-
         }
 
 
+        //Adds to totalMoveCount the number of legal move paths of the given depth that start with the given
+        //moves
         private void Perft(Move[] moves, int depth, int onMove, ref Board theBoard, ref long totalMoveCount)
         {
             if (depth == 1)

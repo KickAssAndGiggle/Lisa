@@ -8,7 +8,6 @@ namespace Lisa
 {
     public static partial class Globals
     {
-
         public static bool USE_TABLEBASE;
 
         public static OpeningBook OPENING_BOOK;
@@ -83,24 +82,29 @@ namespace Lisa
 
         private static string _bookFile = "";
 
+        //Loads Settings.ini, gives the per-piece weight arrays empty starting values until InitialiseScorer fills
+        //them, and loads the opening book if it is turned on
         static Globals()
         {
-
             LoadSettings();
 
             MATERIAL = Array.Empty<int>();
             SEE_MATERIAL = Array.Empty<int>();
             KING_ATTACK_UNITS = Array.Empty<int>();
             KING_DEFENCE_UNITS = Array.Empty<int>();
+            OPENING_MOBILITY_BONUS = Array.Empty<int>();
+            ENDGAME_MOBILITY_BONUS = Array.Empty<int>();
+            OPENING_MOBILITY_UNSAFE_BONUS = Array.Empty<int>();
+            ENDGAME_MOBILITY_UNSAFE_BONUS = Array.Empty<int>();
 
             OPENING_BOOK = new OpeningBook(USE_BOOK ? _bookFile : "");
-
         }
 
 
+        //Reads Settings.ini (next to the executable, or in GlobalBits) and sets the run mode, the file paths,
+        //the hash table sizes and the other options from it. Also finds Book.ini the same way
         private static void LoadSettings()
         {
-
             string AppFolder = AppDomain.CurrentDomain.BaseDirectory;
             if (!AppFolder.EndsWith("\\"))
             {
@@ -125,7 +129,6 @@ namespace Lisa
             List<string> MultiFenList = new();
             if (File.Exists(SettingsFile))
             {
-
                 string[] Lines = File.ReadAllLines(SettingsFile);
                 foreach (string Line in Lines)
                 {
@@ -276,7 +279,6 @@ namespace Lisa
             }
 
             FENS_TO_TEST = MultiFenList.ToArray();
-
         }
 
 
@@ -287,6 +289,7 @@ namespace Lisa
             public readonly ProgramMode[] Modes;
             public readonly Action<string> Apply;
 
+            //Creates a key for the given prefix, the run modes it applies to and what to do with its value
             public SettingKey(string prefix, ProgramMode[] modes, Action<string> apply)
             {
                 Prefix = prefix;
@@ -299,12 +302,9 @@ namespace Lisa
         #region Helper functions used in many places
 
 
-        /// <summary>
-        /// Gets numeric column by its letter
-        /// </summary>
+        //The file number for a file letter (a = 0 to h = 7), or -1 if it isn't one
         public static int GetXByColumn(string Col)
         {
-
             switch (Col.ToLower())
             {
                 case "a":
@@ -328,14 +328,13 @@ namespace Lisa
             }
 
             return -1;
-
         }
 
 
+        //The move in short algebraic form for the given board, such as Nf3, exd5 or O-O. En passant captures
+        //end in ep. No check or promotion marks are added
         public static string ConvertMoveToAlgebraic(Move Made, ref Board theBoard)
         {
-
-
             string PieceOnSquare = ""; string ToRank = ""; string ToFile = ""; bool IsEP = false;
 
             if (theBoard.Piece[Made.From] == KNIGHT)
@@ -409,7 +408,6 @@ namespace Lisa
                 }
             }
 
-
             if (Made.To == 0 || Made.To % 8 == 0)
             {
                 ToFile = "a";
@@ -478,13 +476,12 @@ namespace Lisa
 
             string Ret = PieceOnSquare + (Made.IsCapture ? "x" : "") + ToFile + ToRank + (IsEP ? "ep" : "");
             return Ret;
-
         }
 
 
+        //The move in UCI form: from square, to square and any promotion letter, such as e2e4 or e7e8q
         public static string ConvertMoveToString(Move Made)
         {
-
             string RetVal;
             string FromFile = "";
             string ToFile = "";
@@ -643,12 +640,9 @@ namespace Lisa
             }
 
             return RetVal;
-
         }
 
 
         #endregion
-
-
     }
 }

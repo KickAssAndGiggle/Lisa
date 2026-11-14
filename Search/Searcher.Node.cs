@@ -3,7 +3,6 @@ namespace Lisa
 {
     public sealed partial class Searcher
     {
-
         //The state of the node EvaluateMove is searching, shared by ref with the move stages (TryPrimaryVariation,
         //TryKiller and the rest). A plain struct on the stack rather than a ref struct: same storage, and passing ref
         //node together with ref node.SomeField is always allowed
@@ -28,6 +27,9 @@ namespace Lisa
         }
 
 
+        //Plays legalMove and searches the position after it to the given depth, returning the score for the
+        //side to move there (callers negate it). Moves are tried in stages: TT move, refutation, winning captures,
+        //killers, ProbCut, losing captures, then quiet moves with LMR and LMP. Depth 1 goes to quiescence
         private int EvaluateMove(Move legalMove,
                                  int rootMoveKey,
                                  int alphaOnEntry,
@@ -36,7 +38,6 @@ namespace Lisa
                                  ref Move[] pv
                                 )
         {
-
             //Stopped: unwind straight away. The result is never used
             if (_cancel)
             {
@@ -155,9 +156,8 @@ namespace Lisa
             if (!hasTTMove && ((nodeType != NodeTypes.All && nodeType != NodeTypes.Unknown) ||
                 depth >= _fullDepth - 1) && depth >= 6)
             {
-
                 iidUsedForCaps = true;
-                
+
                 int iidAlpha = node.Alpha;
                 int iidBeta = beta;
                 allOpCaps = TakeSortedMoves(true, false, true);
@@ -193,7 +193,6 @@ namespace Lisa
             {
                 goto StoreInTransTable;
             }
-
 
             //Killers are not tried at expected All-nodes: nothing cuts there, and the quiet loop searches them reduced
             if (nodeType != NodeTypes.All)
@@ -495,10 +494,8 @@ namespace Lisa
                         node.CapsOnlyAlphaRaised = false;
                         node.AlphaRaisedByNonGeneratedMove = false;
                     }
-
                 }
             }
-
 
             //Nothing played and not in check: with no legal move at all, this is stalemate, which is a draw
             if (node.Played == 0 && !isInCheck && !_theBoard.HasLegalMove(_theBoard.OnMove))
@@ -562,10 +559,8 @@ namespace Lisa
             }
             else
             {
-
                 _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth, _phantomMove,
                     TT_POS_TYPE_ALPHA_NOT_BEATEN);
-
             }
 
         ReturnEarly:
@@ -575,10 +570,11 @@ namespace Lisa
             _ply -= 1;
             _theBoard.UnmakeLastMove();
             return node.Alpha;
-
         }
 
 
+        //Looks the position up in the transposition table, giving back its stored move and node type. Returns
+        //true, with alpha set to the stored score, when the stored result is deep enough to cut the node
         private bool TryTranspositionTable(byte depth,
                                            long BoardZobrist,
                                            int beta,
@@ -587,7 +583,6 @@ namespace Lisa
                                            out NodeTypes nodeType
                                           )
         {
-
             ttMove = default;
             nodeType = NodeTypes.Unknown;
             if (_transTable.LookupPos(_theBoard.CurrentZobrist, out TTMove transTableMove))
@@ -689,10 +684,11 @@ namespace Lisa
             }
 
             return false;
-
         }
 
 
+        //Searches the TT move first, if it is legal. Returns true if it causes a beta cutoff, after storing
+        //the cut in the transposition table
         private bool TryPrimaryVariation(bool hasTTMove,
                                          Move ttMove,
                                          byte depth,
@@ -701,12 +697,10 @@ namespace Lisa
                                          ref NodeState node
                                         )
         {
-
             if (hasTTMove)
             {
                 if (_theBoard.MoveIsLegal(ttMove, _theBoard.OnMove))
                 {
-
                     node.Played += 1;
                     int Score = 0 - EvaluateMove(ttMove, rootMoveKey, -beta, -node.Alpha, (byte)(depth - 1),
                         ref node.LocalPV);
@@ -731,15 +725,15 @@ namespace Lisa
                             node.PV[ND] = node.LocalPV[ND];
                         }
                     }
-
                 }
             }
 
             return false;
-
         }
 
 
+        //Searches this ply's refutation move (the quiet move that last cut here), if it is not the TT move and
+        //is still valid and legal in this position. Returns true if it causes a beta cutoff
         private bool TryRefutationMove(Move ttMove,
                                        NodeTypes nodeType,
                                        byte depth,
@@ -748,7 +742,6 @@ namespace Lisa
                                        ref NodeState node
                                       )
         {
-
             int ourDepth = _fullDepth - depth;
 
             if ((_sorter.Refutations[ourDepth].From != 0 || _sorter.Refutations[ourDepth].To != 0)
@@ -758,7 +751,6 @@ namespace Lisa
                 if (_theBoard.Piece[_sorter.Refutations[ourDepth].From] == _sorter.RefutationPieces[ourDepth] &&
                     _theBoard.MoveIsLegal(_sorter.Refutations[ourDepth], _theBoard.OnMove, true))
                 {
-
                     node.Played += 1;
                     node.RefutationSeparated = true;
                     _stats.RefutationTried += 1;
@@ -811,12 +803,12 @@ namespace Lisa
                 }
             }
 
-
             return false;
-
         }
 
 
+        //Searches the captures that win or trade material (all of them when in check), skipping the TT move.
+        //Returns true on a beta cutoff
         private bool TryWinningCaptures(Span<Move> allOppCaps,
                                         Move ttMove,
                                         NodeTypes nodeType,
@@ -829,7 +821,6 @@ namespace Lisa
                                         ref NodeState node
                                        )
         {
-
             int ourDepth = _fullDepth - depth;
 
             for (int nn = 0; nn < allOppCaps.Length; nn++)
@@ -895,12 +886,10 @@ namespace Lisa
                         node.AlphaRaised = true;
                         node.CapsOnlyAlphaRaised = true;
                     }
-
                 }
             }
 
             return false;
-
         }
 
 
@@ -919,18 +908,15 @@ namespace Lisa
                                ref bool alphaRaisedByKiller
                               )
         {
-
             int ourDepth = _fullDepth - depth;
 
             if ((killers[ourDepth].From != 0 || killers[ourDepth].To != 0)
                     && killers[ourDepth].PromotionPiece == 0 && (killers[ourDepth].From != ttMove.From ||
                     killers[ourDepth].To != ttMove.To))
             {
-
                 if (_theBoard.Piece[killers[ourDepth].From] == killerPieces[ourDepth] &&
                     _theBoard.MoveIsLegal(killers[ourDepth], _theBoard.OnMove, true))
                 {
-
                     node.Played += 1;
                     killerSeparated = true;
                     bool nullWindowSearchFailed = false;
@@ -1033,10 +1019,11 @@ namespace Lisa
             }
 
             return false;
-
         }
 
 
+        //Searches the captures that lose material by their ordering score, skipping the TT move. Returns true
+        //on a beta cutoff
         private bool TryLosingCaptures(Span<Move> allOpCaps,
                                        Move ttMove,
                                        NodeTypes nodeType,
@@ -1048,7 +1035,6 @@ namespace Lisa
                                        ref NodeState node
                                       )
         {
-
             int ourDepth = _fullDepth - depth;
 
             for (int LC = 0; LC < allOpCaps.Length; LC++)
@@ -1058,7 +1044,6 @@ namespace Lisa
                     (allOpCaps[LC].From != ttMove.From || allOpCaps[LC].To != ttMove.To ||
                     allOpCaps[LC].PromotionPiece != ttMove.PromotionPiece))
                 {
-
                     if (node.RefutationSeparated && allOpCaps[LC].From == _sorter.Refutations[ourDepth].From &&
                         allOpCaps[LC].To == _sorter.Refutations[ourDepth].To)
                     {
@@ -1115,12 +1100,10 @@ namespace Lisa
                         node.BestIndex = LC;
                         node.CapsOnlyAlphaRaised = true;
                     }
-
                 }
             }
 
             return false;
         }
-
     }
 }
