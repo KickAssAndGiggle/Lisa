@@ -18,8 +18,8 @@ namespace Lisa
         public bool[][] KnightDestinations = new bool[64][];
         public bool[][] SameRank = new bool[64][];
         public bool[][] SameFile = new bool[64][];
-        public bool[][] WhiteKingZone = new bool[64][];
-        public bool[][] BlackKingZone = new bool[64][];
+        public ulong[] WhiteKingZone = new ulong[64];
+        public ulong[] BlackKingZone = new ulong[64];
 
         public int[] WhitePawnSquares = new int[8];
         public int[] BlackPawnSquares = new int[8];
@@ -113,6 +113,8 @@ namespace Lisa
         private bool _checkCacheResult;
 
         private readonly Move[] _moveList = new Move[150];
+        private readonly PieceAttacks[] _whitePieceAttacks = new PieceAttacks[64];
+        private readonly PieceAttacks[] _blackPieceAttacks = new PieceAttacks[64];
         private int _moveListTopIndex = -1;
         private bool _lastMoveWasCastle;
 
@@ -605,14 +607,15 @@ namespace Lisa
         //second rank gets the same block, its first three ranks, so stepping between them doesn't move squares in or
         //out.
         //A king further up gets the squares next to it plus the three squares two ranks in front (towards the enemy).
+        //Each zone is a bit mask, one bit per square (bit 0 is a8)
         private void InitKingZoneLookup()
         {
 
             for (int kingSq = 0; kingSq <= 63; kingSq++)
             {
 
-                bool[] whiteZone = new bool[64];
-                bool[] blackZone = new bool[64];
+                ulong whiteZone = 0;
+                ulong blackZone = 0;
                 int kingRow = kingSq / 8;
                 int kingFile = kingSq % 8;
 
@@ -624,8 +627,14 @@ namespace Lisa
                     if (fileDiff >= -1 && fileDiff <= 1)
                     {
                         //White moves towards row 0, Black towards row 7
-                        whiteZone[sq] = kingRow >= 6 ? row >= 5 : (rowDiff >= -2 && rowDiff <= 1);
-                        blackZone[sq] = kingRow <= 1 ? row <= 2 : (rowDiff >= -1 && rowDiff <= 2);
+                        if (kingRow >= 6 ? row >= 5 : (rowDiff >= -2 && rowDiff <= 1))
+                        {
+                            whiteZone |= 1UL << sq;
+                        }
+                        if (kingRow <= 1 ? row <= 2 : (rowDiff >= -1 && rowDiff <= 2))
+                        {
+                            blackZone |= 1UL << sq;
+                        }
                     }
                 }
 
@@ -1619,6 +1628,22 @@ namespace Lisa
 
         public Move[] GenerateNonCaptureMoves(int toMove)
         {
+            return new Span<Move>(_moveList, 0, FillMoveListWithNonCaptures(toMove)).ToArray();
+        }
+
+
+        //The same moves in the same order, copied to the start of destination. Returns how many there are
+        public int GenerateNonCaptureMoves(int toMove, Span<Move> destination)
+        {
+            int moveCount = FillMoveListWithNonCaptures(toMove);
+            new Span<Move>(_moveList, 0, moveCount).CopyTo(destination);
+            return moveCount;
+        }
+
+
+        //Leaves the moves in _moveList and returns how many there are
+        private int FillMoveListWithNonCaptures(int toMove)
+        {
 
             Span<byte> localColor = new(Color, 0, 64);
             _moveListTopIndex = -1;
@@ -1764,8 +1789,7 @@ namespace Lisa
 
             }
 
-            Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
-            return ret.ToArray();
+            return _moveListTopIndex + 1;
 
 
         }
@@ -1978,7 +2002,17 @@ namespace Lisa
         }
 
 
-        public Move[] GenerateCaptureMoves(int toMove)
+        //Copies the side's captures to the start of destination and returns how many there are
+        public int GenerateCaptureMoves(int toMove, Span<Move> destination)
+        {
+            int moveCount = FillMoveListWithCaptures(toMove);
+            new Span<Move>(_moveList, 0, moveCount).CopyTo(destination);
+            return moveCount;
+        }
+
+
+        //Leaves the moves in _moveList and returns how many there are
+        private int FillMoveListWithCaptures(int toMove)
         {
 
             Span<byte> localColor = new(Color, 0, 64);
@@ -2137,13 +2171,23 @@ namespace Lisa
 
             }
 
-            Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
-            return ret.ToArray();
+            return _moveListTopIndex + 1;
 
         }
 
 
-        public Move[] GenerateCaptureMovesWithScore(int toMove)
+        //Copies the side's captures, scored and sorted, to the start of destination and returns how many there are
+        public int GenerateCaptureMovesWithScore(int toMove, Span<Move> destination)
+        {
+            int moveCount = FillMoveListWithScoredCaptures(toMove);
+            new Span<Move>(_moveList, 0, moveCount).CopyTo(destination);
+            destination.Slice(0, moveCount).Sort();
+            return moveCount;
+        }
+
+
+        //Leaves the scored moves, unsorted, in _moveList and returns how many there are
+        private int FillMoveListWithScoredCaptures(int toMove)
         {
 
             Span<byte> localColor = new(Color, 0, 64);
@@ -2302,10 +2346,7 @@ namespace Lisa
 
             }
 
-            Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
-            Move[] sorted = ret.ToArray();
-            Array.Sort(sorted);
-            return sorted;
+            return _moveListTopIndex + 1;
 
         }
 
@@ -2376,63 +2417,117 @@ namespace Lisa
         }
 
 
-        //Every square each knight, bishop, rook and queen of this side bears on: like GeneratePieceMovesWithoutKing,
-        //but a line stops on, and includes, the first piece it meets of either colour, kings too. Used by the eval for
-        //mobility (which filters out its own pieces and the enemy king) and for king attack and defence.
-        public Move[] GeneratePieceAttacksWithoutKing(int toMove)
+        //The squares each knight, bishop, rook and queen of this side bears on, one entry per piece in square order.
+        //A line stops on, and includes, the first piece it meets of either colour, kings too. Used by the eval.
+        //Returns this board's own list for the side, which the next call for that side overwrites. masks gets the
+        //side's pieces and the same attacks as bit masks
+        public ReadOnlySpan<PieceAttacks> GeneratePieceAttacksWithoutKing(int toMove, out PieceAttackMasks masks)
         {
 
-            Span<byte> localColor = new(Color, 0, 64);
-            _moveListTopIndex = -1;
+            PieceAttacks[] attackers = toMove == WHITE ? _whitePieceAttacks : _blackPieceAttacks;
+            byte[] localColor = Color;
+            int[] localPiece = Piece;
+            int attackerCount = 0;
+            masks = default;
 
-            for (byte sq = 0; sq < 64; sq++)
+            for (int sq = 0; sq < 64; sq++)
             {
 
-                if (localColor[sq] == toMove)
+                if (localColor[sq] != toMove)
+                {
+                    continue;
+                }
+
+                masks.Occupied |= 1UL << sq;
+
+                int P = localPiece[sq];
+                if (P == PAWN)
+                {
+                    continue;
+                }
+                if (P == KING)
+                {
+                    masks.Kings |= 1UL << sq;
+                    continue;
+                }
+
+                masks.PieceSquares |= 1UL << sq;
+
+                int[] dirs = _x88Offset[P];
+                int dirCount = _offsets[P];
+                bool slides = _slide[P];
+                int from88 = sq + (sq & 56);
+                ulong attackedByThisPiece = 0;
+                for (int off = 0; off < dirCount; off++)
                 {
 
-                    int P = Piece[sq];
-
-                    if (P != PAWN && P != KING)
+                    int dir = dirs[off];
+                    for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
                     {
 
-                        int[] dirs = _x88Offset[P];
-                        int dirCount = _offsets[P];
-                        bool slides = _slide[P];
-                        int from88 = sq + (sq & 56);
-                        for (int off = 0; off < dirCount; off++)
+                        int nextSq = (to88 + (to88 & 7)) >> 1;
+                        attackedByThisPiece |= 1UL << nextSq;
+
+                        if (localColor[nextSq] != EMPTY || !slides)
                         {
-
-                            int dir = dirs[off];
-                            for (int to88 = from88 + dir; (to88 & 0x88) == 0; to88 += dir)
-                            {
-
-                                byte nextSq = (byte)((to88 + (to88 & 7)) >> 1);
-                                AddMoveToList(sq, nextSq, localColor[nextSq] != EMPTY && localColor[nextSq] != toMove);
-
-                                if (localColor[nextSq] != EMPTY || !slides)
-                                {
-                                    break;
-                                }
-
-                            }
-
+                            break;
                         }
 
                     }
 
                 }
 
+                ref PieceAttacks attacker = ref attackers[attackerCount];
+                attackerCount += 1;
+                attacker.Attacks = attackedByThisPiece;
+                attacker.Square = (byte)sq;
+                attacker.Piece = (byte)P;
+
+                if (P == KNIGHT)
+                {
+                    masks.Knight |= attackedByThisPiece;
+                }
+                else if (P == BISHOP)
+                {
+                    masks.Bishop |= attackedByThisPiece;
+                }
+                else if (P == ROOK)
+                {
+                    masks.Rook |= attackedByThisPiece;
+                }
+                else
+                {
+                    masks.Queen |= attackedByThisPiece;
+                }
+
             }
 
-            Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
-            return ret.ToArray();
+            return new ReadOnlySpan<PieceAttacks>(attackers, 0, attackerCount);
 
         }
 
 
         public Move[] GenerateAllMoves(int toMove, bool isLegalityCheck = false, int legalityCheckKingSquare = -1,
             bool legalityCheckLastMoveWasCastle = false)
+        {
+            int moveCount = FillMoveListWithAllMoves(toMove, isLegalityCheck, legalityCheckKingSquare,
+                legalityCheckLastMoveWasCastle);
+            return new Span<Move>(_moveList, 0, moveCount).ToArray();
+        }
+
+
+        //The side's moves in the same order, copied to the start of destination. Returns how many there are
+        public int GenerateAllMoves(int toMove, Span<Move> destination)
+        {
+            int moveCount = FillMoveListWithAllMoves(toMove, false, -1, false);
+            new Span<Move>(_moveList, 0, moveCount).CopyTo(destination);
+            return moveCount;
+        }
+
+
+        //Leaves the moves in _moveList and returns how many there are
+        private int FillMoveListWithAllMoves(int toMove, bool isLegalityCheck, int legalityCheckKingSquare,
+            bool legalityCheckLastMoveWasCastle)
         {
 
             Span<byte> localColor = new(Color, 0, 64);
@@ -2733,10 +2828,23 @@ namespace Lisa
 
             }
 
-            Span<Move> ret = new(_moveList, 0, _moveListTopIndex + 1);
-            return ret.ToArray();
+            return _moveListTopIndex + 1;
 
         }      
+
+
+        public bool HasLegalMove(int side)
+        {
+            Move[] moves = GenerateAllMoves(side);
+            for (int nn = 0; nn < moves.Length; nn++)
+            {
+                if (MoveIsLegal(moves[nn], side))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
 
         public bool MoveIsLegal(Move theMove, int toMove, bool isKillerValidCheck = false)
@@ -2993,6 +3101,13 @@ namespace Lisa
                 }
             }
 
+            // A move that changes only its own two squares is tested on the board arrays, without a full MakeMove
+            if (Piece[theMove.From] != KING && theMove.PromotionPiece == 0 && theMove.To != EnPasantCapSquare)
+            {
+                int ownKingSquare = toMove == WHITE ? WhiteKingSquare : BlackKingSquare;
+                return !KingSquareAttackedAfterMove(ownKingSquare, toMove, theMove.From, theMove.To);
+            }
+
             MakeMove(theMove, toMove, false);
             int kingSquare = toMove == WHITE ? WhiteKingSquare : BlackKingSquare;
 
@@ -3078,6 +3193,50 @@ namespace Lisa
             UnmakeLastMove();
             return !illegal;
 
+        }
+
+
+        // Whether the move leaves the opponent in check: what IsInCheck reports for the opponent after MakeMove
+        public bool MoveGivesCheck(Move theMove, int toMove)
+        {
+            if (Piece[theMove.From] != KING && theMove.PromotionPiece == 0 && theMove.To != EnPasantCapSquare)
+            {
+                int enemyKingSquare = toMove == WHITE ? BlackKingSquare : WhiteKingSquare;
+                return KingSquareAttackedAfterMove(enemyKingSquare, toMove == WHITE ? BLACK : WHITE, theMove.From,
+                    theMove.To);
+            }
+
+            MakeMove(theMove, toMove, false);
+            bool givesCheck = IsInCheck(OnMove);
+            UnmakeLastMove();
+            return givesCheck;
+        }
+
+
+        // What IsInCheck would report for kingSide, whose king square is given, once the piece on from has gone to
+        // to. Only for moves that change nothing but those two squares: not castling, en passant or promotion.
+        // The two squares are changed in the board arrays for the test and put back before returning
+        private bool KingSquareAttackedAfterMove(int kingSquare, int kingSide, int from, int to)
+        {
+            int movingPiece = Piece[from];
+            byte movingColor = Color[from];
+            int capturedPiece = Piece[to];
+            byte capturedColor = Color[to];
+
+            Piece[to] = movingPiece;
+            Color[to] = movingColor;
+            Piece[from] = -1;
+            Color[from] = EMPTY;
+
+            bool attacked = Color[kingSquare] == kingSide &&
+                SquareIsAttacked(kingSquare, kingSide == WHITE ? BLACK : WHITE);
+
+            Piece[from] = movingPiece;
+            Color[from] = movingColor;
+            Piece[to] = capturedPiece;
+            Color[to] = capturedColor;
+
+            return attacked;
         }
 
 

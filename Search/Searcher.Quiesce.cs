@@ -35,6 +35,7 @@ namespace Lisa
 
             bool isIrreversible = MoveIsIrreversible(legalMove);
             _theBoard.MakeMove(legalMove, _theBoard.OnMove, false);
+            _transTable.PrefetchEvaluation(_theBoard.CurrentZobrist, _theBoard.PawnOnlyZobrist);
 
             //Only the first move into quiescence can be quiet, so only it can repeat a position
             if (QuiesceDepth == 0 && !isIrreversible)
@@ -128,15 +129,16 @@ namespace Lisa
                 alpha = StandPat;
             }
 
-            Move[] allOppMoves;
+            int moveStackMark = _moveStackTop;
+            Span<Move> allOppMoves;
             if (isInCheck && QuiesceDepth == 0)
             {
-                allOppMoves = _sorter.GetSortedMoves(ref _theBoard, !isInCheck, false, true);
+                allOppMoves = TakeSortedMoves(!isInCheck, false, true);
             }
             else
             {
-                allOppMoves = _theBoard.GenerateCaptureMovesWithScore(_theBoard.OnMove);
-                Array.Sort(allOppMoves);
+                allOppMoves = TakeSortedMoves(true, false, true);
+                allOppMoves.Sort();
             }
 
             bool alphaRaised = false;
@@ -232,6 +234,7 @@ namespace Lisa
                 }
             }
 
+            _moveStackTop = moveStackMark;
             _theBoard.UnmakeLastMove();
             return alpha;
 

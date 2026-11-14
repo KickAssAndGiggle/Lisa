@@ -1,0 +1,2 @@
+﻿00:00:00  Read 26455 positions, 37007 moves from C:\Lisa\Lisa\GlobalBits\Book.ini
+00:00:00  Depth 6, White needs 0, Black needs -20, 20 threads

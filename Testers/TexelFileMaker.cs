@@ -6,6 +6,8 @@ namespace Lisa
     //Reads a PGN file game by game, replays each game on a Board, picks a random sample of quiet
     //positions from it and writes them as EPD lines labelled with the game result from White's
     //point of view:  <fen> c9 "1-0";
+    //Only games between two engines of similar strength are used, so the result says more about the positions than
+    //about which engine was stronger: both must be rated at least minEngineRating, no more than maxEloGap apart
     public sealed class TexelFileMaker
     {
 
@@ -17,7 +19,8 @@ namespace Lisa
         private readonly int _positionsPerGame;
         private readonly int _skipPlies;
         private readonly int _maxGames;
-        private readonly int _gameStride;
+        private readonly int _maxEloGap;
+        private readonly int _minEngineRating;
 
         private readonly Random _sampler = new(SAMPLING_SEED);
         private readonly HashSet<long> _writtenZobrists = new();
@@ -27,6 +30,7 @@ namespace Lisa
         private long _gamesUsed;
         private long _gamesSkippedNotStandard;
         private long _gamesSkippedNoResult;
+        private long _gamesSkippedRatings;
         private long _gamesFailedToParse;
         private long _positionsWritten;
         private long _duplicatesDropped;
@@ -41,14 +45,15 @@ namespace Lisa
         }
 
         public TexelFileMaker(string pgnFile, string epdFile, int positionsPerGame, int skipPlies, int maxGames,
-            int gameStride)
+            int maxEloGap, int minEngineRating)
         {
             _pgnFile = pgnFile;
             _epdFile = epdFile;
             _positionsPerGame = positionsPerGame;
             _skipPlies = skipPlies;
             _maxGames = maxGames;
-            _gameStride = Math.Max(1, gameStride);
+            _maxEloGap = maxEloGap;
+            _minEngineRating = minEngineRating;
         }
 
 
@@ -114,12 +119,9 @@ namespace Lisa
 
             _gamesRead += 1;
 
-            if ((_gamesRead - 1) % _gameStride != 0)
-            {
-                return true;
-            }
-
             string result = "";
+            string whiteElo = "";
+            string blackElo = "";
             foreach (string header in headers)
             {
                 string tag = HeaderTag(header);
@@ -132,6 +134,20 @@ namespace Lisa
                 {
                     result = HeaderValue(header);
                 }
+                else if (tag == "WhiteElo")
+                {
+                    whiteElo = HeaderValue(header);
+                }
+                else if (tag == "BlackElo")
+                {
+                    blackElo = HeaderValue(header);
+                }
+            }
+
+            if (!RatingsAreClose(whiteElo, blackElo))
+            {
+                _gamesSkippedRatings += 1;
+                return true;
             }
 
             if (result != "1-0" && result != "0-1" && result != "1/2-1/2")
@@ -154,6 +170,17 @@ namespace Lisa
 
             return _gamesUsed < _maxGames;
 
+        }
+
+
+        //An unrated or unreadable rating fails
+        private bool RatingsAreClose(string whiteElo, string blackElo)
+        {
+            if (!int.TryParse(whiteElo, out int white) || !int.TryParse(blackElo, out int black))
+            {
+                return false;
+            }
+            return white >= _minEngineRating && black >= _minEngineRating && Math.Abs(white - black) <= _maxEloGap;
         }
 
 
@@ -514,12 +541,13 @@ namespace Lisa
                 "Texel file: " + _epdFile,
                 "From PGN: " + _pgnFile,
                 "Settings: positions/game " + _positionsPerGame + ", skip plies " + _skipPlies + ", max games " +
-                    _maxGames + ", stride " + _gameStride,
+                    _maxGames + ", max Elo gap " + _maxEloGap + ", min engine rating " + _minEngineRating,
                 "",
                 "Games read: " + _gamesRead,
                 "Games used: " + _gamesUsed,
                 "Skipped, not standard start: " + _gamesSkippedNotStandard,
                 "Skipped, no decisive or drawn result: " + _gamesSkippedNoResult,
+                "Skipped, ratings missing, too low or too far apart: " + _gamesSkippedRatings,
                 "Failed to parse: " + _gamesFailedToParse,
                 "",
                 "Positions written: " + _positionsWritten,

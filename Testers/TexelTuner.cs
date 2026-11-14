@@ -60,17 +60,16 @@ namespace Lisa
             "KING_NEAR_HALF_OPEN_FILE_PENALTY",
             "KING_NEAR_OPEN_FILE_ADDITIONAL_PENALTY",
             "FIXED_PAWN_ON_ENEMY_BISHOP_COLOUR_PENALTY",
-            //The attack and defence units pick an entry from KING_ATTACK_PENALTY rather than adding centipawns, and
-            //raising the attack units far enough would index past the end of that table, so they are left to hand
-            //tuning
-            //"KING_ATTACK_KNIGHT_UNITS",
-            //"KING_ATTACK_BISHOP_UNITS",
-            //"KING_ATTACK_ROOK_UNITS",
-            //"KING_ATTACK_QUEEN_UNITS",
-            //"KING_DEFENCE_KNIGHT_UNITS",
-            //"KING_DEFENCE_BISHOP_UNITS",
-            //"KING_DEFENCE_ROOK_UNITS",
-            //"KING_DEFENCE_QUEEN_UNITS",
+            //The attack and defence units pick an entry from KING_ATTACK_PENALTY rather than adding centipawns. Units
+            //past the end of that table use its last entry
+            "KING_ATTACK_KNIGHT_UNITS",
+            "KING_ATTACK_BISHOP_UNITS",
+            "KING_ATTACK_ROOK_UNITS",
+            "KING_ATTACK_QUEEN_UNITS",
+            "KING_DEFENCE_KNIGHT_UNITS",
+            "KING_DEFENCE_BISHOP_UNITS",
+            "KING_DEFENCE_ROOK_UNITS",
+            "KING_DEFENCE_QUEEN_UNITS",
             "OPENING_MOBILITY_PER_KNIGHT_MOVE_BONUS",
             "OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS",
             "OPENING_MOBILITY_PER_ROOK_MOVE_BONUS",
@@ -94,12 +93,62 @@ namespace Lisa
             "PAWN_CHAIN_BONUS",
             "KNIGHT_ON_THE_RIM_IS_DIM_PENALTY",
             "TEMPO_BONUS",
-            "CONNECTED_PASSED_PAWN_BONUS"
+            "CONNECTED_PASSED_PAWN_BONUS",
+            "HOLE_PENALTY",
+            "ENDGAME_SCALE_FEW_PAWNS_BASE",
+            "ENDGAME_SCALE_PER_PAWN",
+            "OCB_SCALE_BASE",
+            "OCB_SCALE_PER_PASSED_PAWN",
+            "OCB_WITH_PIECES_SCALE_BASE",
+            "OCB_WITH_PIECES_SCALE_PER_PIECE",
+            "OPENING_MOBILITY_PER_KNIGHT_UNSAFE_MOVE_BONUS",
+            "OPENING_MOBILITY_PER_BISHOP_UNSAFE_MOVE_BONUS",
+            "OPENING_MOBILITY_PER_ROOK_UNSAFE_MOVE_BONUS",
+            "OPENING_MOBILITY_PER_QUEEN_UNSAFE_MOVE_BONUS",
+            "ENDGAME_MOBILITY_PER_KNIGHT_UNSAFE_MOVE_BONUS",
+            "ENDGAME_MOBILITY_PER_BISHOP_UNSAFE_MOVE_BONUS",
+            "ENDGAME_MOBILITY_PER_ROOK_UNSAFE_MOVE_BONUS",
+            "ENDGAME_MOBILITY_PER_QUEEN_UNSAFE_MOVE_BONUS",
+            "CENTRAL_KING_FILE_SHELTER_PAWN_BONUS",
+            "CENTRAL_KING_FILE_NO_SHELTER_PAWN_PENALTY",
+            "CENTRAL_SIDE_FILE_SHELTER_PAWN_BONUS",
+            "CENTRAL_SIDE_FILE_NO_SHELTER_PAWN_PENALTY",
+            "PAWN_CHAIN_ADVANCED_BONUS",
+            "KNIGHT_VALUE_PER_PAWN_ABOVE_FIVE",
+            "ROOK_VALUE_LOST_PER_PAWN_ABOVE_FIVE",
+            "HOLE_NEAR_KING_PENALTY",
+            "HOLE_PENALTY_PER_ENEMY_MINOR",
+            "KNIGHT_OUTPOST_ON_HOLE_BONUS",
+            "BISHOP_OUTPOST_ON_HOLE_BONUS",
+            "STORM_PAWN_ON_THIRD_RANK_PENALTY",
+            "STORM_PAWN_ON_FOURTH_RANK_PENALTY",
+            "STORM_PAWN_ON_FIFTH_RANK_PENALTY",
+            "KING_STUCK_IN_CENTRE_PENALTY",
+            "MINOR_BEHIND_PAWN_BONUS",
+            "TRAPPED_BISHOP_PENALTY",
+            "UNDEVELOPED_MINOR_PENALTY",
+            "EARLY_QUEEN_PENALTY",
+            "SPACE_BONUS",
+            "FLANK_PAWN_ADVANCED_PENALTY",
+            "PAWN_PHALANX_BONUS",
+            "PAWN_PHALANX_ENDGAME_BONUS",
+            "UNOPPOSED_ISOLATED_PAWN_PENALTY",
+            "CANDIDATE_PASSED_PAWN_BONUS",
+            "PAWN_ISLAND_PENALTY",
+            "THREATENED_BY_PAWN_PENALTY",
+            "HANGING_PIECE_PENALTY",
+            "WEAK_KING_SQUARE_PENALTY",
+            "SAFE_KNIGHT_CHECK_PENALTY",
+            "SAFE_BISHOP_CHECK_PENALTY",
+            "SAFE_ROOK_CHECK_PENALTY",
+            "SAFE_QUEEN_CHECK_PENALTY"
         };
 
         private const int PERCENT_WEIGHT_MAXIMUM = 100;
         private const int WEIGHT_MAXIMUM = 5000;
         private const int INITIAL_STEP_DIVISOR = 16;
+        //A weight starting at 0 would otherwise creep up 1 at a time
+        private const int ZERO_WEIGHT_INITIAL_STEP = 4;
         private const int CHUNKS_PER_THREAD = 8;
         //centipawns: an eval this close to 0 counts as calling a draw
         private const int DRAW_BAND = 40;
@@ -473,7 +522,7 @@ namespace Lisa
                     Name = name,
                     Field = field,
                     StartValue = value,
-                    Step = Math.Max(1, Math.Abs(value) / INITIAL_STEP_DIVISOR),
+                    Step = value == 0 ? ZERO_WEIGHT_INITIAL_STEP : Math.Max(1, Math.Abs(value) / INITIAL_STEP_DIVISOR),
                     Maximum = name.EndsWith("_PERCENT") ? PERCENT_WEIGHT_MAXIMUM : WEIGHT_MAXIMUM
                 });
             }

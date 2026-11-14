@@ -8,7 +8,7 @@ namespace Lisa
     //GenerateFen, and a move is kept when it was played there in at least BookMinGames games and scored at least
     //BookMinScorePercent for the side that played it. Its weight is the square root of the points it scored: popular,
     //successful moves are still picked most often, but rarer sound moves get a real share rather than vanishing next to
-    //the main lines.
+    //the main lines. Games shorter than BookMinGamePlies are skipped.
     //Two passes over the PGN keep memory down: the first counts how often each position occurs, the second records
     //moves only for positions seen often enough to hold a book move. In the starting position only BookFirstMoves are
     //written.
@@ -37,6 +37,7 @@ namespace Lisa
         private readonly int _minScorePercent;
         private readonly HashSet<string> _allowedFirstMoves = new();
         private readonly string _firstMovesSetting;
+        private readonly int _minGamePlies;
 
         private readonly Dictionary<long, int> _positionCounts = new();
         private readonly Dictionary<long, BookEntry> _entries = new();
@@ -45,9 +46,10 @@ namespace Lisa
         private long _gamesRead;
         private long _gamesUsed;
         private long _gamesFailedToParse;
+        private long _gamesTooShort;
 
         public BookMaker(string pgnFile, string bookFile, int maxPlies, int minGames, int minScorePercent,
-            string firstMoves)
+            string firstMoves, int minGamePlies)
         {
             _pgnFile = pgnFile;
             _bookFile = bookFile;
@@ -55,6 +57,7 @@ namespace Lisa
             _minGames = minGames;
             _minScorePercent = minScorePercent;
             _firstMovesSetting = firstMoves;
+            _minGamePlies = minGamePlies;
         }
 
 
@@ -83,6 +86,7 @@ namespace Lisa
             _gamesRead = 0;
             _gamesUsed = 0;
             _gamesFailedToParse = 0;
+            _gamesTooShort = 0;
             ReadGames(true);
 
             WriteBook(timer, positionsCounted);
@@ -191,7 +195,15 @@ namespace Lisa
                 return;
             }
 
+            //Games this short were mostly ended by a crash, forfeit or disconnect, so their result says nothing about
+            //the opening
             List<string> sanMoves = TexelFileMaker.ExtractSANMoves(moveText);
+            if (sanMoves.Count < _minGamePlies)
+            {
+                _gamesTooShort += 1;
+                return;
+            }
+
             _board.InitialiseFromFEN(START_FEN);
             _board.ResetUndoMoves();
             _gamesUsed += 1;
@@ -287,7 +299,7 @@ namespace Lisa
                 "# Max plies " + _maxPlies + ", min games " + _minGames + ", min score " + _minScorePercent +
                     "%, first moves " + _firstMovesSetting,
                 "# Games read " + _gamesRead + ", used " + _gamesUsed + ", stopped early by an unreadable move " +
-                    _gamesFailedToParse,
+                    _gamesFailedToParse + ", skipped as shorter than " + _minGamePlies + " plies " + _gamesTooShort,
                 "# Positions counted " + positionsCounted + ", positions written " + bookLines.Count +
                     ", moves written " + movesWritten,
                 "# Time " + (timer.ElapsedMilliseconds / 1000) + "s",

@@ -39,6 +39,16 @@ namespace Lisa
 
         private readonly Sorter _sorter = new();
 
+        //The move lists of every node on the line being searched, one after another. A node takes its lists from
+        //_moveStackTop upwards and sets _moveStackTop back when it returns, which hands them back
+        private const int MOVE_STACK_SIZE = 32768;
+        private readonly Move[] _moveStack = new Move[MOVE_STACK_SIZE];
+        private int _moveStackTop = 0;
+
+        //A LocalPV array for the node at each ply, in place of a new array per node
+        private const int LOCAL_PV_LENGTH = 64;
+        private readonly Move[][] _localPVs = NewLocalPVs();
+
         private SearchStats _stats = new();
 
         public ref readonly SearchStats Stats => ref _stats;
@@ -93,6 +103,28 @@ namespace Lisa
         public void Cancel()
         {
             _cancel = true;
+        }
+
+
+        private static Move[][] NewLocalPVs()
+        {
+            Move[][] localPVs = new Move[128][];
+            for (int ply = 0; ply < localPVs.Length; ply++)
+            {
+                localPVs[ply] = new Move[LOCAL_PV_LENGTH];
+            }
+            return localPVs;
+        }
+
+
+        //Generates and sorts the side to move's moves onto the top of the move stack and returns them. The caller
+        //notes _moveStackTop beforehand and sets it back when it has finished with the list
+        private Span<Move> TakeSortedMoves(bool capturesOnly, bool nonCapturesOnly, bool lowDepth)
+        {
+            Span<Move> moves = _sorter.GetSortedMoves(ref _theBoard, _moveStack.AsSpan(_moveStackTop), capturesOnly,
+                nonCapturesOnly, lowDepth);
+            _moveStackTop += moves.Length;
+            return moves;
         }
 
 

@@ -7,8 +7,13 @@ namespace Lisa
         private Board _gameBoard;
         private Searcher _search;
 
+        private const byte MAX_SEARCH_DEPTH = 20;
+        //Given to both clocks for "go depth N", so only the depth ends the search
+        private const int FIXED_DEPTH_CLOCK_MILLISECONDS = 1000000000;
+
         private int _timeInMils = 0;
         private int _oppTimeInMils = 0;
+        private byte _maxDepth = MAX_SEARCH_DEPTH;
         private List<long> _seenZobrist = new();
 
         public UCIInterface()
@@ -138,6 +143,8 @@ namespace Lisa
                 {
 
                     string[] splits = command.Split(Convert.ToChar(" "));
+                    _maxDepth = MAX_SEARCH_DEPTH;
+                    bool fixedDepth = false;
 
                     for (int nn = 0; nn < splits.Length; nn++)
                     {
@@ -162,6 +169,18 @@ namespace Lisa
                             string msString = splits[nn + 1];
                             _oppTimeInMils = Convert.ToInt32(msString);
                         }
+                        else if (commandPart.ToLower() == "depth")
+                        {
+                            int depth = Convert.ToInt32(splits[nn + 1]);
+                            _maxDepth = (byte)Math.Clamp(depth, 1, MAX_SEARCH_DEPTH);
+                            fixedDepth = true;
+                        }
+                    }
+
+                    if (fixedDepth)
+                    {
+                        _timeInMils = FIXED_DEPTH_CLOCK_MILLISECONDS;
+                        _oppTimeInMils = FIXED_DEPTH_CLOCK_MILLISECONDS;
                     }
 
                     Thread searchThread = new(new ThreadStart(SearchPosition));
@@ -270,7 +289,7 @@ namespace Lisa
 
         private void SearchPosition()
         {
-            _search.Search(ref _gameBoard, 20, _timeInMils, _oppTimeInMils, _seenZobrist);
+            _search.Search(ref _gameBoard, _maxDepth, _timeInMils, _oppTimeInMils, _seenZobrist);
         }
 
 

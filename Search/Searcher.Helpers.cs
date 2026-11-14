@@ -122,6 +122,7 @@ namespace Lisa
             _sorter.SetRootMoves(_helperRootMoves);
 
             _ply = 0;
+            _moveStackTop = 0;
             _inCheckAtPly[0] = _theBoard.IsInCheck(_theBoard.OnMove);
             _pathZobrist[0] = _theBoard.CurrentZobrist;
             _repetitionFloor = 0;

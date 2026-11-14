@@ -130,7 +130,8 @@ namespace Lisa
                 _theBoard.MakeMove(_phantomMove, _theBoard.OnMove, true);
                 int savedRepetitionFloor = _repetitionFloor;
                 _repetitionFloor = _ply + 1;
-                Move[] AllMovesAfterOppNull = _sorter.GetSortedMoves(ref _theBoard, false, false);
+                int moveStackMark = _moveStackTop;
+                Span<Move> AllMovesAfterOppNull = TakeSortedMoves(false, false, false);
                 for (int nn = 0; nn < AllMovesAfterOppNull.Length; nn++)
                 {
                     if (_theBoard.MoveIsLegal(AllMovesAfterOppNull[nn], _theBoard.OnMove))
@@ -161,6 +162,7 @@ namespace Lisa
                         {
                             _stats.NullMoveCutOffs += 1;
                             alpha = staticEval;
+                            _moveStackTop = moveStackMark;
                             _repetitionFloor = savedRepetitionFloor;
                             _theBoard.UnmakeLastMove(); //Unmake the Null Move
                             return true;
@@ -173,6 +175,7 @@ namespace Lisa
                     }
                 }
 
+                _moveStackTop = moveStackMark;
                 _repetitionFloor = savedRepetitionFloor;
                 _theBoard.UnmakeLastMove(); //Unmake the Null move
             }
@@ -196,7 +199,8 @@ namespace Lisa
 
                 _stats.ProbCutAttempts += 1;
 
-                Move[] AllProbCutOppMoves = _sorter.GetSortedMoves(ref _theBoard, false, false);
+                int moveStackMark = _moveStackTop;
+                Span<Move> AllProbCutOppMoves = TakeSortedMoves(false, false, false);
                 int BetaExceeded = 0;
                 for (int nn = 0; nn < AllProbCutOppMoves.Length / 3; nn++)
                 {
@@ -235,12 +239,14 @@ namespace Lisa
                             {
                                 _stats.ProbCutCutOffs += 1;
                                 node.Alpha = beta;
+                                _moveStackTop = moveStackMark;
                                 return true;
                             }
                         }
 
                     }
                 }
+                _moveStackTop = moveStackMark;
             }
 
             return false;
@@ -292,10 +298,7 @@ namespace Lisa
 
         private bool GivesCheck(Move move)
         {
-            _theBoard.MakeMove(move, _theBoard.OnMove, false);
-            bool givesCheck = _theBoard.IsInCheck(_theBoard.OnMove);
-            _theBoard.UnmakeLastMove();
-            return givesCheck;
+            return _theBoard.MoveGivesCheck(move, _theBoard.OnMove);
         }
 
 

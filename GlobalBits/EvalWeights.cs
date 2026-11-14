@@ -10,140 +10,140 @@
 
         public static int[] WhiteKnightEarlyPST = new int[64]
         {
-            -161, -2, -2, 12, 12, 0, 0, -36,
-            -46, -17, 40, 53, 58, 115, 2, 51,
-            -30, 4, 61, 91, 136, 140, 96, 56,
-            -8, -11, 28, 66, 20, 71, 19, 68,
-            -28, 0, 8, 9, 32, 24, 47, 6,
-            -46, -40, -27, 14, 21, -16, -9, -12,
-            -90, -83, -44, -28, -29, -36, -37, -24,
-            -139, -61, -83, -56, -42, -33, -66, -53
+            -81, -1, -1, 6, 6, 0, 0, -18,
+            -23, -9, 20, 27, 29, 58, 1, 26,
+            -15, 2, 31, 46, 68, 70, 48, 28,
+            -4, -6, 14, 33, 10, 36, 10, 34,
+            -14, 0, 4, 5, 16, 12, 24, 3,
+            -23, -20, -14, 7, 11, -8, -5, -6,
+            -45, -42, -22, -14, -15, -18, -19, -12,
+            -70, -31, -42, -28, -21, -17, -33, -27
         };
         public static int[] BlackKnightEarlyPST = new int[64];
 
 
         public static int[] WhiteKnightLatePST = new int[64]
         {
-            -91, -18, 5, 4, 17, 8, -3, -64,
-            -7, -10, -3, 16, 6, -15, 2, -14,
-            -3, 18, 16, 11, -6, 17, -4, 9,
-            -13, 9, 21, 29, 39, 34, 19, -14,
-            -27, -12, 21, 23, 24, 17, -9, -20,
-            -77, -34, -19, -5, -5, -34, -24, -54,
-            -72, -21, -42, -36, -27, -19, -34, -72,
-            -114, -107, -47, -49, -52, -84, -82, -111
+            -46, -9, 3, 2, 9, 4, -2, -32,
+            -4, -5, -2, 8, 3, -8, 1, -7,
+            -2, 9, 8, 6, -3, 9, -2, 5,
+            -7, 5, 11, 15, 20, 17, 10, -7,
+            -14, -6, 11, 12, 12, 9, -5, -10,
+            -39, -17, -10, -3, -3, -17, -12, -27,
+            -36, -11, -21, -18, -14, -10, -17, -36,
+            -57, -54, -24, -25, -26, -42, -41, -56
         };
         public static int[] BlackKnightLatePST = new int[64];
 
 
         public static int[] WhiteBishopEarlyPST = new int[64]
         {
-            -10, 2, 2, 4, 2, 0, 0, -3,
-            -22, -9, -17, 36, 31, 51, 30, -58,
-            -12, 28, 14, 56, 101, 168, 119, 45,
-            -15, -18, 36, 67, 30, 65, -26, 3,
-            -13, 8, -6, 25, 26, -21, -3, -9,
-            -22, 6, -1, 0, -7, -6, -8, 3,
-            0, -18, 33, -21, -9, -3, 7, -23,
-            -12, 43, -18, -40, -19, -23, 15, -27
+            -5, 1, 1, 2, 1, 0, 0, -2,
+            -11, -5, -9, 18, 16, 26, 15, -29,
+            -6, 14, 7, 28, 51, 84, 60, 23,
+            -8, -9, 18, 34, 15, 33, -13, 2,
+            -7, 4, -3, 13, 13, -11, -2, -5,
+            -11, 3, -1, 0, -4, -3, -4, 2,
+            0, -9, 17, -11, -5, -2, 4, -12,
+            -6, 22, -9, -20, -10, -12, 8, -14
         };
         public static int[] BlackBishopEarlyPST = new int[64];
 
 
         public static int[] WhiteBishopLatePST = new int[64]
         {
-            21, 25, 30, 28, 37, 14, 24, 10,
-            10, 30, 31, 16, 13, 21, 10, 15,
-            22, 27, 28, 20, 12, 1, 19, 21,
-            24, 37, 16, 12, 20, 24, 51, 13,
-            25, 8, 36, 19, 10, 18, 19, -2,
-            11, 15, 10, 3, 14, 2, 1, -5,
-            14, -5, -14, 8, -3, 3, -12, -21,
-            -25, -15, -22, 13, -6, 1, -16, -28
+            11, 13, 15, 14, 19, 7, 12, 5,
+            5, 15, 16, 8, 7, 11, 5, 8,
+            11, 14, 14, 10, 6, 1, 10, 11,
+            12, 19, 8, 6, 10, 12, 26, 7,
+            13, 4, 18, 10, 5, 9, 10, -1,
+            6, 8, 5, 2, 7, 1, 1, -3,
+            7, -3, -7, 4, -2, 2, -6, -11,
+            -13, -8, -11, 7, -3, 1, -8, -14
         };
         public static int[] BlackBishopLatePST = new int[64];
 
 
         public static int[] WhiteRookEarlyPST = new int[64]
         {
-            43, 51, 52, 92, 124, 44, 49, 153,
-            16, 22, 58, 84, 111, 119, 61, 134,
-            -4, 28, 43, 83, 130, 159, 126, 95,
-            -32, -10, -10, 35, 35, 61, 81, 35,
-            -66, -60, -39, -16, -13, -49, -2, -24,
-            -69, -66, -60, -33, -26, -30, 6, -31,
-            -85, -60, -40, -30, -32, -23, -5, -39,
-            -67, -47, -34, -28, -25, -37, 6, -55
+            22, 26, 26, 46, 62, 22, 25, 77,
+            8, 11, 29, 42, 56, 60, 31, 67,
+            -2, 14, 22, 42, 65, 80, 63, 48,
+            -16, -5, -5, 18, 18, 31, 41, 18,
+            -33, -30, -20, -8, -7, -25, -1, -12,
+            -35, -33, -30, -17, -13, -15, 3, -16,
+            -43, -30, -20, -15, -16, -12, -3, -20,
+            -34, -24, -17, -14, -13, -19, 3, -28
         };
         public static int[] BlackRookEarlyPST = new int[64];
 
 
         public static int[] WhiteRookLatePST = new int[64]
         {
-            31, 42, 33, 16, 17, 51, 59, 9,
-            42, 42, 30, 12, 18, 19, 43, 9,
-            57, 45, 35, 16, 8, 13, 18, 18,
-            56, 50, 46, 26, 25, 31, 23, 33,
-            44, 40, 39, 18, 18, 57, 25, 18,
-            15, 23, 32, 5, 5, 12, -12, -7,
-            14, 6, -1, -16, -8, -30, -25, -16,
-            10, -2, -2, -16, -15, -8, -35, -8
+            16, 21, 17, 8, 9, 26, 30, 5,
+            21, 21, 15, 6, 9, 10, 22, 5,
+            29, 23, 18, 8, 4, 7, 9, 9,
+            28, 25, 23, 13, 13, 16, 12, 17,
+            22, 20, 20, 9, 9, 29, 13, 9,
+            8, 12, 16, 3, 3, 6, -6, -4,
+            7, 3, -1, -8, -4, -15, -13, -8,
+            5, -1, -1, -8, -8, -4, -18, -4
         };
         public static int[] BlackRookLatePST = new int[64];
 
 
         public static int[] WhiteKingEarlyPST = new int[64]
         {
-            -9, -9, -9, -9, -9, -9, -9, -9,
-            -9, 6, -3, -9, -9, -5, 2, 3,
-            -7, -2, -8, -18, -4, -7, 7, -7,
-            -8, -6, -18, -14, -23, 4, -6, 3,
-            3, -8, -20, -49, -43, -26, -13, -48,
-            41, 59, 1, -55, -43, -21, 40, 52,
-            -5, -23, 22, 8, -5, 1, 15, -4,
-            -66, -17, -31, -32, -12, -17, 17, -3
+            -5, -5, -5, -5, -5, -5, -5, -5,
+            -5, 3, -2, -5, -5, -3, 1, 2,
+            -4, -1, -4, -9, -2, -4, 4, -4,
+            -4, -3, -9, -7, -12, 2, -3, 2,
+            2, -4, -10, -25, -22, -13, -7, -24,
+            21, 30, 1, -28, -22, -11, 20, 26,
+            -3, -12, 11, 4, -3, 1, 8, -2,
+            -33, -9, -16, -16, -6, -9, 9, -2
         };
         public static int[] BlackKingEarlyPST = new int[64];
 
 
         public static int[] WhiteKingLatePST = new int[64]
         {
-            30, 59, 48, 47, 51, 48, 59, 20,
-            35, 71, 68, 47, 40, 61, 76, 51,
-            50, 63, 44, 41, 30, 54, 65, 36,
-            30, 45, 39, 34, 34, 31, 37, 25,
-            14, 19, 21, 25, 18, 14, 6, 5,
-            -15, -11, -3, 6, 2, -5, -27, -43,
-            -39, -18, -7, -6, -1, -2, -27, -37,
-            -60, -44, -31, -9, -36, -20, -56, -91
+            15, 30, 24, 24, 26, 24, 30, 10,
+            18, 36, 34, 24, 20, 31, 38, 26,
+            25, 32, 22, 21, 15, 27, 33, 18,
+            15, 23, 20, 17, 17, 16, 19, 13,
+            7, 10, 11, 13, 9, 7, 3, 3,
+            -8, -6, -2, 3, 1, -3, -14, -22,
+            -20, -9, -4, -3, -1, -1, -14, -19,
+            -30, -22, -16, -5, -18, -10, -28, -46
         };
         public static int[] BlackKingLatePST = new int[64];
 
 
         public static int[] WhiteQueenEarlyPST = new int[64]
         {
-            -18, 20, 11, 35, 60, 42, 64, 113,
-            -28, -60, 7, 20, 37, 73, 38, 92,
-            -29, -9, -16, 22, 53, 82, 100, 44,
-            -32, -31, -20, 3, 9, 8, 37, 16,
-            -35, -37, -15, -15, 1, -14, 9, 5,
-            -43, -31, -12, -15, -10, -5, -1, 14,
-            -29, -9, -3, 8, 2, 4, -11, -6,
-            -5, -18, -6, -5, 10, -34, -76, 8
+            -9, 10, 6, 18, 30, 21, 32, 57,
+            -14, -30, 4, 10, 19, 37, 19, 46,
+            -15, -5, -8, 11, 27, 41, 50, 22,
+            -16, -16, -10, 2, 5, 4, 19, 8,
+            -18, -19, -8, -8, 1, -7, 5, 3,
+            -22, -16, -6, -8, -5, -3, -1, 7,
+            -15, -5, -2, 4, 1, 2, -6, -3,
+            -3, -9, -3, -3, 5, -17, -38, 4
         };
         public static int[] BlackQueenEarlyPST = new int[64];
 
 
         public static int[] WhiteQueenLatePST = new int[64]
         {
-            27, 27, 63, 46, 49, 56, 67, 22,
-            39, 65, 54, 52, 66, 54, 62, 35,
-            35, 28, 45, 35, 62, 60, 58, 50,
-            32, 45, 58, 33, 40, 71, 64, 63,
-            7, 42, -5, 30, 5, 35, 14, 41,
-            -15, -6, -19, -35, -26, -18, -24, -30,
-            -32, -58, -68, -82, -76, -111, -92, -43,
-            -58, -74, -85, -71, -126, -104, -80, -70
+            14, 14, 32, 23, 25, 28, 34, 11,
+            20, 33, 27, 26, 33, 27, 31, 18,
+            18, 14, 23, 18, 31, 30, 29, 25,
+            16, 23, 29, 17, 20, 36, 32, 32,
+            4, 21, -3, 15, 3, 18, 7, 21,
+            -8, -3, -10, -18, -13, -9, -12, -15,
+            -16, -29, -34, -41, -38, -56, -46, -22,
+            -29, -37, -43, -36, -63, -52, -40, -35
         };
         public static int[] BlackQueenLatePST = new int[64];
 
@@ -151,12 +151,12 @@
         public static int[] WhitePawnEarlyPST = new int[64]
         {
             0, 0, 0, 0, 0, 0, 0, 0,
-            169, 151, 213, 209, 178, 137, 14, 34,
-            26, 37, 61, 77, 114, 110, 95, 34,
-            -7, -3, -4, 16, 45, 50, 31, 0,
-            -31, -27, -21, -15, 2, 6, 11, -24,
-            -50, -50, -62, -58, -46, -25, -23, -39,
-            -47, -48, -61, -70, -57, -22, -4, -54,
+            85, 76, 107, 105, 89, 69, 7, 17,
+            13, 19, 31, 39, 57, 55, 48, 17,
+            -4, -2, -2, 8, 23, 25, 16, 0,
+            -16, -14, -11, -8, 1, 3, 6, -12,
+            -25, -25, -31, -29, -23, -13, -12, -20,
+            -24, -24, -31, -35, -29, -11, -2, -27,
             0, 0, 0, 0, 0, 0, 0, 0
         };
         public static int[] BlackPawnEarlyPST = new int[64];
@@ -165,12 +165,12 @@
         public static int[] WhitePawnLatePST = new int[64]
         {
             0, 0, 0, 0, 0, 0, 0, 0,
-            37, 85, 68, 68, 83, 84, 94, 56,
-            30, 48, 37, 23, 15, 42, 39, 30,
-            25, 41, 26, 6, 15, 21, 36, 17,
-            18, 35, 16, 6, 14, 23, 24, 10,
-            10, 26, 27, 25, 27, 27, 18, 1,
-            18, 33, 46, 28, 56, 36, 22, 8,
+            19, 43, 34, 34, 42, 42, 47, 28,
+            15, 24, 19, 12, 8, 21, 20, 15,
+            13, 21, 13, 3, 8, 11, 18, 9,
+            9, 18, 8, 3, 7, 12, 12, 5,
+            5, 13, 14, 13, 14, 14, 9, 1,
+            9, 17, 23, 14, 28, 18, 11, 4,
             0, 0, 0, 0, 0, 0, 0, 0
         };
         public static int[] BlackPawnLatePST = new int[64];
@@ -180,79 +180,79 @@
 
         #region Evaluation parameters
 
-        public static int KNIGHT_VALUE = 426;
-        public static int BISHOP_VALUE = 396;
-        public static int ROOK_VALUE = 624;
-        public static int QUEEN_VALUE = 1177;
+        public static int KNIGHT_VALUE = 383;
+        public static int BISHOP_VALUE = 380;
+        public static int ROOK_VALUE = 591;
+        public static int QUEEN_VALUE = 1155;
 
-        public static int BISHOP_PAIR_BONUS_VALUE = 27;
+        public static int BISHOP_PAIR_BONUS_VALUE = 26;
 
-        public static int FLANK_BACKWARD_PAWN_PENALTY = 3;
-        public static int CENTER_BACKWARD_PAWN_PENALTY = 8;
+        public static int FLANK_BACKWARD_PAWN_PENALTY = 0;
+        public static int CENTER_BACKWARD_PAWN_PENALTY = 0;
 
-        public static int ROOK_ON_SEVENTH_BONUS = 9;
+        public static int ROOK_ON_SEVENTH_BONUS = 25;
 
         public static int BISHOP_PAWN_COLOR_PENALTY = 6;
 
-        public static int KSIDE_CASTLE_BONUS = 45;
-        public static int QSIDE_CASTLE_BONUS = 90;
-        public static int KSIDE_CASTLE_RIGHTS = 46;
-        public static int QSIDE_CASTLE_RIGHTS = 24;
+        public static int KSIDE_CASTLE_BONUS = 17;
+        public static int QSIDE_CASTLE_BONUS = 53;
+        public static int KSIDE_CASTLE_RIGHTS = 12;
+        public static int QSIDE_CASTLE_RIGHTS = 10;
 
-        public static int DOUBLED_PAWN_PENALTY = 30;
+        public static int DOUBLED_PAWN_PENALTY = 21;
         public static int DOUBLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 0;
-        public static int TRIPLED_PAWN_PENALTY = 119;
-        public static int TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 0;
+        public static int TRIPLED_PAWN_PENALTY = 94;
+        public static int TRIPLED_PAWN_ON_CLOSED_FILE_EXTRA_PENALTY = 7;
 
-        public static int EDGE_PAWN_ISOLATED_PENALTY = 5;
-        public static int CENTER_PAWN_ISOLATED_PENALTY = 22;
+        public static int EDGE_PAWN_ISOLATED_PENALTY = 0;
+        public static int CENTER_PAWN_ISOLATED_PENALTY = 10;
 
-        public static int ROOK_ON_SEMI_OPEN_FILE_BONUS = 17;
-        public static int ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS = 14;
+        public static int ROOK_ON_SEMI_OPEN_FILE_BONUS = 10;
+        public static int ROOK_ON_FULLY_OPEN_FILE_ADDITIONAL_BONUS = 20;
 
         public static int PASSED_PAWN_BONUS = 0;
         public static int PASSED_PAWN_HIGHLY_ADVANCED_ADDITIONAL_BONUS = 75;
         public static int PASSED_PAWN_SOMEWHAT_ADVANCED_ADDITIONAL_BONUS = 79;
         public static int PASSED_PAWN_LITTLE_ADVANCED_ADDITIONAL_BONUS = 39;
-        public static int PASSED_PAWN_BLOCKADED_KEEP_PERCENT = 52;
-        public static int PASSED_PAWN_OWN_KING_DISTANCE_PENALTY = 4;
+        public static int PASSED_PAWN_BLOCKADED_KEEP_PERCENT = 73;
+        public static int PASSED_PAWN_OWN_KING_DISTANCE_PENALTY = 5;
         public static int PASSED_PAWN_ENEMY_KING_DISTANCE_BONUS = 9;
-        public static int PASSED_PAWN_FREE_PATH_BONUS = 11;
-        public static int PASSED_PAWN_SAFE_STEP_BONUS = 7;
-        public static int PASSED_PAWN_ROOK_BEHIND_BONUS = 29;
-        public static int PASSED_PAWN_ENEMY_ROOK_BEHIND_PENALTY = 76;
+        public static int PASSED_PAWN_FREE_PATH_BONUS = 10;
+        public static int PASSED_PAWN_SAFE_STEP_BONUS = 10;
+        public static int PASSED_PAWN_ROOK_BEHIND_BONUS = 21;
+        public static int PASSED_PAWN_ENEMY_ROOK_BEHIND_PENALTY = 84;
 
         public static int PAWN_OPPOSITE_FLANK_TO_KING_COWARD_PENALTY = 23;
 
-        public static int BISHOP_ATTACKS_QUEEN_BONUS = 14;
-        public static int BISHOP_ATTACKS_ROOK_BONUS = 3;
-        public static int BISHOP_ATTACKS_KNIGHT_BONUS = 17;
+        public static int BISHOP_ATTACKS_QUEEN_BONUS = 17;
+        public static int BISHOP_ATTACKS_ROOK_BONUS = 9;
+        public static int BISHOP_ATTACKS_KNIGHT_BONUS = 16;
 
-        public static int KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY = 133;
+        public static int KING_ADVANCED_EARLY_OPP_QUEEN_PRESENT_PENALTY = 75;
         public static int KING_ADVANCED_EARLY_OPP_QUEEN_ABSENT_PENALTY = 0;
         public static int KING_STEPPED_UP_EARLY_PENALTY = 0;
 
-        public static int KING_FILE_SHELTER_PAWN_BONUS = 11;
-        public static int KING_FILE_NO_SHELTER_PAWN_PENALTY = 16;
-        public static int SIDE_FILE_SHELTER_PAWN_BONUS = 1;
-        public static int SIDE_FILE_NO_SHELTER_PAWN_PENALTY = 11;
+        public static int KING_FILE_SHELTER_PAWN_BONUS = 0;
+        public static int KING_FILE_NO_SHELTER_PAWN_PENALTY = 26;
+        public static int SIDE_FILE_SHELTER_PAWN_BONUS = 13;
+        public static int SIDE_FILE_NO_SHELTER_PAWN_PENALTY = 3;
 
-        public static int KING_NEAR_HALF_OPEN_FILE_PENALTY = 31;
-        public static int KING_NEAR_OPEN_FILE_ADDITIONAL_PENALTY = 25;
+        public static int KING_NEAR_HALF_OPEN_FILE_PENALTY = 24;
+        public static int KING_NEAR_OPEN_FILE_ADDITIONAL_PENALTY = 14;
 
-        public static int KING_ATTACK_KNIGHT_UNITS = 2;
-        public static int KING_ATTACK_BISHOP_UNITS = 2;
-        public static int KING_ATTACK_ROOK_UNITS = 3;
-        public static int KING_ATTACK_QUEEN_UNITS = 5;
+        public static int KING_ATTACK_KNIGHT_UNITS = 6;
+        public static int KING_ATTACK_BISHOP_UNITS = 3;
+        public static int KING_ATTACK_ROOK_UNITS = 6;
+        public static int KING_ATTACK_QUEEN_UNITS = 4;
         public static int KING_ATTACK_XRAY_SQUARES = 2;
 
         public static int FIXED_PAWN_ON_ENEMY_BISHOP_COLOUR_PENALTY = 0;
         public static int KING_ATTACK_MAX_SQUARES_PER_PIECE = 3;
 
-        public static int KING_DEFENCE_KNIGHT_UNITS = 5;
-        public static int KING_DEFENCE_BISHOP_UNITS = 3;
-        public static int KING_DEFENCE_ROOK_UNITS = 2;
-        public static int KING_DEFENCE_QUEEN_UNITS = 2;
+        public static int KING_DEFENCE_KNIGHT_UNITS = 3;
+        public static int KING_DEFENCE_BISHOP_UNITS = 2;
+        public static int KING_DEFENCE_ROOK_UNITS = 1;
+        public static int KING_DEFENCE_QUEEN_UNITS = 0;
 
         //Penalty for the defending king by attack units: 10 for the first unit, then 5 more per unit, capped at 250
         public static int[] KING_ATTACK_PENALTY = new int[100]
@@ -269,34 +269,93 @@
             250, 250, 250, 250, 250, 250, 250, 250, 250, 250
         };
 
-        public static int OPENING_MOBILITY_PER_KNIGHT_MOVE_BONUS = 2;
-        public static int OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS = 6;
+        public static int OPENING_MOBILITY_PER_KNIGHT_MOVE_BONUS = 7;
+        public static int OPENING_MOBILITY_PER_BISHOP_MOVE_BONUS = 8;
         public static int OPENING_MOBILITY_PER_ROOK_MOVE_BONUS = 5;
         public static int OPENING_MOBILITY_PER_QUEEN_MOVE_BONUS = 1;
-        public static int ENDGAME_MOBILITY_PER_KNIGHT_MOVE_BONUS = 1;
-        public static int ENDGAME_MOBILITY_PER_BISHOP_MOVE_BONUS = 7;
+        public static int ENDGAME_MOBILITY_PER_KNIGHT_MOVE_BONUS = 9;
+        public static int ENDGAME_MOBILITY_PER_BISHOP_MOVE_BONUS = 9;
         public static int ENDGAME_MOBILITY_PER_ROOK_MOVE_BONUS = 6;
         public static int ENDGAME_MOBILITY_PER_QUEEN_MOVE_BONUS = 8;
-        public static int OPENING_MINOR_PIECE_INFLUENCES_CENTER = 1;
+        public static int OPENING_MINOR_PIECE_INFLUENCES_CENTER = 0;
 
-        public static int ROOK_REDUNDANCY_PENALTY = 113;
-        public static int EXCHANGE_IMBALANCE_BONUS = 56;
+        public static int ROOK_REDUNDANCY_PENALTY = 83;
+        public static int EXCHANGE_IMBALANCE_BONUS = 40;
         public static int KNIGHT_REDUNDANCY_PENALTY = 10;
-        public static int SEMI_OPEN_FILE_TWO_ROOKS_BONUS = 11;
-        public static int SEMI_OPEN_FILE_ONE_ROOK_BONUS = 0;
+        public static int SEMI_OPEN_FILE_TWO_ROOKS_BONUS = 9;
+        public static int SEMI_OPEN_FILE_ONE_ROOK_BONUS = 1;
 
-        public static int TRAPPED_ROOK_PENALTY = 73;
-        public static int TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION = 0;
+        public static int TRAPPED_ROOK_PENALTY = 95;
+        public static int TRAPPED_ROOK_PENALTY_B_PAWN_MITIGATION = 16;
         public static int TRAPPED_ROOK_PENALTY_C_PAWN_MITIGATION = 0;
 
-        public static int BLOCKADING_PASSED_PAWN_BONUS = 54;
-        public static int KNIGHT_OUTPOST_MINOR_BONUS = 2;
-        public static int KNIGHT_OUTPOST_MAJOR_BONUS = 2;
+        public static int BLOCKADING_PASSED_PAWN_BONUS = 47;
+        public static int KNIGHT_OUTPOST_MINOR_BONUS = 0;
+        public static int KNIGHT_OUTPOST_MAJOR_BONUS = 0;
 
-        public static int PAWN_CHAIN_BONUS = 13;
-        public static int KNIGHT_ON_THE_RIM_IS_DIM_PENALTY = 16;
-        public static int TEMPO_BONUS = 4;
-        public static int CONNECTED_PASSED_PAWN_BONUS = 26;
+        public static int PAWN_CHAIN_BONUS = 18;
+        //Per square on a side's third or fourth rank that none of its pawns can ever guard again
+        public static int HOLE_PENALTY = 8;
+        public static int KNIGHT_ON_THE_RIM_IS_DIM_PENALTY = 11;
+        public static int TEMPO_BONUS = 6;
+        public static int CONNECTED_PASSED_PAWN_BONUS = 20;
+
+        //Endgame scale factors, out of 64 (see EndgameScaleFactor)
+        public static int ENDGAME_SCALE_FEW_PAWNS_BASE = 30;
+        public static int ENDGAME_SCALE_PER_PAWN = 11;
+        public static int OCB_SCALE_BASE = 1;
+        public static int OCB_SCALE_PER_PASSED_PAWN = 10;
+        public static int OCB_WITH_PIECES_SCALE_BASE = 40;
+        public static int OCB_WITH_PIECES_SCALE_PER_PIECE = 3;
+
+        //Mobility onto squares an enemy pawn attacks
+        public static int OPENING_MOBILITY_PER_KNIGHT_UNSAFE_MOVE_BONUS = 0;
+        public static int OPENING_MOBILITY_PER_BISHOP_UNSAFE_MOVE_BONUS = 0;
+        public static int OPENING_MOBILITY_PER_ROOK_UNSAFE_MOVE_BONUS = 0;
+        public static int OPENING_MOBILITY_PER_QUEEN_UNSAFE_MOVE_BONUS = 0;
+        public static int ENDGAME_MOBILITY_PER_KNIGHT_UNSAFE_MOVE_BONUS = 0;
+        public static int ENDGAME_MOBILITY_PER_BISHOP_UNSAFE_MOVE_BONUS = 7;
+        public static int ENDGAME_MOBILITY_PER_ROOK_UNSAFE_MOVE_BONUS = 4;
+        public static int ENDGAME_MOBILITY_PER_QUEEN_UNSAFE_MOVE_BONUS = 1;
+
+        //King shelter for a king on the d or e file
+        public static int CENTRAL_KING_FILE_SHELTER_PAWN_BONUS = 5;
+        public static int CENTRAL_KING_FILE_NO_SHELTER_PAWN_PENALTY = 0;
+        public static int CENTRAL_SIDE_FILE_SHELTER_PAWN_BONUS = 9;
+        public static int CENTRAL_SIDE_FILE_NO_SHELTER_PAWN_PENALTY = 0;
+
+        //Pawn chain bonus for a defended pawn on its fourth rank or further (PAWN_CHAIN_BONUS is for the third)
+        public static int PAWN_CHAIN_ADVANCED_BONUS = 11;
+
+        //Terms in ScorerExtraTerms.cs. A weight of 0 switches its term off
+        public static int KNIGHT_VALUE_PER_PAWN_ABOVE_FIVE = 5;
+        public static int ROOK_VALUE_LOST_PER_PAWN_ABOVE_FIVE = 12;
+        public static int HOLE_NEAR_KING_PENALTY = 4;
+        public static int HOLE_PENALTY_PER_ENEMY_MINOR = 0;
+        public static int KNIGHT_OUTPOST_ON_HOLE_BONUS = 40;
+        public static int BISHOP_OUTPOST_ON_HOLE_BONUS = 34;
+        public static int STORM_PAWN_ON_THIRD_RANK_PENALTY = 49;
+        public static int STORM_PAWN_ON_FOURTH_RANK_PENALTY = 23;
+        public static int STORM_PAWN_ON_FIFTH_RANK_PENALTY = 14;
+        public static int KING_STUCK_IN_CENTRE_PENALTY = 48;
+        public static int MINOR_BEHIND_PAWN_BONUS = 12;
+        public static int TRAPPED_BISHOP_PENALTY = 110;
+        public static int UNDEVELOPED_MINOR_PENALTY = 3;
+        public static int EARLY_QUEEN_PENALTY = 7;
+        public static int SPACE_BONUS = 4;
+        public static int FLANK_PAWN_ADVANCED_PENALTY = 0;
+        public static int PAWN_PHALANX_BONUS = 9;
+        public static int PAWN_PHALANX_ENDGAME_BONUS = 1;
+        public static int UNOPPOSED_ISOLATED_PAWN_PENALTY = 10;
+        public static int CANDIDATE_PASSED_PAWN_BONUS = 21;
+        public static int PAWN_ISLAND_PENALTY = 0;
+        public static int THREATENED_BY_PAWN_PENALTY = 38;
+        public static int HANGING_PIECE_PENALTY = 21;
+        public static int WEAK_KING_SQUARE_PENALTY = 10;
+        public static int SAFE_KNIGHT_CHECK_PENALTY = 62;
+        public static int SAFE_BISHOP_CHECK_PENALTY = 21;
+        public static int SAFE_ROOK_CHECK_PENALTY = 54;
+        public static int SAFE_QUEEN_CHECK_PENALTY = 48;
 
         #endregion
 
@@ -308,6 +367,8 @@
         public static int[] KING_DEFENCE_UNITS;
         public static int[] OPENING_MOBILITY_BONUS;
         public static int[] ENDGAME_MOBILITY_BONUS;
+        public static int[] OPENING_MOBILITY_UNSAFE_BONUS;
+        public static int[] ENDGAME_MOBILITY_UNSAFE_BONUS;
         public static int MAX_MATERIAL;
 
         #endregion
@@ -330,6 +391,12 @@
             ENDGAME_MOBILITY_BONUS = new int[6] { 0, ENDGAME_MOBILITY_PER_KNIGHT_MOVE_BONUS,
                 ENDGAME_MOBILITY_PER_BISHOP_MOVE_BONUS, ENDGAME_MOBILITY_PER_ROOK_MOVE_BONUS,
                 ENDGAME_MOBILITY_PER_QUEEN_MOVE_BONUS, 0 };
+            OPENING_MOBILITY_UNSAFE_BONUS = new int[6] { 0, OPENING_MOBILITY_PER_KNIGHT_UNSAFE_MOVE_BONUS,
+                OPENING_MOBILITY_PER_BISHOP_UNSAFE_MOVE_BONUS, OPENING_MOBILITY_PER_ROOK_UNSAFE_MOVE_BONUS,
+                OPENING_MOBILITY_PER_QUEEN_UNSAFE_MOVE_BONUS, 0 };
+            ENDGAME_MOBILITY_UNSAFE_BONUS = new int[6] { 0, ENDGAME_MOBILITY_PER_KNIGHT_UNSAFE_MOVE_BONUS,
+                ENDGAME_MOBILITY_PER_BISHOP_UNSAFE_MOVE_BONUS, ENDGAME_MOBILITY_PER_ROOK_UNSAFE_MOVE_BONUS,
+                ENDGAME_MOBILITY_PER_QUEEN_UNSAFE_MOVE_BONUS, 0 };
 
             MirrorPSTsForBlack();
 

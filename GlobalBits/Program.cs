@@ -42,7 +42,7 @@ namespace Lisa
             {
                 InitialiseScorer();
                 TexelFileMaker maker = new(TEXEL_PGN_INPUT, TEXEL_EPD_OUTPUT, TEXEL_POSITIONS_PER_GAME,
-                    TEXEL_SKIP_PLIES, TEXEL_MAX_GAMES, TEXEL_GAME_STRIDE);
+                    TEXEL_SKIP_PLIES, TEXEL_MAX_GAMES, TEXEL_MAX_ELO_GAP, TEXEL_MIN_ENGINE_RATING);
                 maker.MakeFile();
             }
             else if (RUN_MODE == ProgramMode.TexelTune)
@@ -63,8 +63,15 @@ namespace Lisa
             {
                 InitialiseScorer();
                 BookMaker bookMaker = new(BOOK_PGN_INPUT, BOOK_OUTPUT, BOOK_MAX_PLIES, BOOK_MIN_GAMES,
-                    BOOK_MIN_SCORE_PERCENT, BOOK_FIRST_MOVES);
+                    BOOK_MIN_SCORE_PERCENT, BOOK_FIRST_MOVES, BOOK_MIN_GAME_PLIES);
                 bookMaker.MakeBook();
+            }
+            else if (RUN_MODE == ProgramMode.VerifyBook)
+            {
+                InitialiseScorer();
+                BookVerifier verifier = new(BOOK_VERIFY_INPUT, BOOK_VERIFY_OUTPUT, BOOK_VERIFY_DEPTH,
+                    BOOK_MIN_SCORE_WHITE, BOOK_MIN_SCORE_BLACK, BOOK_VERIFY_THREADS);
+                verifier.Verify();
             }
 
         }

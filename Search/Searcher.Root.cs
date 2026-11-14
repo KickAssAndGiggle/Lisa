@@ -134,6 +134,7 @@ namespace Lisa
             _sorter.SetRootMoves(legal);
 
             _ply = 0;
+            _moveStackTop = 0;
             _inCheckAtPly[0] = _theBoard.IsInCheck(_theBoard.OnMove);
             _pathZobrist[0] = _theBoard.CurrentZobrist;
             _repetitionFloor = 0;
@@ -287,6 +288,10 @@ namespace Lisa
             _iterationLines.Clear();
             int searchStartTickCount = Environment.TickCount;
 
+            //Root moves that root selectivity has demoted, by from * 100 + to. They are searched
+            //ROOT_DEMOTED_MOVE_REDUCTION plies shallower until one beats the window again
+            HashSet<int> demotedRootMoves = new();
+
             for (byte depth = startDepth; depth <= maxDepth; depth++)
             {
 
@@ -301,8 +306,8 @@ namespace Lisa
                 int failLowReSearches = 0;
                 int failHighReSearches = 0;
                 int belowBestSearches = 0;
-                int rootMovesDropped = 0;
-                string newlyDroppedMoves = "";
+                int rootMovesDemoted = 0;
+                string newlyDemotedMoves = "";
                 int windowSlides = 0;
                 int windowSlideTotal = 0;
 
@@ -332,6 +337,11 @@ namespace Lisa
                             bool alphaWidened = false;
                             bool betaWidened = false;
                             bool nullWindowFailure = false;
+                            if (nn == 0)
+                            {
+                                demotedRootMoves.Remove(MoveKey);
+                            }
+                            bool demoted = demotedRootMoves.Contains(MoveKey);
 
                         ReSearchAfterFallingOutsideWindow:
 
@@ -340,6 +350,16 @@ namespace Lisa
                                 nullWindowSearch = false;
                                 legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspBeta, -aspAlpha, depth, ref pv);
 
+                            }
+                            else if (demoted)
+                            {
+                                //The search below the root reads its ply from _fullDepth, so it is lowered to match
+                                nullWindowSearch = true;
+                                byte reducedDepth = (byte)Math.Max(1, depth - ROOT_DEMOTED_MOVE_REDUCTION);
+                                _fullDepth = reducedDepth;
+                                legal[nn].Score = -EvaluateMove(legal[nn], MoveKey, -aspAlpha - 1, -aspAlpha,
+                                    reducedDepth, ref pv);
+                                _fullDepth = depth;
                             }
                             else
                             {
@@ -352,6 +372,8 @@ namespace Lisa
                             {
                                 nullWindowReSearches += 1;
                                 nullWindowFailure = true;
+                                demotedRootMoves.Remove(MoveKey);
+                                demoted = false;
                                 goto ReSearchAfterFallingOutsideWindow;
                             }
 
@@ -360,10 +382,13 @@ namespace Lisa
                                 if (nn > 0)
                                 {
                                     //Not the best move, so no exact score is needed: only whether root selectivity will
-                                    //drop it
-                                    belowBestSearches += 1;
-                                    legal[nn].Score = ScoreRootMoveBelowBest(legal[nn], MoveKey, depth,
-                                        bestScoreAtDepth, legal[nn].Score, ref pv);
+                                    //demote it. A move already demoted keeps its reduced-depth bound
+                                    if (!demoted)
+                                    {
+                                        belowBestSearches += 1;
+                                        legal[nn].Score = ScoreRootMoveBelowBest(legal[nn], MoveKey, depth,
+                                            bestScoreAtDepth, legal[nn].Score, ref pv);
+                                    }
                                 }
                                 else if (!alphaWidened)
                                 {
@@ -475,16 +500,15 @@ namespace Lisa
                         int cutoff = RootSelectivityCutoff(depth);
                         for (int NRed = 1; NRed < legal.Length; NRed++)
                         {
-                            if (legal[NRed].Score < _bestScore - cutoff && !GivesCheck(legal[NRed]) &&
-                                !ThreatensMateInOne(legal[NRed]))
+                            if (legal[NRed].Score < _bestScore - cutoff && legal[NRed].Score > -5000 &&
+                                !GivesCheck(legal[NRed]) && !ThreatensMateInOne(legal[NRed]))
                             {
-                                if (legal[NRed].Score > -5000)
+                                if (demotedRootMoves.Add(legal[NRed].From * 100 + legal[NRed].To))
                                 {
-                                    newlyDroppedMoves += " " + ConvertMoveToString(legal[NRed]) + " " +
+                                    newlyDemotedMoves += " " + ConvertMoveToString(legal[NRed]) + " " +
                                         legal[NRed].Score;
                                 }
-                                legal[NRed].Score = -5000;
-                                rootMovesDropped += 1;
+                                rootMovesDemoted += 1;
                             }
                         }
                     }
@@ -494,9 +518,9 @@ namespace Lisa
                         _stats.NodesLookedAt + ", all nodes " + NodesLookedAtAllThreads() + ", root moves " +
                         rootMovesSearched +
                         ", re-searches null/low/high " + nullWindowReSearches + "/" + failLowReSearches + "/" +
-                        failHighReSearches + ", below-best " + belowBestSearches + ", dropped " + rootMovesDropped +
+                        failHighReSearches + ", below-best " + belowBestSearches + ", demoted " + rootMovesDemoted +
                         ", window slid down " + windowSlides + " times by " + windowSlideTotal +
-                        ", newly dropped:" + newlyDroppedMoves);
+                        ", newly demoted:" + newlyDemotedMoves);
 
                 }
                 else
@@ -547,10 +571,10 @@ namespace Lisa
         }
 
 
-        //A root move that failed low against the best so far. After the iteration, root selectivity drops moves scoring
-        //below the best minus its cutoff, so a search on that line decides the move's fate; otherwise the fail-low
-        //bound stands. The window is two wide, not one, so the pruning reserved for null windows (null move, futility,
-        //LMP), which can hide sacrifices, stays off
+        //A root move that failed low against the best so far. After the iteration, root selectivity demotes moves
+        //scoring below the best minus its cutoff, so a search on that line decides the move's fate; otherwise the
+        //fail-low bound stands. The window is two wide, not one, so the pruning reserved for null windows (null move,
+        //futility, LMP), which can hide sacrifices, stays off
         private int ScoreRootMoveBelowBest(Move move, int moveKey, byte depth, int bestScore, int failLowScore,
             ref Move[] pv)
         {
@@ -570,7 +594,7 @@ namespace Lisa
 
 
         //Root selectivity, from depth 6: after an iteration, root moves scoring more than this below the best are
-        //dropped (unless they give check or threaten mate in one). 0 below depth 6
+        //demoted to a shallower search (unless they give check or threaten mate in one). 0 below depth 6
         private int RootSelectivityCutoff(byte depth)
         {
             if (depth < 6)

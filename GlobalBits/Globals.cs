@@ -45,8 +45,9 @@ namespace Lisa
         public static string TEXEL_EPD_OUTPUT = "";
         public static int TEXEL_POSITIONS_PER_GAME = 10;
         public static int TEXEL_SKIP_PLIES = 16;
-        public static int TEXEL_MAX_GAMES = 100000;
-        public static int TEXEL_GAME_STRIDE = 25;
+        public static int TEXEL_MAX_GAMES = 400000;
+        public static int TEXEL_MAX_ELO_GAP = 25;
+        public static int TEXEL_MIN_ENGINE_RATING = 3000;
 
         public static string TEXEL_TUNE_INPUT = "";
         public static string TEXEL_TUNE_RESULTS = "";
@@ -61,6 +62,14 @@ namespace Lisa
         public static int BOOK_MIN_GAMES = 50;
         public static int BOOK_MIN_SCORE_PERCENT = 40;
         public static string BOOK_FIRST_MOVES = "e4,d4,c4,Nf3,b3";
+        public static int BOOK_MIN_GAME_PLIES = 40;
+
+        public static string BOOK_VERIFY_INPUT = "";
+        public static string BOOK_VERIFY_OUTPUT = "";
+        public static byte BOOK_VERIFY_DEPTH = 10;
+        public static int BOOK_MIN_SCORE_WHITE = 0;
+        public static int BOOK_MIN_SCORE_BLACK = -20;
+        public static int BOOK_VERIFY_THREADS = 0;
 
         public static int TT_HASH_SIZE_MB = 128;
         public static int PAWN_STRUCTURE_HASH_SIZE_MB = 64;
@@ -68,6 +77,9 @@ namespace Lisa
 
         //Search threads, the main search included (Lazy SMP). Threads= in Settings.ini, or the UCI Threads option
         public static int SEARCH_THREADS = 4;
+
+        //UseBook= in Settings.ini: false leaves the opening book empty, so every move comes from search
+        public static bool USE_BOOK = true;
 
         private static string _bookFile = "";
 
@@ -81,7 +93,7 @@ namespace Lisa
             KING_ATTACK_UNITS = Array.Empty<int>();
             KING_DEFENCE_UNITS = Array.Empty<int>();
 
-            OPENING_BOOK = new OpeningBook(_bookFile);
+            OPENING_BOOK = new OpeningBook(USE_BOOK ? _bookFile : "");
 
         }
 
@@ -146,6 +158,10 @@ namespace Lisa
                             {
                                 RUN_MODE = ProgramMode.MakeTexelFile;
                             }
+                            else if (L.ToLower().Contains("=verifybook"))
+                            {
+                                RUN_MODE = ProgramMode.VerifyBook;
+                            }
                             else if (L.ToLower().Contains("=makebook"))
                             {
                                 RUN_MODE = ProgramMode.MakeBook;
@@ -174,6 +190,8 @@ namespace Lisa
                     new("multifen_", new[] { ProgramMode.MultiFen }, value => MultiFenList.Add(value)),
                     new("threads=", new[] { ProgramMode.UCI, ProgramMode.MultiFen, ProgramMode.EPD },
                         value => SEARCH_THREADS = Math.Max(1, Convert.ToInt32(value))),
+                    new("usebook=", new[] { ProgramMode.UCI, ProgramMode.MultiFen, ProgramMode.EPD },
+                        value => USE_BOOK = !value.Trim().Equals("false", StringComparison.OrdinalIgnoreCase)),
                     new("multifendepth=", new[] { ProgramMode.MultiFen, ProgramMode.EPD },
                         value => MULTI_FEN_DEPTH = Convert.ToByte(value)),
                     new("epdinputfile=", new[] { ProgramMode.EPD }, value => EPD_INPUT = value),
@@ -186,8 +204,10 @@ namespace Lisa
                         value => TEXEL_SKIP_PLIES = Convert.ToInt32(value)),
                     new("texelmaxgames=", new[] { ProgramMode.MakeTexelFile },
                         value => TEXEL_MAX_GAMES = Convert.ToInt32(value)),
-                    new("texelgamestride=", new[] { ProgramMode.MakeTexelFile },
-                        value => TEXEL_GAME_STRIDE = Convert.ToInt32(value)),
+                    new("texelmaxelogap=", new[] { ProgramMode.MakeTexelFile },
+                        value => TEXEL_MAX_ELO_GAP = Convert.ToInt32(value)),
+                    new("texelminenginerating=", new[] { ProgramMode.MakeTexelFile },
+                        value => TEXEL_MIN_ENGINE_RATING = Convert.ToInt32(value)),
                     new("texeltuneinput=", new[] { ProgramMode.TexelTune, ProgramMode.TexelTunePST },
                         value => TEXEL_TUNE_INPUT = value),
                     new("texeltuneresults=", new[] { ProgramMode.TexelTune }, value => TEXEL_TUNE_RESULTS = value),
@@ -206,7 +226,19 @@ namespace Lisa
                         value => BOOK_MIN_GAMES = Convert.ToInt32(value)),
                     new("bookminscorepercent=", new[] { ProgramMode.MakeBook },
                         value => BOOK_MIN_SCORE_PERCENT = Convert.ToInt32(value)),
-                    new("bookfirstmoves=", new[] { ProgramMode.MakeBook }, value => BOOK_FIRST_MOVES = value)
+                    new("bookfirstmoves=", new[] { ProgramMode.MakeBook }, value => BOOK_FIRST_MOVES = value),
+                    new("bookmingameplies=", new[] { ProgramMode.MakeBook },
+                        value => BOOK_MIN_GAME_PLIES = Convert.ToInt32(value)),
+                    new("bookverifyinput=", new[] { ProgramMode.VerifyBook }, value => BOOK_VERIFY_INPUT = value),
+                    new("bookverifyoutput=", new[] { ProgramMode.VerifyBook }, value => BOOK_VERIFY_OUTPUT = value),
+                    new("bookverifydepth=", new[] { ProgramMode.VerifyBook },
+                        value => BOOK_VERIFY_DEPTH = Convert.ToByte(value)),
+                    new("bookminscorewhite=", new[] { ProgramMode.VerifyBook },
+                        value => BOOK_MIN_SCORE_WHITE = Convert.ToInt32(value)),
+                    new("bookminscoreblack=", new[] { ProgramMode.VerifyBook },
+                        value => BOOK_MIN_SCORE_BLACK = Convert.ToInt32(value)),
+                    new("bookverifythreads=", new[] { ProgramMode.VerifyBook },
+                        value => BOOK_VERIFY_THREADS = Convert.ToInt32(value))
                 };
 
                 foreach (string Line in Lines)

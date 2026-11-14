@@ -31,6 +31,9 @@
         public static int DEPTH10_LATE_SELECTIVITY_SCORE_CUTOFF = 220;
         public static int DEPTH_OVER_10_LATE_SELECTIVITY_SCORE_CUTOFF = 190;
 
+        //Plies a root move demoted by root selectivity is searched shallower than the iteration's depth
+        public static int ROOT_DEMOTED_MOVE_REDUCTION = 3;
+
         public static int LAZY_EVAL_QUEENS_OFF_MARGIN = 1143;
         public static int LAZY_EVAL_QUEENS_ON_MARGIN = 1348;
 

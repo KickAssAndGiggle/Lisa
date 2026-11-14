@@ -32,8 +32,17 @@ namespace Lisa
             AddTaperedTerm(lines, "PST (late)", "endgame", theBoard.WhiteLatePSTScore, theBoard.BlackLatePSTScore,
                 phase, false, true, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
 
-            Move[] whitePieceAttacks = theBoard.GeneratePieceAttacksWithoutKing(WHITE);
-            Move[] blackPieceAttacks = theBoard.GeneratePieceAttacksWithoutKing(BLACK);
+            ReadOnlySpan<PieceAttacks> whitePieceAttacks = theBoard.GeneratePieceAttacksWithoutKing(WHITE,
+                out PieceAttackMasks whitePieces);
+            ReadOnlySpan<PieceAttacks> blackPieceAttacks = theBoard.GeneratePieceAttacksWithoutKing(BLACK,
+                out PieceAttackMasks blackPieces);
+            AnalysePawns(ref theBoard, out TTPawnAnalysis pawns);
+            ulong whiteHoles = pawns.WhiteHoles;
+            ulong blackHoles = pawns.BlackHoles;
+            ulong whitePawnAttacks = pawns.WhitePawnAttacks;
+            ulong blackPawnAttacks = pawns.BlackPawnAttacks;
+            ulong attackedByWhite = AttackedSquares(in whitePieces, whitePawnAttacks, theBoard.WhiteKingSquare);
+            ulong attackedByBlack = AttackedSquares(in blackPieces, blackPawnAttacks, theBoard.BlackKingSquare);
             int white;
             int black;
 
@@ -53,13 +62,13 @@ namespace Lisa
                 ref whiteEndgame, ref blackOpening, ref blackEndgame);
             lines.Add("      White king: attack " + KingAttackUnits(ref theBoard, blackPieceAttacks,
                 theBoard.WhiteKingSquare, BLACK).ToString()
-                + ", defence " + KingDefenceUnits(ref theBoard, whitePieceAttacks,
+                + ", defence " + KingDefenceUnits(whitePieceAttacks,
                     theBoard.WhiteKingZone[theBoard.WhiteKingSquare]).ToString()
                 + ", net " + NetKingAttackUnits(ref theBoard, blackPieceAttacks, whitePieceAttacks,
                     theBoard.WhiteKingSquare, BLACK).ToString()
                 + "   Black king: attack " + KingAttackUnits(ref theBoard, whitePieceAttacks, theBoard.BlackKingSquare,
                     WHITE).ToString()
-                + ", defence " + KingDefenceUnits(ref theBoard, blackPieceAttacks,
+                + ", defence " + KingDefenceUnits(blackPieceAttacks,
                     theBoard.BlackKingZone[theBoard.BlackKingSquare]).ToString()
                 + ", net " + NetKingAttackUnits(ref theBoard, whitePieceAttacks, blackPieceAttacks,
                     theBoard.BlackKingSquare, WHITE).ToString());
@@ -84,8 +93,9 @@ namespace Lisa
             white = 0; black = 0;
             int whiteMobilityEndgame = 0;
             int blackMobilityEndgame = 0;
-            RewardMobility(ref theBoard, whitePieceAttacks, blackPieceAttacks, ref white, ref black,
-                ref whiteMobilityEndgame, ref blackMobilityEndgame);
+            RewardMobility(ref theBoard, whitePieceAttacks, blackPieceAttacks, in whitePieces, in blackPieces,
+                whitePawnAttacks, blackPawnAttacks, ref white, ref black, ref whiteMobilityEndgame,
+                ref blackMobilityEndgame);
             AddTaperedTerm(lines, "RewardMobility", "opening", white, black, phase, true, false, ref whiteOpening,
                 ref whiteEndgame, ref blackOpening, ref blackEndgame);
             AddTaperedTerm(lines, "RewardMobility", "endgame", whiteMobilityEndgame, blackMobilityEndgame, phase, false,
@@ -129,13 +139,18 @@ namespace Lisa
             AddTaperedTerm(lines, "RewardPawnChains", "opening", whiteChainScore, blackChainScore, phase, true, false,
                 ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
 
+            PenaliseHoles(whiteHoles, blackHoles, out int whiteHolePenalty, out int blackHolePenalty);
+            AddTaperedTerm(lines, "PenaliseHoles", "opening", -whiteHolePenalty, -blackHolePenalty, phase, true, false,
+                ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
+
             RewardPassedPawns(ref theBoard, out int whitePPScore, out int blackPPScore);
             AddTaperedTerm(lines, "RewardPassedPawns", "endgame", whitePPScore, blackPPScore, phase, false, true,
                 ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
             AddTaperedTerm(lines, "RewardPassedPawns (half again)", "opening", whitePPScore / 2, blackPPScore / 2,
                 phase, true, false, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
 
-            ReduceBlockadedPassedPawns(ref theBoard, out int whiteBlockadeReduction, out int blackBlockadeReduction);
+            ReduceBlockadedPassedPawns(ref theBoard, pawns.WhitePassedPawns, pawns.BlackPassedPawns,
+                out int whiteBlockadeReduction, out int blackBlockadeReduction);
             AddTaperedTerm(lines, "ReduceBlockadedPassedPawns", "endgame", -whiteBlockadeReduction,
                 -blackBlockadeReduction, phase, false, true, ref whiteOpening, ref whiteEndgame, ref blackOpening,
                 ref blackEndgame);
@@ -144,7 +159,7 @@ namespace Lisa
                 ref blackEndgame);
 
             FindPassedPawns(ref theBoard, out ulong whitePassedPawns, out ulong blackPassedPawns);
-            ScorePassedPawnPromotionChances(ref theBoard, whitePieceAttacks, blackPieceAttacks, whitePassedPawns,
+            ScorePassedPawnPromotionChances(ref theBoard, attackedByWhite, attackedByBlack, whitePassedPawns,
                 blackPassedPawns,
                 out int whitePromotionChances, out int blackPromotionChances);
             AddTaperedTerm(lines, "ScorePassedPawnPromotionChances", "endgame", whitePromotionChances,
@@ -158,6 +173,16 @@ namespace Lisa
             PenaliseIsolatedPawns(ref theBoard, out int whiteIsoPawnScore, out int blackIsoPawnScore);
             AddTaperedTerm(lines, "PenaliseIsolatedPawns", "endgame", whiteIsoPawnScore, blackIsoPawnScore, phase,
                 false, true, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
+
+            AddExtraTerms(ref theBoard, in whitePieces, in blackPieces, attackedByWhite, attackedByBlack, in pawns,
+                phase, lines, ref whiteOpening, ref whiteEndgame, ref blackOpening, ref blackEndgame);
+
+            int endgameDifference = whiteEndgame - blackEndgame;
+            int endgameScale = EndgameScaleFactor(ref theBoard, endgameDifference > 0, whitePassedPawns,
+                blackPassedPawns);
+            whiteEndgame -= endgameDifference - endgameDifference * endgameScale / 64;
+            lines.Add(string.Format("  {0,-48}{1,-10}{2,8}", "Endgame scale (out of 64, stronger side keeps)",
+                "endgame", endgameScale));
 
             int whiteScore = ((whiteOpening * (256 - phase)) + (whiteEndgame * phase)) / 256;
             int blackScore = ((blackOpening * (256 - phase)) + (blackEndgame * phase)) / 256;

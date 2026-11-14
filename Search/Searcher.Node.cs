@@ -49,7 +49,6 @@ namespace Lisa
             {
                 Alpha = alphaOnEntry,
                 BestIndex = -1,
-                LocalPV = new Move[depth],
                 PV = pv
             };
 
@@ -64,9 +63,16 @@ namespace Lisa
             _stats.NodesLookedAt += 1; _stats.NodesLookedAtWithoutQuiesce += 1;
             bool isIrreversible = MoveIsIrreversible(legalMove);
             _theBoard.MakeMove(legalMove, _theBoard.OnMove, false);
+            _transTable.PrefetchPosition(_theBoard.CurrentZobrist);
+            _transTable.PrefetchEvaluation(_theBoard.CurrentZobrist, _theBoard.PawnOnlyZobrist);
             bool isInCheck = _theBoard.IsInCheck(_theBoard.OnMove);
             _ply += 1;
             _inCheckAtPly[_ply] = isInCheck;
+
+            //This ply's LocalPV, with the slots this node uses cleared so it starts as a new array would
+            node.LocalPV = depth <= LOCAL_PV_LENGTH ? _localPVs[_ply] : new Move[depth];
+            Array.Clear(node.LocalPV, 0, depth);
+            int moveStackMark = _moveStackTop;
 
             int savedRepetitionFloor = _repetitionFloor;
             _pathZobrist[_ply] = _theBoard.CurrentZobrist;
@@ -111,8 +117,10 @@ namespace Lisa
                 goto ReturnEarly;
             }
 
-            Move[]? allOppMoves = null;
-            Move[]? allOpCaps = null;
+            Span<Move> allOppMoves = default;
+            Span<Move> allOpCaps = default;
+            bool hasOppMoves = false;
+            bool hasOpCaps = false;
 
             if (hasTTMove)
             {
@@ -152,7 +160,8 @@ namespace Lisa
                 
                 int iidAlpha = node.Alpha;
                 int iidBeta = beta;
-                allOpCaps = _sorter.GetSortedMoves(ref _theBoard, true, false, true);
+                allOpCaps = TakeSortedMoves(true, false, true);
+                hasOpCaps = true;
 
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOpCaps.Length; nn++)
@@ -169,13 +178,12 @@ namespace Lisa
                         iidAlpha = allOpCaps[nn].Score;
                     }
                 }
-                Array.Sort(allOpCaps);
+                allOpCaps.Sort();
             }
 
-            if (allOpCaps == null)
+            if (!hasOpCaps)
             {
-                allOpCaps = _sorter.GetSortedMoves(ref _theBoard, true, false,
-                    (depth <= _fullDepth - 6 && nodeType != NodeTypes.PV));
+                allOpCaps = TakeSortedMoves(true, false, (depth <= _fullDepth - 6 && nodeType != NodeTypes.PV));
             }
 
             bool winningCapsCut = TryWinningCaptures(allOpCaps, ttMove, nodeType, depth, beta, isInCheck, rootMoveKey,
@@ -252,7 +260,8 @@ namespace Lisa
                 int iidAlpha = node.Alpha;
                 int iidBeta = beta;
 
-                allOppMoves = _sorter.GetSortedMoves(ref _theBoard, false, true, true);
+                allOppMoves = TakeSortedMoves(false, true, true);
+                hasOppMoves = true;
 
                 byte iidReduceDepth = (byte)(depth - 4);
                 for (int nn = 0; nn < allOppMoves.Length; nn++)
@@ -272,12 +281,13 @@ namespace Lisa
                     allOppMoves[nn].Score += _sorter.CutCount[moveKey];
                     allOppMoves[nn].Score += _sorter.CutCountUnderRootMove(rootMoveKey, moveKey);
                 }
-                Array.Sort(allOppMoves);
+                allOppMoves.Sort();
             }
 
-            if (allOppMoves == null)
+            if (!hasOppMoves)
             {
-                allOppMoves = _sorter.GetSortedMoves(ref _theBoard, false, true, (depth >= 5));
+                allOppMoves = TakeSortedMoves(false, true, (depth >= 5));
+                hasOppMoves = true;
             }
 
             int quietPlayed = 0;
@@ -315,10 +325,13 @@ namespace Lisa
                     byte ByteDepth;
                     bool WasReduced = false;
                     byte originalDepth = (byte)(SearchDepth - 1);
+                    //How late the move counts as for reductions. In the replies to a root move it counts as half as
+                    //late, so twice as many quiet moves are searched before each step of reduction
+                    int quietLateness = depth == _fullDepth ? (quietPlayed + 1) / 2 : quietPlayed;
                     //Checks are never reduced: GivesCheck is last so it only runs for moves that would otherwise be
                     //reduced
-                    if (isInCheck || quietPlayed == 1 || (_endGame && _theBoard.Piece[allOppMoves[nn].From] == PAWN) ||
-                        GivesCheck(allOppMoves[nn]))
+                    if (isInCheck || quietLateness == 1 ||
+                        (_endGame && _theBoard.Piece[allOppMoves[nn].From] == PAWN) || GivesCheck(allOppMoves[nn]))
                     {
                         ByteDepth = (byte)(SearchDepth - 1);
                     }
@@ -330,11 +343,11 @@ namespace Lisa
                         }
                         else
                         {
-                            if (SearchDepth - 6 >= 1 && quietPlayed > 10)
+                            if (SearchDepth - 6 >= 1 && quietLateness > 10)
                             {
                                 ByteDepth = (byte)(SearchDepth - 6);
                             }
-                            else if (SearchDepth - 5 >= 1 && quietPlayed > 5)
+                            else if (SearchDepth - 5 >= 1 && quietLateness > 5)
                             {
                                 ByteDepth = (byte)(SearchDepth - 5);
                             }
@@ -487,11 +500,18 @@ namespace Lisa
             }
 
 
+            //Nothing played and not in check: with no legal move at all, this is stalemate, which is a draw
+            if (node.Played == 0 && !isInCheck && !_theBoard.HasLegalMove(_theBoard.OnMove))
+            {
+                node.Alpha = DrawScoreInWindow(node.Alpha, beta);
+                goto ReturnEarly;
+            }
+
         StoreInTransTable:
 
             if (node.BetaCutoff)
             {
-                if (!node.CapsOnlyCut && allOppMoves != null)
+                if (!node.CapsOnlyCut && hasOppMoves)
                 {
                     _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth,
                         allOppMoves[node.BestIndex], TT_POS_TYPE_BETA_CUT);
@@ -506,7 +526,7 @@ namespace Lisa
             }
             else if (node.AlphaRaised)
             {
-                if (!node.CapsOnlyAlphaRaised && !node.AlphaRaisedByNonGeneratedMove && allOppMoves != null)
+                if (!node.CapsOnlyAlphaRaised && !node.AlphaRaisedByNonGeneratedMove && hasOppMoves)
                 {
                     _transTable.AddToTranstable(_theBoard.CurrentZobrist, node.Alpha, depth,
                         allOppMoves[node.BestIndex], TT_POS_TYPE_EXACT);
@@ -550,6 +570,7 @@ namespace Lisa
 
         ReturnEarly:
 
+            _moveStackTop = moveStackMark;
             _repetitionFloor = savedRepetitionFloor;
             _ply -= 1;
             _theBoard.UnmakeLastMove();
@@ -796,7 +817,7 @@ namespace Lisa
         }
 
 
-        private bool TryWinningCaptures(Move[] allOppCaps,
+        private bool TryWinningCaptures(Span<Move> allOppCaps,
                                         Move ttMove,
                                         NodeTypes nodeType,
                                         byte depth,
@@ -1016,7 +1037,7 @@ namespace Lisa
         }
 
 
-        private bool TryLosingCaptures(Move[] allOpCaps,
+        private bool TryLosingCaptures(Span<Move> allOpCaps,
                                        Move ttMove,
                                        NodeTypes nodeType,
                                        byte depth,

@@ -24,6 +24,9 @@
         }
 
 
+        //Everything the evaluation takes from the pawns alone. The scores above the passed pawn masks are already
+        //weighted. The masks have one bit per square (bit 0 is a8). The counts below them are unweighted, and the
+        //StormFiles come from Scorer.PawnStormFiles. Filled is 1 in every stored entry, so an empty slot never matches
         public struct TTPawnAnalysis
         {
             public int WhitePassedPawnScore;
@@ -39,6 +42,27 @@
             public ulong WhitePassedPawns;
             public ulong BlackPassedPawns;
             public long Zobrist;
+            public ulong WhiteHoles;
+            public ulong BlackHoles;
+            public ulong WhitePawnAttacks;
+            public ulong BlackPawnAttacks;
+            public ushort WhiteStormFiles;
+            public ushort BlackStormFiles;
+            public byte WhitePhalanxPawns;
+            public byte BlackPhalanxPawns;
+            public byte WhiteSpace;
+            public byte BlackSpace;
+            public byte WhiteUnopposedIsolatedPawns;
+            public byte BlackUnopposedIsolatedPawns;
+            public byte WhiteCandidatePassedPawns;
+            public byte BlackCandidatePassedPawns;
+            public byte WhitePawnIslands;
+            public byte BlackPawnIslands;
+            public byte WhiteAdvancedFlankPawns;
+            public byte BlackAdvancedFlankPawns;
+            public byte WhitePawnlessFiles;
+            public byte BlackPawnlessFiles;
+            public byte Filled;
         }
 
         public struct BookMove
@@ -68,6 +92,28 @@
             }
         }
 
+        //One side's pieces as bit masks, one bit per square (bit 0 is a8): every square it occupies, its king, where
+        //its knights, bishops, rooks and queens stand, and the squares each of those kinds bears on. Filled by
+        //Board.GeneratePieceAttacksWithoutKing
+        public struct PieceAttackMasks
+        {
+            public ulong Occupied;
+            public ulong Kings;
+            public ulong PieceSquares;
+            public ulong Knight;
+            public ulong Bishop;
+            public ulong Rook;
+            public ulong Queen;
+        }
+
+        //One knight, bishop, rook or queen: the squares it bears on (bit 0 is a8), where it stands and what it is
+        public struct PieceAttacks
+        {
+            public ulong Attacks;
+            public byte Square;
+            public byte Piece;
+        }
+
         public enum ProgramMode
         {
             Unknown = 0,
@@ -79,7 +125,8 @@
             MakeTexelFile = 6,
             TexelTune = 7,
             TexelTunePST = 8,
-            MakeBook = 9
+            MakeBook = 9,
+            VerifyBook = 10
         }
 
         public enum UCILogLevels

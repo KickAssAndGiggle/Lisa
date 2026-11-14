@@ -39,32 +39,35 @@ namespace Lisa
         private readonly int[] _rootMoveRow = new int[6363];
 
 
-        public Move[] GetSortedMoves(ref Board theBoard, bool capturesOnly, bool nonCapturesOnly,
-            bool lowDepth = false)
+        //Generates the side to move's moves at the start of buffer, scores and sorts them, and returns that part of
+        //buffer
+        public Span<Move> GetSortedMoves(ref Board theBoard, Span<Move> buffer, bool capturesOnly,
+            bool nonCapturesOnly, bool lowDepth = false)
         {
 
-            Move[] list;
+            int moveCount;
             if (capturesOnly)
             {
                 if (lowDepth)
                 {
-                    list = theBoard.GenerateCaptureMovesWithScore(theBoard.OnMove);
-                    return list;
+                    moveCount = theBoard.GenerateCaptureMovesWithScore(theBoard.OnMove, buffer);
+                    return buffer.Slice(0, moveCount);
                 }
                 else
                 {
-                    list = theBoard.GenerateCaptureMoves(theBoard.OnMove);
+                    moveCount = theBoard.GenerateCaptureMoves(theBoard.OnMove, buffer);
                 }
             }
             else if (nonCapturesOnly)
             {
-                list = theBoard.GenerateNonCaptureMoves(theBoard.OnMove);
+                moveCount = theBoard.GenerateNonCaptureMoves(theBoard.OnMove, buffer);
             }
             else
             {
-                list = theBoard.GenerateAllMoves(theBoard.OnMove);
+                moveCount = theBoard.GenerateAllMoves(theBoard.OnMove, buffer);
             }
 
+            Span<Move> list = buffer.Slice(0, moveCount);
             for (int nn = 0; nn < list.Length; nn++)
             {
                 if (list[nn].IsCapture)
@@ -90,7 +93,7 @@ namespace Lisa
                 }
             }
 
-            Array.Sort(list);
+            list.Sort();
             return list;
 
         }

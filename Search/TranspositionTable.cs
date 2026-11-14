@@ -1,4 +1,6 @@
-﻿using static Lisa.Globals;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.X86;
+using static Lisa.Globals;
 namespace Lisa
 {
     //Shared by every search thread, without locks. Two threads can write the same entry at once, or one read it while
@@ -75,6 +77,31 @@ namespace Lisa
             return (int)Math.Abs(pawnOnlyZobrist % _passedPawnSize);
         }
 
+        //Asks the processor to start loading the move table bucket for this position, so it is in the cache by
+        //the time LookupPos reads it. A hint only: it reads and changes nothing
+        public unsafe void PrefetchPosition(long zobrist)
+        {
+            if (Sse.IsSupported)
+            {
+                Sse.Prefetch0(Unsafe.AsPointer(ref _primaryMoveList[MakeTTBucket(zobrist)]));
+            }
+        }
+
+
+        //The same hint for the score table entry and the pawn table entry ScorePosition will read. A pawn entry is
+        //wider than one cache line, so both of its lines are asked for
+        public unsafe void PrefetchEvaluation(long zobrist, long pawnOnlyZobrist)
+        {
+            if (Sse.IsSupported)
+            {
+                Sse.Prefetch0(Unsafe.AsPointer(ref _scoreList[MakeScoreTTHash(zobrist)]));
+                byte* pawnEntry = (byte*)Unsafe.AsPointer(ref _pawnStructList[MakePawnTTHash(pawnOnlyZobrist)]);
+                Sse.Prefetch0(pawnEntry);
+                Sse.Prefetch0(pawnEntry + 64);
+            }
+        }
+
+
         public void AddToTranstable(long zobrist, int posScore, byte posDepth, Move bestResponse, byte posType)
         {
 
@@ -115,29 +142,14 @@ namespace Lisa
         }
 
 
-        public void AddPawnStructureToTransTable(long pawnOnlyZobrist, int whitePPScore, int blackPPScore,
-            int whiteBWPScore,
-            int blackBWPScore, int whiteChainScore, int blackChainPawn, int whiteDblPawnScore, int blackDblPawnScore,
-            int whiteIsoPawnScore, int blackIsoPawnScore, ulong whitePassedPawns, ulong blackPassedPawns)
+        //Stores the analysis under the pawn key. It sets the entry's Filled and Zobrist, so the caller's copy is
+        //the stored entry
+        public void AddPawnStructureToTransTable(long pawnOnlyZobrist, ref TTPawnAnalysis entry)
         {
 
             int ttPPHash = MakePawnTTHash(pawnOnlyZobrist);
-            TTPawnAnalysis entry = new()
-            {
-                WhitePassedPawnScore = whitePPScore,
-                BlackPassedPawnScore = blackPPScore,
-                WhiteBackwardsPawnScore = whiteBWPScore,
-                BlackBackwardPawnScore = blackBWPScore,
-                WhitePawnChainScore = whiteChainScore,
-                BlackPawnChainScore = blackChainPawn,
-                WhiteDoubledPawnScore = whiteDblPawnScore,
-                BlackDoubledPawnScore = blackDblPawnScore,
-                WhiteIsolatedPawnScore = whiteIsoPawnScore,
-                BlackIsolatedPawnScore = blackIsoPawnScore,
-                WhitePassedPawns = whitePassedPawns,
-                BlackPassedPawns = blackPassedPawns
-            };
-            entry.Zobrist = pawnOnlyZobrist ^ PawnEntryCheck(entry);
+            entry.Filled = 1;
+            entry.Zobrist = pawnOnlyZobrist ^ PawnEntryCheck(in entry);
             _pawnStructList[ttPPHash] = entry;
 
         }
@@ -148,7 +160,7 @@ namespace Lisa
 
             int ttHash = MakePawnTTHash(zobrist);
             posScore = _pawnStructList[ttHash];
-            if ((posScore.Zobrist ^ PawnEntryCheck(posScore)) == zobrist)
+            if (posScore.Filled == 1 && (posScore.Zobrist ^ PawnEntryCheck(in posScore)) == zobrist)
             {
                 return true;
             }
@@ -226,7 +238,7 @@ namespace Lisa
 
 
         //Mixes every field, so any torn mix of two writes gives a different value
-        private static long PawnEntryCheck(TTPawnAnalysis entry)
+        private static long PawnEntryCheck(in TTPawnAnalysis entry)
         {
             ulong check = (ulong)entry.WhitePassedPawns;
             check = MixIn(check, entry.BlackPassedPawns);
@@ -235,6 +247,19 @@ namespace Lisa
             check = MixIn(check, Pair(entry.WhitePawnChainScore, entry.BlackPawnChainScore));
             check = MixIn(check, Pair(entry.WhiteDoubledPawnScore, entry.BlackDoubledPawnScore));
             check = MixIn(check, Pair(entry.WhiteIsolatedPawnScore, entry.BlackIsolatedPawnScore));
+            check = MixIn(check, entry.WhiteHoles);
+            check = MixIn(check, entry.BlackHoles);
+            check = MixIn(check, entry.WhitePawnAttacks);
+            check = MixIn(check, entry.BlackPawnAttacks);
+            check = MixIn(check, entry.WhiteStormFiles | ((ulong)entry.BlackStormFiles << 16) |
+                ((ulong)entry.WhitePhalanxPawns << 32) | ((ulong)entry.BlackPhalanxPawns << 40) |
+                ((ulong)entry.WhiteSpace << 48) | ((ulong)entry.BlackSpace << 56));
+            check = MixIn(check, entry.WhiteUnopposedIsolatedPawns | ((ulong)entry.BlackUnopposedIsolatedPawns << 8) |
+                ((ulong)entry.WhiteCandidatePassedPawns << 16) | ((ulong)entry.BlackCandidatePassedPawns << 24) |
+                ((ulong)entry.WhitePawnIslands << 32) | ((ulong)entry.BlackPawnIslands << 40) |
+                ((ulong)entry.WhiteAdvancedFlankPawns << 48) | ((ulong)entry.BlackAdvancedFlankPawns << 56));
+            check = MixIn(check, entry.Filled | ((ulong)entry.WhitePawnlessFiles << 8) |
+                ((ulong)entry.BlackPawnlessFiles << 16));
             return (long)check;
         }
 
